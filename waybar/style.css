@@ -1,0 +1,35 @@
+* {
+  font-family: "Sans";
+  font-size: 14px;
+  color: #ffffff;
+  background: #1e1e2e;
+}
+
+#battery {
+  color: #a6e3a1;
+}
+
+#clock {
+  color: #89b4fa;
+}
+#backlight-slider slider {
+    min-height: 0px;
+    min-width: 0px;
+    opacity: 0;
+    background-image: none;
+    border: none;
+    box-shadow: none;
+
+}
+#backlight-slider trough {
+    min-height: 9px;
+    min-width: 50px;
+    border-radius: 5px;
+    background-color: black;
+}
+#backlight-slider highlight {
+    min-width: 10px;
+    border-radius: 5px;
+    background-color: #58b9b9;
+    border-color:#ffffff
+}

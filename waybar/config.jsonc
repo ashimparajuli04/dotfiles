@@ -1,0 +1,39 @@
+{
+  "height": 30,
+  "position": "top",
+  "modules-right": ["battery", "clock"],
+  "modules-left":["backlight/slider"],
+  "reload_style_on_change": true,
+  "spacing": 10,
+  "output": "!HDMI-A-1",
+
+"battery": {
+    "bat": "BAT1",
+    "interval": 60,
+    "states": {
+        "warning": 30,
+        "critical": 15
+    },
+    "format": "{capacity}% {icon}",
+    "format-icons": ["", "", "", "", ""],
+    "max-length": 25
+  },
+
+  "clock": {
+    "format": "{:%H:%M}"
+  },
+
+  "backlight/slider": {
+    "min": 0,
+    "max": 100,
+    "orientation": "horizontal",
+    "device": "intel_backlight"
+  },
+    "group/info": {
+    "orientation": "horizontal",
+    "modules": ["clock","battery"]
+  }
+}
+
+
+

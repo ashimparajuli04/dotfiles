@@ -1,0 +1,17 @@
+{
+  "custom/quicklink1": {
+    "format": "󰈹",
+    "on-click": "firefox",
+    "tooltip-format": "Firefox"
+  },
+  "group/quicklinks": {
+    "orientation": "horizontal",
+    "modules": [
+      "custom/quicklink1",
+      "custom/quicklink2",
+      "custom/quicklink3",
+      "custom/quicklink4",
+      "custom/quicklink5"
+    ]
+  }
+}
