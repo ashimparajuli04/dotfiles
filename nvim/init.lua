@@ -19,8 +19,22 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
-    spec = {
-    { import = "plugins" },
+  {
+    "folke/tokyonight.nvim",
+    lazy = false,
+    priority = 1000,
+    config = function()
+      vim.cmd.colorscheme("tokyonight-night")
+    end,
   },
+  { import = "plugins" },
 })
-  vim.cmd.colorscheme("tokyonight-night")
+
+
+vim.cmd.colorscheme("tokyonight-night")
+
+-- Enable persistent undo
+vim.opt.undofile = true
+-- Set custom undo directory
+vim.opt.undodir = vim.fn.expand("~/.undotree")
+
