@@ -14,3 +14,9 @@ vim.keymap.set("n", "<leader>cs", ":Telescope colorscheme<CR>")
 vim.keymap.set("n", "<leader>of", ":Telescope oldfiles<CR>")
 vim.keymap.set("n", "<leader>fw", ":Telescope live_grep<CR>")
 vim.keymap.set("n", "<leader>lp", ":Telescope lsp_document_symbols<CR>")
+
+--bufferline
+vim.keymap.set("n", "<tab>", ":bnext<CR>", { noremap = true, silent = true })
+vim.keymap.set("n", "<S-tab>", ":bprevious<CR>", { noremap = true, silent = true })
+vim.keymap.set("n", "<leader>x", ":bd<CR>", { noremap = true, silent = true })
+
