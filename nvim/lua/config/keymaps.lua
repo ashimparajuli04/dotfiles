@@ -17,11 +17,18 @@ map("n", "<leader>mm", function()
 end, { desc = "Format current buffer (conform)" })
 
 -- copilot
-map("i", "<A-l>", 'copilot#Accept("<CR>")', {
-  expr = true,
-  replace_keycodes = false,
-})
+map("i", "<A-l>", function()
+	require("copilot.suggestion").accept()
+end, { desc = "Copilot accept" })
 
-map("i", "<A-j>", "<Plug>(copilot-next)")
-map("i", "<A-k>", "<Plug>(copilot-previous)")
-map("i", "<A-h>", "<Plug>(copilot-dismiss)")
+map("i", "<A-j>", function()
+	require("copilot.suggestion").next()
+end, { desc = "Copilot next" })
+
+map("i", "<A-k>", function()
+	require("copilot.suggestion").prev()
+end, { desc = "Copilot previous" })
+
+map("i", "<A-h>", function()
+	require("copilot.suggestion").dismiss()
+end, { desc = "Copilot dismiss" })
