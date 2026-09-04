@@ -17,7 +17,7 @@ return {
 		opts = {
 			ensure_installed = {
 				"lua_ls",
-				"pyright",
+				"basedpyright",
 				"ts_ls",
 				"html",
 				"cssls",
@@ -48,9 +48,11 @@ return {
 				},
 			})
 
+			vim.lsp.config("pyright", { enabled = false })
+
 			vim.lsp.enable({
 				"lua_ls",
-				"pyright",
+				"basedpyright",
 				"ts_ls",
 				"html",
 				"cssls",

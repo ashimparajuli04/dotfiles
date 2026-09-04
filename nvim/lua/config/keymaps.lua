@@ -34,7 +34,7 @@ map("i", "<A-h>", function()
 end, { desc = "Copilot dismiss" })
 
 -- toggleterm
-vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], { desc = "Exit terminal mode" })
+map("t", "<Esc>", [[<C-\><C-n>]], { desc = "Exit terminal mode" })
 
 map("t", "<C-h>", [[<C-\><C-n><C-w>h]], { desc = "Move to left window" })
 map("t", "<C-j>", [[<C-\><C-n><C-w>j]], { desc = "Move to bottom window" })
@@ -76,3 +76,41 @@ map("n", "gd", vim.lsp.buf.definition, { desc = "Go to definition" })
 map("n", "gr", vim.lsp.buf.references, { desc = "Find references" })
 map("n", "K", vim.lsp.buf.hover, { desc = "Hover documentation" })
 map("n", "<leader>rn", vim.lsp.buf.rename, { desc = "Rename symbol" })
+
+-- trouble.nvim
+map("n", "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>", {
+    desc = "Diagnostics",
+})
+
+map("n", "<leader>xX", "<cmd>Trouble diagnostics toggle filter.buf=0<cr>", {
+    desc = "Buffer Diagnostics",
+})
+
+map("n", "<leader>cs", "<cmd>Trouble symbols toggle focus=false<cr>", {
+    desc = "Symbols",
+})
+
+map("n", "<leader>cl", "<cmd>Trouble lsp toggle focus=false win.position=right<cr>", {
+    desc = "LSP",
+})
+
+map("n", "<leader>xL", "<cmd>Trouble loclist toggle<cr>", {
+    desc = "Location List",
+})
+
+map("n", "<leader>xQ", "<cmd>Trouble qflist toggle<cr>", {
+    desc = "Quickfix List",
+})
+
+-- noice.nvim
+map("n", "<leader>nh", "<cmd>Noice history<cr>", {
+    desc = "Notification History",
+})
+
+map("n", "<leader>nl", "<cmd>Noice last<cr>", {
+    desc = "Last Notification",
+})
+
+map("n", "<leader>nd", "<cmd>Noice dismiss<cr>", {
+    desc = "Dismiss Notifications",
+})
