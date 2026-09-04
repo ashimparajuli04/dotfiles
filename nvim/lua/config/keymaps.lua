@@ -32,3 +32,40 @@ end, { desc = "Copilot previous" })
 map("i", "<A-h>", function()
 	require("copilot.suggestion").dismiss()
 end, { desc = "Copilot dismiss" })
+
+-- toggleterm
+vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], { desc = "Exit terminal mode" })
+
+map("t", "<C-h>", [[<C-\><C-n><C-w>h]], { desc = "Move to left window" })
+map("t", "<C-j>", [[<C-\><C-n><C-w>j]], { desc = "Move to bottom window" })
+map("t", "<C-k>", [[<C-\><C-n><C-w>k]], { desc = "Move to top window" })
+map("t", "<C-l>", [[<C-\><C-n><C-w>l]], { desc = "Move to right window" })
+
+-- window resize
+map("n", "<A-Up>", "<cmd>resize +2<cr>", { desc = "Increase window height" })
+map("n", "<A-Down>", "<cmd>resize -2<cr>", { desc = "Decrease window height" })
+map("n", "<A-Left>", "<cmd>vertical resize -2<cr>", { desc = "Decrease window width" })
+map("n", "<A-Right>", "<cmd>vertical resize +2<cr>", { desc = "Increase window width" })
+
+-- window navigation
+map("n", "<C-Left>", "<C-w>h", { desc = "Move to left window" })
+map("n", "<C-Down>", "<C-w>j", { desc = "Move to lower window" })
+map("n", "<C-Up>", "<C-w>k", { desc = "Move to upper window" })
+map("n", "<C-Right>", "<C-w>l", { desc = "Move to right window" })
+
+-- bufferline
+map("n", "<A-j>", "<cmd>BufferLineCyclePrev<cr>", {
+	desc = "Previous buffer",
+})
+
+map("n", "<A-k>", "<cmd>BufferLineCycleNext<cr>", {
+	desc = "Next buffer",
+})
+
+map("n", "<A-p>", "<cmd>BufferLinePick<cr>", {
+	desc = "Pick buffer",
+})
+
+map("n", "<A-w>", "<cmd>BufferLineCyclePrev<cr><cmd>bdelete #<cr>", {
+	desc = "Close buffer",
+})

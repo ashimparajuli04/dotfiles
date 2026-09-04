@@ -32,8 +32,12 @@ return {
 
 	{
 		"neovim/nvim-lspconfig",
+		dependencies = { "saghen/blink.cmp" },
 		config = function()
-			-- Lua
+			local capabilities = require("blink.cmp").get_lsp_capabilities()
+
+			vim.lsp.config("*", { capabilities = capabilities })
+
 			vim.lsp.config("lua_ls", {
 				settings = {
 					Lua = {
@@ -43,43 +47,19 @@ return {
 					},
 				},
 			})
-			vim.lsp.enable("lua_ls")
 
-			-- Python
-			vim.lsp.config("pyright", {})
-			vim.lsp.enable("pyright")
-
-			-- TypeScript / JavaScript
-			vim.lsp.config("ts_ls", {})
-			vim.lsp.enable("ts_ls")
-
-			-- HTML
-			vim.lsp.config("html", {})
-			vim.lsp.enable("html")
-
-			-- CSS
-			vim.lsp.config("cssls", {})
-			vim.lsp.enable("cssls")
-
-			-- JSON
-			vim.lsp.config("jsonls", {})
-			vim.lsp.enable("jsonls")
-
-			-- Tailwind
-			vim.lsp.config("tailwindcss", {})
-			vim.lsp.enable("tailwindcss")
-
-			-- Bash 
-			vim.lsp.config("bashls", {})
-			vim.lsp.enable("bashls")
-
-			-- Docker
-			vim.lsp.config("dockerls", {})
-			vim.lsp.enable("dockerls")
-
-			-- YAML
-			vim.lsp.config("yamlls", {})
-			vim.lsp.enable("yamlls")
+			vim.lsp.enable({
+				"lua_ls",
+				"pyright",
+				"ts_ls",
+				"html",
+				"cssls",
+				"jsonls",
+				"tailwindcss",
+				"bashls",
+				"dockerls",
+				"yamlls",
+			})
 		end,
 	},
 }
