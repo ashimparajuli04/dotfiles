@@ -20,7 +20,6 @@ return {
 				-- Tailwind
 				-- Tailwind files are usually handled by prettier
 				-- through the Tailwind prettier plugin
-				html = { "prettier" },
 
 				-- Lua
 				lua = { "stylua" },

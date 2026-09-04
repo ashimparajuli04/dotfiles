@@ -12,7 +12,7 @@ map("n", "<leader>fh", builtin.help_tags, { desc = "Telescope help tags" })
 map("n", "<leader>ft", builtin.colorscheme, { desc = "Telescope colorscheme picker" })
 
 -- Formatter
-map("n", "<leader>mm", function()
+map("n", "<leader>fr", function()
 	require("conform").format({ bufnr = 0 })
 end, { desc = "Format current buffer (conform)" })
 
@@ -69,3 +69,10 @@ map("n", "<A-p>", "<cmd>BufferLinePick<cr>", {
 map("n", "<A-w>", "<cmd>BufferLineCyclePrev<cr><cmd>bdelete #<cr>", {
 	desc = "Close buffer",
 })
+
+-- code actions
+map("n", "<leader>ca", "<cmd>lua vim.lsp.buf.code_action()<cr>", { desc = "Code action" })
+map("n", "gd", vim.lsp.buf.definition, { desc = "Go to definition" })
+map("n", "gr", vim.lsp.buf.references, { desc = "Find references" })
+map("n", "K", vim.lsp.buf.hover, { desc = "Hover documentation" })
+map("n", "<leader>rn", vim.lsp.buf.rename, { desc = "Rename symbol" })
