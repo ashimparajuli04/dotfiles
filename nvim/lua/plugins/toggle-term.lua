@@ -5,8 +5,6 @@ return {
 		opts = {
 			size = 15,
 
-			open_mapping = [[<C-\>]],
-
 			hide_numbers = false,
 
 			shade_filetypes = {},

@@ -34,6 +34,10 @@ map("i", "<A-h>", function()
 end, { desc = "Copilot dismiss" })
 
 -- toggleterm
+map("n", "<C-\\>", "<cmd>ToggleTerm<CR>", { desc = "Toggle terminal" })
+map("i", "<C-\\>", "<cmd>ToggleTerm<CR>", { desc = "Toggle terminal" })
+map("t", "<C-\\>", "<cmd>ToggleTerm<CR>", { desc = "Toggle terminal" })
+
 map("t", "<Esc>", [[<C-\><C-n>]], { desc = "Exit terminal mode" })
 
 map("t", "<C-h>", [[<C-\><C-n><C-w>h]], { desc = "Move to left window" })
@@ -114,3 +118,37 @@ map("n", "<leader>nl", "<cmd>Noice last<cr>", {
 map("n", "<leader>nd", "<cmd>Noice dismiss<cr>", {
     desc = "Dismiss Notifications",
 })
+
+-- Completion (blink.cmp)
+local cmp_keymaps = {
+	preset = "default",
+
+	["<C-space>"] = {
+		"show",
+		"show_documentation",
+		"hide_documentation",
+	},
+
+	["<C-e>"] = { "hide" },
+
+	["<CR>"] = { "accept", "fallback" },
+
+	["<Tab>"] = {
+		"select_next",
+		"snippet_forward",
+		"fallback",
+	},
+
+	["<S-Tab>"] = {
+		"select_prev",
+		"snippet_backward",
+		"fallback",
+	},
+
+	["<C-n>"] = { "select_next" },
+	["<C-p>"] = { "select_prev" },
+}
+
+return {
+	cmp_keymaps = cmp_keymaps,
+}
