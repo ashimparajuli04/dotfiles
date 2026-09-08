@@ -1,0 +1,8 @@
+// Custom keymap tweaks for this machine.
+// "ralt_super": right Alt acts as an extra Super key (Mod4, i.e. sway's $mod).
+// Left Alt and both Win keys keep their normal behavior.
+partial modifier_keys
+xkb_symbols "ralt_super" {
+    key <RALT> { [ Super_R ], type[group1] = "ONE_LEVEL" };
+    modifier_map Mod4 { <RALT> };
+};

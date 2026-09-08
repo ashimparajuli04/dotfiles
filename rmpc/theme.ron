@@ -1,0 +1,84 @@
+#![enable(implicit_some)]
+#![enable(unwrap_newtypes)]
+#![enable(unwrap_variant_newtypes)]
+(
+    background_color: "#232136",
+    text_color: "#e0def4",
+    header_background_color: "#191726",
+    modal_background_color: "#191726",
+    modal_backdrop: false,
+    preview_label_style: (fg: "#c4a7e7"),
+    preview_metadata_group_style: (fg: "#c4a7e7", modifiers: "Bold"),
+    highlighted_item_style: (fg: "#9ccfd8", modifiers: "Bold"),
+    current_item_style: (fg: "#191726", bg: "#9ccfd8", modifiers: "Bold"),
+    borders_style: (fg: "#4b4673"),
+    highlight_border_style: (fg: "#9ccfd8"),
+    tab_bar: (
+        active_style: (fg: "#191726", bg: "#9ccfd8", modifiers: "Bold"),
+        inactive_style: (fg: "#817c9c"),
+    ),
+    progress_bar: (
+        symbols: ["█", "█", "█", " ", "█"],
+        track_style: (fg: "#373354"),
+        elapsed_style: (fg: "#9ccfd8"),
+        thumb_style: (fg: "#9ccfd8"),
+        use_track_when_empty: true,
+    ),
+    scrollbar: (
+        symbols: ["│", "█", "▲", "▼"],
+        track_style: (fg: "#373354"),
+        ends_style: (fg: "#4b4673"),
+        thumb_style: (fg: "#9ccfd8"),
+    ),
+    level_styles: (
+        info: (fg: "#9ccfd8", bg: "#191726"),
+        warn: (fg: "#f6c177", bg: "#191726"),
+        error: (fg: "#eb6f92", bg: "#191726"),
+        debug: (fg: "#b1d196", bg: "#191726"),
+        trace: (fg: "#c4a7e7", bg: "#191726"),
+    ),
+    song_table_format: [
+        (
+            prop: (kind: Property(Artist),
+                default: (kind: Text("Unknown"))
+            ),
+            label_prop: (kind: Text("Artist")),
+            width: "20%",
+        ),
+        (
+            prop: (kind: Property(Title),
+                default: (kind: Text("Unknown"))
+            ),
+            label_prop: (kind: Text("Title")),
+            width: "35%",
+        ),
+        (
+            prop: (kind: Property(Album), style: (fg: "#cdcbe0"),
+                default: (kind: Text("Unknown Album"), style: (fg: "#cdcbe0"))
+            ),
+            label_prop: (kind: Text("Album")),
+            width: "30%",
+        ),
+        (
+            prop: (kind: Property(Duration),
+                default: (kind: Text("-"))
+            ),
+            label_prop: (kind: Text("Duration")),
+            width: "15%",
+            alignment: Right,
+        ),
+    ],
+    cava: (
+        bar_symbols: ['▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'],
+        bar_width: 1,
+        bar_spacing: 1,
+        bg_color: "#232136",
+        bar_color: Gradient({
+            0:   "#569fba",
+            25:  "#9ccfd8",
+            50:  "#a3be8c",
+            75:  "#f6c177",
+            100: "#eb6f92",
+        }),
+    ),
+)

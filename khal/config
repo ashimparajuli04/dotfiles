@@ -1,0 +1,46 @@
+[calendars]
+
+# --- Google calendars (colors match the phone/iOS look) ---
+[[primary]]
+path = ~/.calendars/google/primary/
+color = "#0A84FF"
+
+[[family]]
+path = ~/.calendars/google/family/
+color = "#5E5CE6"
+
+[[chorpatan]]
+path = ~/.calendars/google/chorpatan/
+color = "#FF9F0A"
+
+[[holidays]]
+path = ~/.calendars/google/holidays-nepal/
+color = "#30D158"
+
+[[hindu-holidays]]
+path = ~/.calendars/google/hindu-holidays/
+color = "#30D158"
+
+# --- F1 (synced from the webcal feed) ---
+[[f1]]
+path = ~/.calendars/f1/
+color = "#0A84FF"
+
+# --- iCloud ---
+[[work]]
+path = ~/.calendars/icloud/work/
+color = "#98989F"
+
+[[birthdays]]
+path = ~/.contacts/icloud/card/
+type = birthdays
+color = "#30D158"
+
+[locale]
+timeformat = "%H:%M"
+dateformat = "%Y-%m-%d"
+longdateformat = "%Y-%m-%d"
+datetimeformat = "%Y-%m-%d %H:%M"
+longdatetimeformat = "%Y-%m-%d %H:%M"
+# iOS-style weeks start on Sunday (Monday = 0 ... Sunday = 6)
+firstweekday = 6

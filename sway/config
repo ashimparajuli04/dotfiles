@@ -1,0 +1,341 @@
+# Default config for sway
+#
+# Copy this to ~/.config/sway/config and edit it to your liking.
+#
+# Read `man 5 sway` for a complete reference.
+#
+# New Wave rice additions at the bottom - see /home/ashim/changes.md
+
+### Variables
+#
+# Logo key. Use Mod1 for Alt.
+# NOTE: right Alt is also mapped to Super (Mod4 = $mod) — see the keyboard
+# input block at the bottom of this file and ~/.config/xkb/.
+set $mod Mod4
+# Home row direction keys, like vim
+set $left h
+set $down j
+set $up k
+set $right l
+# Your preferred terminal emulator
+set $term kitty
+# Your preferred application launcher (New Wave: rofi type-7)
+set $menu bash /home/ashim/.config/rofi/launchers/type-7/launcher.sh
+
+### Output configuration
+#
+# Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
+output * bg /home/ashim/Pictures/wallpapers/newwave-1.png fill
+#
+# Example configuration:
+#
+#   output HDMI-A-1 resolution 1920x1080 position 1920,0
+#
+# You can get the names of your outputs by running: swaymsg -t get_outputs
+
+### Idle configuration
+#
+# Example configuration:
+#
+# exec swayidle -w \
+#          timeout 300 'swaylock -f -c 000000' \
+#          timeout 600 'swaymsg "output * power off"' resume 'swaymsg "output * power on"' \
+#          before-sleep 'swaylock -f -c 000000'
+#
+# This will lock your screen after 300 seconds of inactivity, then turn off
+# your displays after another 300 seconds, and turn your screens back on when
+# resumed. It will also lock your screen before your computer goes to sleep.
+
+### Input configuration
+#
+# Example configuration:
+#
+#   input type:touchpad {
+#       dwt enabled
+#       tap enabled
+#       natural_scroll enabled
+#       middle_emulation enabled
+#   }
+#
+#   input type:keyboard {
+#       xkb_layout "eu"
+#   }
+#
+# You can also configure each device individually.
+# Read `man 5 sway-input` for more information about this section.
+
+### Key bindings
+#
+# Basics:
+#
+    # Start a terminal
+    bindsym $mod+Return exec $term
+
+    # Kill focused window
+    bindsym $mod+Shift+q kill
+
+    # Start your launcher
+    bindsym $mod+d exec $menu
+
+    # Drag floating windows by holding down $mod and left mouse button.
+    # Resize them with right mouse button + $mod.
+    # Despite the name, also works for non-floating windows.
+    # Change normal to inverse to use left mouse button for resizing and right
+    # mouse button for dragging.
+    floating_modifier $mod normal
+
+    # Reload the configuration file
+    bindsym $mod+Shift+c reload
+
+    # Exit sway (logs you out of your Wayland session)
+    bindsym $mod+Shift+e exec swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your Wayland session.' -B 'Yes, exit sway' 'swaymsg exit'
+#
+# Moving around:
+#
+    # Move your focus around
+    bindsym $mod+$left focus left
+    bindsym $mod+$down focus down
+    bindsym $mod+$up focus up
+    bindsym $mod+$right focus right
+    # Or use $mod+[up|down|left|right]
+    bindsym $mod+Left focus left
+    bindsym $mod+Down focus down
+    bindsym $mod+Up focus up
+    bindsym $mod+Right focus right
+
+    # Move the focused window with the same, but add Shift
+    bindsym $mod+Shift+$left move left
+    bindsym $mod+Shift+$down move down
+    bindsym $mod+Shift+$up move up
+    bindsym $mod+Shift+$right move right
+    # Ditto, with arrow keys
+    bindsym $mod+Shift+Left move left
+    bindsym $mod+Shift+Down move down
+    bindsym $mod+Shift+Up move up
+    bindsym $mod+Shift+Right move right
+#
+# Workspaces:
+#
+    # Switch to workspace
+    bindsym $mod+1 workspace number 1
+    bindsym $mod+2 workspace number 2
+    bindsym $mod+3 workspace number 3
+    bindsym $mod+4 workspace number 4
+    bindsym $mod+5 workspace number 5
+    bindsym $mod+6 workspace number 6
+    bindsym $mod+7 workspace number 7
+    bindsym $mod+8 workspace number 8
+    bindsym $mod+9 workspace number 9
+    bindsym $mod+0 workspace number 10
+    # Move focused container to workspace
+    bindsym $mod+Shift+1 move container to workspace number 1
+    bindsym $mod+Shift+2 move container to workspace number 2
+    bindsym $mod+Shift+3 move container to workspace number 3
+    bindsym $mod+Shift+4 move container to workspace number 4
+    bindsym $mod+Shift+5 move container to workspace number 5
+    bindsym $mod+Shift+6 move container to workspace number 6
+    bindsym $mod+Shift+7 move container to workspace number 7
+    bindsym $mod+Shift+8 move container to workspace number 8
+    bindsym $mod+Shift+9 move container to workspace number 9
+    bindsym $mod+Shift+0 move container to workspace number 10
+    # Note: workspaces can have any name you want, not just numbers.
+    # We just use 1-10 as the default.
+#
+# Layout stuff:
+#
+    # You can "split" the current object of your focus with
+    # $mod+b or $mod+v, for horizontal and vertical splits
+    # respectively.
+    bindsym $mod+b splith
+    bindsym $mod+v splitv
+
+    # Switch the current container between different layout styles
+    bindsym $mod+s layout stacking
+    bindsym $mod+w layout tabbed
+    bindsym $mod+e layout toggle split
+
+    # Make the current focus fullscreen
+    bindsym $mod+f fullscreen
+
+    # Toggle the current focus between tiling and floating mode
+    bindsym $mod+Shift+space floating toggle
+
+    # Swap focus between the tiling area and the floating area
+    bindsym $mod+space focus mode_toggle
+
+    # Move focus to the parent container
+    bindsym $mod+a focus parent
+#
+# Scratchpad:
+#
+    # Sway has a "scratchpad", which is a bag of holding for windows.
+    # You can send windows there and get them back later.
+
+    # Move the currently focused window to the scratchpad
+    bindsym $mod+Shift+minus move scratchpad
+
+    # Show the next scratchpad window or hide the focused scratchpad window.
+    # If there are multiple scratchpad windows, this command cycles through them.
+    bindsym $mod+minus scratchpad show
+#
+# Resizing containers:
+#
+mode "resize" {
+    # left will shrink the containers width
+    # right will grow the containers width
+    # up will shrink the containers height
+    # down will grow the containers height
+    bindsym $left resize shrink width 10px
+    bindsym $down resize grow height 10px
+    bindsym $up resize shrink height 10px
+    bindsym $right resize grow width 10px
+
+    # Ditto, with arrow keys
+    bindsym Left resize shrink width 10px
+    bindsym Down resize grow height 10px
+    bindsym Up resize shrink height 10px
+    bindsym Right resize grow width 10px
+
+    # Return to default mode
+    bindsym Return mode "default"
+    bindsym Escape mode "default"
+}
+bindsym $mod+r mode "resize"
+#
+# Utilities:
+#
+    # Special keys to adjust volume via PulseAudio
+    bindsym --locked XF86AudioMute exec pactl set-sink-mute \@DEFAULT_SINK@ toggle
+    bindsym --locked XF86AudioLowerVolume exec pactl set-sink-volume \@DEFAULT_SINK@ -5%
+    bindsym --locked XF86AudioRaiseVolume exec pactl set-sink-volume \@DEFAULT_SINK@ +5%
+    bindsym --locked XF86AudioMicMute exec pactl set-source-mute \@DEFAULT_SOURCE@ toggle
+
+    # Special keys to control media via playerctl
+    bindsym --locked XF86AudioPlay exec playerctl play-pause
+    bindsym --locked XF86AudioPause exec playerctl play-pause
+    bindsym --locked XF86AudioPrev exec playerctl previous
+    bindsym --locked XF86AudioNext exec playerctl next
+    bindsym --locked XF86AudioStop exec playerctl stop
+
+    # Special keys to adjust brightness via brightnessctl
+    bindsym --locked XF86MonBrightnessDown exec brightnessctl set 5%-
+    bindsym --locked XF86MonBrightnessUp exec brightnessctl set 5%+
+
+    # Special key to take a screenshot with grim
+    bindsym Print exec grim
+
+#
+# Status Bar:
+#
+# Read `man 5 sway-bar` for more information about this section.
+#
+# [New Wave] The built-in swaybar is disabled, Waybar is used instead.
+#
+#bar {
+#    position top
+#
+#    # When the status_command prints a new line to stdout, swaybar updates.
+#    # The default just shows the current date and time.
+#    status_command while date +'%Y-%m-%d %X'; do sleep 1; done
+#
+#    colors {
+#        statusline #ffffff
+#        background #323232
+#        inactive_workspace #32323200 #32323200 #5c5c5c
+#    }
+#}
+
+### Touchpad gestures
+# 3-finger horizontal swipe: right = previous (left) workspace,
+# left = next (right) workspace; both created on demand like pressing Mod+N.
+# No previous workspace exists on workspace 1, so that swipe is ignored there.
+bindgesture swipe:3:left exec ~/.config/sway/scripts/gesture-workspace.py right
+bindgesture swipe:3:right exec ~/.config/sway/scripts/gesture-workspace.py left
+
+# 4-finger swipe: move the focused container; if it can't move (layout
+# edge), it is carried to the adjacent workspace instead
+bindgesture swipe:4:left exec ~/.config/sway/scripts/gesture-move.py left
+bindgesture swipe:4:right exec ~/.config/sway/scripts/gesture-move.py right
+bindgesture swipe:4:up exec ~/.config/sway/scripts/gesture-move.py up
+bindgesture swipe:4:down exec ~/.config/sway/scripts/gesture-move.py down
+
+include /etc/sway/config.d/*
+
+# NEW WAVE ---------------------------------------------------------------------
+# Ported from https://github.com/LoneWolf4713/new-wave (see /home/ashim/changes.md)
+
+# Touchpad Click --
+input "type:touchpad" {
+    dwt enabled
+    tap enabled
+    middle_emulation enabled
+    scroll_method edge
+    natural_scroll enabled
+}
+
+# Right Alt as an extra $mod key:
+# maps right Alt to Super (Mod4) through the custom XKB option defined in
+# ~/.config/xkb/symbols/custom (+ ~/.config/xkb/rules/evdev). Left Alt and the
+# Win keys keep their normal behavior; the Logo key still works as $mod too.
+input "type:keyboard" {
+    xkb_options custom:ralt_super
+}
+
+# Gaps And No Borders:
+# NOTE (sway 1.12): "inner" spaces each window (including workspace edges),
+# "outer" is ADDITIONAL workspace spacing -> edge gap = inner + outer.
+# Tuned per user request: 6px edges / 6px between windows, top gap matched
+# to the Waybar pills (margin-top 1 + 5px pill margin). See ~/changes.md.
+gaps inner 6
+gaps outer 0
+default_border none
+default_floating_border none
+font pango:monospace 1
+titlebar_padding 1
+titlebar_border_thickness 0
+
+# Rofi Menus:
+bindsym $mod+m exec bash /home/ashim/.config/rofi/applets/bin/mpd.sh
+bindsym XF86PowerOff exec qs ipc call powermenu toggle
+
+# GTK Theme:
+set $gnome-schema org.gnome.desktop.interface
+exec_always {
+    gsettings set $gnome-schema gtk-theme 'Nightfox-Dusk-B'
+    gsettings set $gnome-schema icon-theme 'Flat-Remix-Blue-Dark'
+    gsettings set $gnome-schema cursor-theme 'Bibata-Modern-Ice'
+    gsettings set $gnome-schema font-name 'SF Pro Display'
+}
+
+# MPD / Music Setup:
+# mpd is started by the systemd user service 'mpd.service' (systemctl --user enable --now mpd)
+# exec --no-startup-id mpd
+exec --no-startup-id bash /home/ashim/.config/mpd/mpd-notify
+# mpd-lyricsd is managed by the systemd user service 'mpd-lyricsd.service' (auto-restarts)
+assign [app_id="Spotify"] workspace number 4
+assign [app_id="rmpc"] workspace number 3
+exec --no-startup-id kitty --class rmpc rmpc
+
+# Notifications:
+exec --no-startup-id dunst
+
+# Focus apps' windows when they request attention (e.g. clicking Discord's tray icon):
+exec --no-startup-id bash /home/ashim/.config/sway/scripts/urgent-focus.sh
+
+# Waybar (replaces the built-in swaybar):
+# wait for MPD first, so waybar's 'mpd' module doesn't get stuck disconnected
+exec --no-startup-id sh -c 'for i in $(seq 1 50); do mpc status >/dev/null 2>&1 && break; sleep 0.2; done; exec waybar'
+
+# EWW (music widget, bottom left):
+exec --no-startup-id eww daemon
+exec --no-startup-id sh -c "sleep 1 && eww open example"
+
+# Battery Alert:
+exec --no-startup-id /home/ashim/.config/battery-alert/battery-alert
+
+# Quickshell (Bluetooth / Wi-Fi / Sound / Power popovers, toggled from the Waybar icons):
+exec --no-startup-id quickshell --no-duplicate
+
+# Brightness CTRL (F2/F3, in addition to the Fn keys above):
+bindsym F2 exec brightnessctl set 5%-
+bindsym F3 exec brightnessctl set 5%+

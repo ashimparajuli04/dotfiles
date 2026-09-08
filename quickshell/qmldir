@@ -1,0 +1,15 @@
+singleton Theme 1.0 Theme.qml
+ToggleSwitch 1.0 ToggleSwitch.qml
+DeviceRow 1.0 DeviceRow.qml
+BluetoothPanel 1.0 BluetoothPanel.qml
+VolumeSlider 1.0 VolumeSlider.qml
+AudioRow 1.0 AudioRow.qml
+SoundPanel 1.0 SoundPanel.qml
+WifiRow 1.0 WifiRow.qml
+WifiPanel 1.0 WifiPanel.qml
+PowermenuPanel 1.0 PowermenuPanel.qml
+CalendarPanel 1.0 CalendarPanel.qml
+CalendarAgenda 1.0 CalendarAgenda.qml
+CalendarMonth 1.0 CalendarMonth.qml
+EventRow 1.0 EventRow.qml
+BrightnessPill 1.0 BrightnessPill.qml

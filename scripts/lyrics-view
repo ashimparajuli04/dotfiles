@@ -1,0 +1,140 @@
+#!/usr/bin/env python3
+"""
+Time-synced lyrics viewer for the eww desktop widget.
+
+Reads the current MPD track, finds the matching .lrc file in
+~/.local/share/lyrics/, and outputs a rolling window of lines
+centered on the currently-playing line (Apple Music style).
+
+Falls back to ~/Music/.lyrics/lyrics.txt (Genius plain text)
+when no .lrc file exists for the current track.
+"""
+
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+LYRICS_DIR = Path.home() / ".local/share/lyrics"
+FALLBACK_FILE = Path.home() / "Music/.lyrics/lyrics.txt"
+
+# LRC timestamp: [mm:ss.xx] or [mm:ss]
+TS_RE = re.compile(r'\[(\d+):(\d+(?:\.\d+)?)\]')
+
+
+def mpc(*args: str) -> str:
+    """Run mpc and return stdout, or empty string on failure."""
+    try:
+        result = subprocess.run(
+            ["mpc", *args],
+            capture_output=True, text=True, timeout=5
+        )
+        return result.stdout.strip()
+    except Exception:
+        return ""
+
+
+def parse_time(t: str) -> float:
+    """Parse m:ss or h:mm:ss into seconds."""
+    parts = t.split(":")
+    if len(parts) == 3:
+        h, m, s = parts
+        return int(h) * 3600 + int(m) * 60 + float(s)
+    elif len(parts) == 2:
+        m, s = parts
+        return int(m) * 60 + float(s)
+    return 0.0
+
+
+def parse_lrc(content: str) -> list[tuple[float, str]]:
+    """Parse LRC content into [(timestamp, text), ...] sorted by time."""
+    lines: list[tuple[float, str]] = []
+    offset = 0.0
+
+    for line in content.splitlines():
+        # Check for offset tag
+        m = re.match(r'\[offset:([+-]?\d+)\]', line)
+        if m:
+            offset = int(m.group(1)) / 1000.0
+            continue
+
+        # Skip metadata tags [ti:], [ar:], [al:], [by:], etc.
+        if re.match(r'\[(ti|ar|al|by|re|ve|length|offset):', line):
+            continue
+
+        # Extract all timestamps on this line
+        timestamps = TS_RE.findall(line)
+        if not timestamps:
+            continue
+
+        text = TS_RE.sub('', line).strip()
+        for mm, ss in timestamps:
+            t = int(mm) * 60 + float(ss) + offset
+            lines.append((t, text))
+
+    lines.sort(key=lambda x: x[0])
+    return lines
+
+
+def find_active_index(lines: list[tuple[float, str]], pos: float) -> int:
+    """Find the index of the line that should be active at position `pos`."""
+    idx = 0
+    for i, (t, _) in enumerate(lines):
+        if t <= pos:
+            idx = i
+        else:
+            break
+    return idx
+
+
+def render_window(
+    lines: list[tuple[float, str]],
+    active_idx: int,
+    before: int = 3,
+    after: int = 4,
+) -> str:
+    """Render a rolling window of lines with the active line marked."""
+    start = max(0, active_idx - before)
+    end = min(len(lines), active_idx + after + 1)
+
+    out = []
+    for i in range(start, end):
+        _, text = lines[i]
+        if i == active_idx:
+            out.append(f"▶ {text}")
+        else:
+            out.append(f"  {text}")
+    return "\n".join(out)
+
+
+def main():
+    # Get current track file
+    file = mpc("current", "-f", "%file%")
+    if not file:
+        # Nothing playing — show fallback
+        if FALLBACK_FILE.exists():
+            print(FALLBACK_FILE.read_text())
+        return
+
+    # Get current position
+    pos_str = mpc("status", "%currenttime%")
+    pos = parse_time(pos_str) if pos_str else 0.0
+
+    # Find matching .lrc file
+    lrc_path = LYRICS_DIR / f"{Path(file).stem}.lrc"
+
+    if lrc_path.exists():
+        content = lrc_path.read_text()
+        lines = parse_lrc(content)
+        if lines:
+            active_idx = find_active_index(lines, pos)
+            print(render_window(lines, active_idx))
+            return
+
+    # Fallback to Genius plain text
+    if FALLBACK_FILE.exists():
+        print(FALLBACK_FILE.read_text())
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,160 @@
+# iCloud sync: calendars (CalDAV) + contacts (CardDAV)
+# Password: app-specific password from account.apple.com, stored in
+# ~/.config/vdirsyncer/icloud-password (chmod 600).
+#
+# Run manually:  vdirsyncer sync
+# Automatic:     systemd --user timer "vdirsyncer.timer" (hourly)
+
+[general]
+status_path = "~/.local/share/vdirsyncer/status/"
+
+[pair icloud_calendars]
+a = "icloud_calendars_remote"
+b = "icloud_calendars_local"
+# Only the "work" calendar exists on this account; skip "Reminders".
+collections = ["work"]
+conflict_resolution = "a wins"
+metadata = ["color", "displayname"]
+
+[storage icloud_calendars_remote]
+type = "caldav"
+url = "https://caldav.icloud.com/"
+username = "ashimparajuli799@gmail.com"
+password.fetch = ["command", "cat", "/home/ashim/.config/vdirsyncer/icloud-password"]
+
+[storage icloud_calendars_local]
+type = "filesystem"
+path = "~/.calendars/icloud/"
+fileext = ".ics"
+
+[pair icloud_contacts]
+a = "icloud_contacts_remote"
+b = "icloud_contacts_local"
+collections = ["card"]
+conflict_resolution = "a wins"
+
+[storage icloud_contacts_remote]
+type = "carddav"
+url = "https://contacts.icloud.com/"
+username = "ashimparajuli799@gmail.com"
+password.fetch = ["command", "cat", "/home/ashim/.config/vdirsyncer/icloud-password"]
+
+[storage icloud_contacts_local]
+type = "filesystem"
+path = "~/.contacts/icloud/"
+fileext = ".vcf"
+
+# ---------------- Google Calendar (main data source) ----------------
+# Legacy Google CalDAV endpoint (works with app passwords; the newer
+# apidata.googleusercontent.com one requires OAuth).
+# Each calendar is configured as its own single-collection pair because
+# vdirsyncer's automatic discovery is unreliable with Google's two-level
+# calendar URLs (<calendar-id>/events/).
+# Password: Google app password -> ~/.config/vdirsyncer/google-password
+
+[pair g_primary]
+a = "g_primary_remote"
+b = "g_primary_local"
+collections = null
+conflict_resolution = "a wins"
+
+[storage g_primary_remote]
+type = "caldav"
+url = "https://www.google.com/calendar/dav/ashimparajuli799%40gmail.com/events/"
+username = "ashimparajuli799@gmail.com"
+password.fetch = ["command", "cat", "/home/ashim/.config/vdirsyncer/google-password"]
+
+[storage g_primary_local]
+type = "filesystem"
+path = "~/.calendars/google/primary/"
+fileext = ".ics"
+
+[pair g_family]
+a = "g_family_remote"
+b = "g_family_local"
+collections = null
+conflict_resolution = "a wins"
+
+[storage g_family_remote]
+type = "caldav"
+url = "https://www.google.com/calendar/dav/family18409859158411747188%40group.calendar.google.com/events/"
+username = "ashimparajuli799@gmail.com"
+password.fetch = ["command", "cat", "/home/ashim/.config/vdirsyncer/google-password"]
+
+[storage g_family_local]
+type = "filesystem"
+path = "~/.calendars/google/family/"
+fileext = ".ics"
+
+[pair g_chorpatan]
+a = "g_chorpatan_remote"
+b = "g_chorpatan_local"
+collections = null
+conflict_resolution = "a wins"
+
+[storage g_chorpatan_remote]
+type = "caldav"
+url = "https://www.google.com/calendar/dav/000198afa8f13b3729b50cd58d785b23645608d18a84b7371683a634d75d2093%40group.calendar.google.com/events/"
+username = "ashimparajuli799@gmail.com"
+password.fetch = ["command", "cat", "/home/ashim/.config/vdirsyncer/google-password"]
+
+[storage g_chorpatan_local]
+type = "filesystem"
+path = "~/.calendars/google/chorpatan/"
+fileext = ".ics"
+
+[pair g_holidays_nepal]
+a = "g_holidays_nepal_remote"
+b = "g_holidays_nepal_local"
+collections = null
+conflict_resolution = "a wins"
+
+[storage g_holidays_nepal_remote]
+type = "caldav"
+url = "https://www.google.com/calendar/dav/cln2srjg4dk6ur39chgnig37e9nnas1eeon66obccln68obi5pjmurr7dhiisorfdk%40virtual/events/"
+username = "ashimparajuli799@gmail.com"
+password.fetch = ["command", "cat", "/home/ashim/.config/vdirsyncer/google-password"]
+
+[storage g_holidays_nepal_local]
+type = "filesystem"
+path = "~/.calendars/google/holidays-nepal/"
+fileext = ".ics"
+
+[pair g_hindu_holidays]
+a = "g_hindu_holidays_remote"
+b = "g_hindu_holidays_local"
+collections = null
+conflict_resolution = "a wins"
+
+[storage g_hindu_holidays_remote]
+type = "caldav"
+url = "https://www.google.com/calendar/dav/cln2sq39dpi7aqbjdkhmgrrcd5i62ua0ctp6utbg5pr2sor1dhimsp31e8n6errfctm6abj3dtmg%40virtual/events/"
+username = "ashimparajuli799@gmail.com"
+password.fetch = ["command", "cat", "/home/ashim/.config/vdirsyncer/google-password"]
+
+[storage g_hindu_holidays_local]
+type = "filesystem"
+path = "~/.calendars/google/hindu-holidays/"
+fileext = ".ics"
+
+# Bikram Sambat excluded by default: it is a daily Nepali-date feed that
+# would put an event pill on every day of the month view. To re-enable,
+# restore its pair from git/history and sync.
+
+# F1: taken from the webcal feed directly (Google's imported-calendar
+# event URLs are malformed for vdirsyncer via the legacy CalDAV endpoint).
+[pair f1_feed]
+a = "f1_feed_remote"
+b = "f1_feed_local"
+collections = null
+
+[storage f1_feed_remote]
+type = "http"
+url = "https://files-f1.motorsportcalendars.com/f1-calendar_p1_p2_p3_qualifying_sprint_gp_alarm-30.ics"
+
+[storage f1_feed_local]
+type = "filesystem"
+path = "~/.calendars/f1/"
+fileext = ".ics"
+
+

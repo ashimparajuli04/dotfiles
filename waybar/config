@@ -1,0 +1,226 @@
+{
+    "layer": "top",
+    "position": "top",
+    "margin-top": 1,
+    "margin-left": 1,
+    "margin-right": 1,
+    "height": 20,
+    "spacing": 0,
+    "modules-left": [
+        "sway/workspaces",
+        "custom/weather",
+        "custom/music-lyrics"
+    ],
+    "modules-center": [],
+    "modules-right": [
+    	"mpris",
+	"tray",
+	"custom/brightness",
+	"pulseaudio",
+	"bluetooth",
+        "network",
+        "battery",
+        "custom/powermenu"
+        
+    ],
+    "wlr/taskbar": {
+        "format": "{icon}",
+        "on-click": "activate",
+        "on-click-right": "fullscreen",
+        "icon-theme": "Flat-Remix-Blue-Dark",
+        "icon-size": 16,
+        "tooltip-format": "{title}",
+        "rewrite": {
+            "rmpc": "kitty"
+        }
+    },
+    "backlight": {
+        // "device": "acpi_video1",
+        "format": "{icon} {percent}%",
+        "format-icons": ["", "", "", "", "", "", "", "", ""]
+    },
+    // Invisible slot holder for the Quickshell brightness pill
+    // (BrightnessPill.qml renders on top of this). See changes.md §13.
+    "custom/brightness": {
+        "format": " ",
+        "tooltip": false
+    },
+    "sway/workspaces": {
+        "format": "",
+        "format-icons": {},
+        "all-outputs": true,
+        "persistent-workspaces": {
+            "1": [],
+            "2": [],
+            "3": [],
+            "4": [],
+            "5": []
+        }
+    },
+    "memory": {
+        "interval": 5,
+        "format": "   {}% ",
+        "max-length": 10
+    },
+    "cpu": {
+        "interval": 5,
+        "format": "   {}% ",
+        "max-length": 10
+    },
+    "tray": {
+        "icon-size": 16,
+        "spacing": 10,
+        "show-passive-items": true,
+        "reverse-direction": true
+    },
+    "clock": {
+        "tooltip-format": "<tt>{calendar}</tt>",
+        "format-alt": "   {:%a, %d %b %Y} ",
+        "format": "   {:%I:%M %p} "
+    },
+    "network": {
+        "format-wifi": "{icon}",
+        "format-disconnected": "󰤮",
+        "format-icons": [
+            "󰤯 ",
+            "󰤟 ",
+            "󰤢 ",
+            "󰤥 ",
+            "󰤨 "
+        ],
+        "tooltip-format-disconnected": "Disconnected",
+        "tooltip-format-wifi": "{icon} {essid}\n⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
+        "on-click": "qs ipc call wifi toggle",
+        "format-ethernet": "󰈀",
+        "tooltip-format-ethernet": "󰀂  {ifname}\n⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
+        "nospacing": 1,
+        "interval": 5
+    },
+    "bluetooth": {
+        "format": "{icon}",
+        "format-icons": {
+            "disabled": "󰂲",
+            "off": "󰂲",
+            "on": "󰂯",
+            "connected": "󰂱",
+            "default": "󰂯"
+        },
+        "tooltip-format": "{controller_alias}",
+        "tooltip-format-no-controller": "No Bluetooth controller",
+        "tooltip-format-connected": "{controller_alias}\n{num_connections} connected\n\n{device_enumerate}",
+        "tooltip-format-enumerate-connected": "{device_alias}",
+        "on-click": "qs ipc call bluetooth toggle",
+        "interval": 5
+    },
+    "pulseaudio": {
+        "format": "{icon}{volume}%",
+        "format-bluetooth": "{icon}{volume}%",
+        "nospacing": 1,
+        "tooltip-format": "Volume : {volume}%",
+        "format-muted": "󰝟 ",
+        "format-icons": {
+            "headphone": " ",
+            "default": [
+                "󰕿 ",
+                "󰖀 ",
+                "󰕾 "
+            ]
+        },
+        "on-click": "qs ipc call sound toggle",
+        "on-click-right": "pavucontrol",
+        "scroll-step": 1
+    },
+    "custom/launcher": {
+        "format": "  ",
+        "tooltip": false,
+        "on-click": "bash ~/.config/rofi/launchers/type-7/launcher.sh &"
+    },
+    "battery": {
+        "format": "{icon} {capacity}%",
+        "format-icons": {
+            "charging": [
+                "󰢜",
+                "󰂆",
+                "󰂇",
+                "󰂈",
+                "󰢝",
+                "󰂉",
+                "󰢞",
+                "󰂊",
+                "󰂋",
+                "󰂅"
+            ],
+            "default": [
+                "󰁺",
+                "󰁻",
+                "󰁼",
+                "󰁽",
+                "󰁾",
+                "󰁿",
+                "󰂀",
+                "󰂁",
+                "󰂂",
+                "󰁹"
+            ]
+        },
+        "interval": 5,
+        "states": {
+            "warning": 25,
+            "critical": 10
+        },
+        "tooltip": false
+    },
+    "custom/powermenu": {
+        "format": "⏻ ",
+        "tooltip": false,
+        "on-click": "qs ipc call powermenu toggle"
+    },
+    "mpris": {
+	"format": "{player_icon} {dynamic}",
+	"format-paused": "{status_icon} <i>{dynamic}</i>",
+	"player-icons": {
+		"spotify": "",
+		"default": "🎵"
+	},
+	"dynamic-order": ["title"],
+	"interval": 5,
+	"status-icons": {
+		"paused": "⏸"
+	},
+	"ignored-players": ["firefox"]
+},
+
+  "custom/discord": {
+    "format": "{}",
+    "exec": "/home/ashim/.config/waybar/scripts/app-icon.sh Discord \uf066f",
+    "interval": 2,
+    "hide-empty-text": true,
+    "tooltip": false,
+    "on-click": "/home/ashim/.config/waybar/scripts/app-toggle.sh discord discord"
+  },
+  "custom/qbittorrent": {
+    "format": "{}",
+    "exec": "/home/ashim/.config/waybar/scripts/app-icon.sh qbittorrent \uf05d2",
+    "interval": 2,
+    "hide-empty-text": true,
+    "tooltip": false,
+    "on-click": "/home/ashim/.config/waybar/scripts/app-toggle.sh qbittorrent qbittorrent"
+  },
+  "custom/weather": {
+    "format": "{}",
+    "format-alt": "{alt}",
+    "format-alt-click": "click-left",
+    "interval": 3600,
+    "return-type": "json",
+    "exec": "~/.config/waybar/weather-waybar-module.sh",
+    "exec-if": "ping openweathermap.org -c1",
+    "signal": 8
+  },
+  "custom/music-lyrics": {
+    "format": "{}",
+    "exec": "~/.config/waybar/scripts/music-lyrics.sh",
+    "interval": 1,
+    "return-type": "text",
+    "on-click": "mpc toggle"
+  },
+}

@@ -1,0 +1,6 @@
+[Unit]
+Description=Fetch synced lyrics for the MPD library (LRCLIB)
+
+[Service]
+Type=oneshot
+ExecStart=/home/ashim/Programming/dotfiles/scripts/fetch-lyrics

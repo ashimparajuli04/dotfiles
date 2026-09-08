@@ -1,0 +1,10 @@
+import Quickshell
+
+ShellRoot {
+    BluetoothPanel {}
+    WifiPanel {}
+    SoundPanel {}
+    PowermenuPanel {}
+    CalendarPanel {}
+    BrightnessPill {}
+}
