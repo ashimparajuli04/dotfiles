@@ -3,7 +3,7 @@
 (defpoll artist		:interval "5s"  "~/.config/eww/music artist")
 (defpoll playpause	:interval "5s"  "~/.config/eww/music statusicon")
 (defpoll songtime 	:interval "5s"  "~/.config/eww/music length")
-(defpoll lyrics 	:interval "1s"  "/home/ashim/Programming/dotfiles/scripts/lyrics-view")
+(defpoll lyrics 	:interval "2s"  "/home/ashim/Programming/dotfiles/scripts/lyrics-view")
 
 
 (defwidget music []

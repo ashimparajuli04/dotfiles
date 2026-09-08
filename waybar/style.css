@@ -219,6 +219,40 @@ window#waybar.hidden {
   min-width: 70px;
 }
 
+/* Invisible slot for the Quickshell sound pill (SoundPill.qml draws on
+   top of it); reserves the old pulseaudio pill footprint. See changes.md §14. */
+#custom-sound {
+  background-color: transparent;
+  padding: 0;
+  margin-top: 5px;
+  margin-bottom: 0px;
+  margin-right: 10px;
+  min-width: 64px;
+}
+
+/* Invisible slot for the Quickshell bluetooth pill (BluetoothPill.qml
+   draws on top of it); reserves the old bluetooth pill footprint.
+   See changes.md §15. */
+#custom-bluetooth {
+  background-color: transparent;
+  padding: 0;
+  margin-top: 5px;
+  margin-bottom: 0px;
+  margin-right: 10px;
+  min-width: 27px;
+}
+
+/* Invisible slot for the Quickshell wifi pill (WifiPill.qml draws on top
+   of it); reserves the old network pill footprint. See changes.md §15. */
+#custom-wifi {
+  background-color: transparent;
+  padding: 0;
+  margin-top: 5px;
+  margin-bottom: 0px;
+  margin-right: 10px;
+  min-width: 42px;
+}
+
 #network {
   padding-left: 0.2em;
   color: #268bd2;
@@ -237,8 +271,10 @@ window#waybar.hidden {
   color: #e78284;
   margin-left: -12px;
   margin-right: 5px;
-  padding-left: 12px;
-  padding-right: 12px;
+  /* 8px (not 12px) so the wider 💢 emoji keeps the pill at its old width
+     and the battery cluster's 10px gaps stay intact. See changes.md §16. */
+  padding-left: 8px;
+  padding-right: 8px;
   border-radius: 0px 8px 8px 0px;
 }
 

@@ -5,9 +5,13 @@
 #    " Let Her Go: only know you love her when you let her go"
 
 LYRICS_DIR="$HOME/.local/share/lyrics"
-ICON_PLAY=''
-ICON_PAUSE=''
-ICON_STOP=''
+# The icon shows what pressing the pill will do:
+#   bars while playing  -> press pauses
+#   triangle while paused -> press plays
+#   note when stopped / disconnected
+ICON_WHILE_PLAYING=$'\uf04c'   # nf-fa-pause (press -> pause)
+ICON_WHILE_PAUSED=$'\uf04b'    # nf-fa-play  (press -> play)
+ICON_STOP=$'\uf001'            # nf-fa-music
 
 # ---- MPD status ------------------------------------------------------------
 if ! status=$(mpc status 2>/dev/null); then
@@ -15,10 +19,12 @@ if ! status=$(mpc status 2>/dev/null); then
     exit 0
 fi
 
-state=$(printf '%s\n' "$status" | head -n1 | sed -E 's/^\[([a-z]+)\].*/\1/')
+# NOTE: line 1 of `mpc status` is the current song title; the [state]
+# token is on line 2 — taking line 1 made the state never match.
+state=$(printf '%s\n' "$status" | sed -n '2{s/^\[\([a-z]*\)\].*/\1/;p}')
 case "$state" in
-    playing) icon="$ICON_PLAY" ;;
-    paused)  icon="$ICON_PAUSE" ;;
+    playing) icon="$ICON_WHILE_PLAYING" ;;
+    paused)  icon="$ICON_WHILE_PAUSED" ;;
     *)       icon="$ICON_STOP" ;;
 esac
 

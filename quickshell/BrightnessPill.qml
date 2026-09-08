@@ -11,6 +11,8 @@ import Quickshell.Wayland
 //     calendar chip in CalendarPanel.qml)
 //   * rightMargin = distance from the right screen edge to the pill's
 //     right edge (tuned against the real bar with screenshots)
+//   * the sound pill (to the right) pushes this pill left while it
+//     expands on hover (see PillBus.qml)
 // The input mask keeps the transparent remainder of the surface
 // click-through, so neighbouring Waybar pills stay clickable.
 Scope {
@@ -140,7 +142,7 @@ Scope {
             right: root.rightMargin
         }
 
-        implicitWidth: root.expandedWidth
+        implicitWidth: root.expandedWidth + PillBus.maxPushBrightness
         implicitHeight: root.pillHeight
         color: "transparent"
         exclusiveZone: 0
@@ -161,7 +163,10 @@ Scope {
         Rectangle {
             id: pill
             anchors.top: parent.top
-            anchors.right: parent.right
+            // Right edge normally at 1643; the sound/bt/wifi pills (to
+            // the right) push this pill left while they expand — the
+            // shifts cascade, see PillBus.qml.
+            x: win.width - width - PillBus.pushBrightness
             height: root.pillHeight
             width: root.expanded ? root.expandedWidth : root.collapsedWidth
             radius: 8

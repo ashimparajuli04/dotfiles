@@ -7,4 +7,7 @@ ShellRoot {
     PowermenuPanel {}
     CalendarPanel {}
     BrightnessPill {}
+    SoundPill {}
+    BluetoothPill {}
+    WifiPill {}
 }

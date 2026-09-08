@@ -13,11 +13,11 @@ Scope {
     readonly property color red: "#FF453A"
     readonly property color textPrimary: "#FFFFFF"
     readonly property color textSecondary: "#98989F"
-    readonly property color cardBg: "#1C1C1E"
+    readonly property color cardBg: Theme.bg
     readonly property color cardBorder: "#2C2C2E"
     readonly property color pillBg: "#2C2C2E"
     readonly property color pillHover: "#3A3A3C"
-    readonly property color monthBg: "#0B0B0D"
+    readonly property color monthBg: Theme.bg
     readonly property color chipBg: "#040404"
 
     // ---------- state ----------

@@ -502,6 +502,9 @@ spacer measures 70px; the Waybar restart is visually clean (neighbours unmoved).
   calendar chip (§11) — both unchanged by this work.
 - Quickshell still logs the pre-existing Qt 6.11→6.12 rebuild warning from §10; the
   current quickshell instance runs fine.
+- Note (see §14/§15): the sound, bluetooth and wifi pills expand leftward into this
+  pill's gap when hovered and push it left via PillBus.qml; its resting position is
+  unchanged.
 
 **Revert:**
 ```bash
@@ -517,3 +520,268 @@ rm ~/.config/quickshell/BrightnessPill.qml
 # style.css: remove the #custom-brightness rule block
 pkill -x waybar; setsid -f waybar >/dev/null 2>&1
 ```
+
+---
+
+## 14. Hover-expanding volume pill with slider (2026-10-09)
+
+The Waybar `pulseaudio` pill was replaced by a **Quickshell overlay pill** that expands
+on hover and reveals a draggable slider — same pattern as the brightness pill (§13).
+The slider always controls the **PipeWire default sink**: the exact same device the
+keyboard volume keys drive (`pactl ... @DEFAULT_SINK@`). When two devices play at once,
+only the default sink is affected, just like the keys.
+
+**New files (`~/.config/quickshell/`):**
+- `SoundPill.qml` — idle it looks like the old pulseaudio pill: black rounded pill,
+  glyph + `NN%` in mauve `#a55377` (mute → 󰝟 in `#fb958b`; headphones/bluez → the
+  FA headphone glyph; otherwise 󰕿/󰖀/󰕾 by level). On hover it animates width 64→154px
+  (220ms OutCubic) **leftward** (right edge pinned at x=1719) and fades in the slider;
+  on mouse-leave (or after a drag) it collapses back after a 260ms grace period.
+  Wheel = ±5% (matches the keyboard step), drag = live sink volume (coalesced to
+  ~30ms). Drag never unmutes.
+- `PillBus.qml` — singleton that coordinates the pill row (generalized to the full
+  cascade in §15).
+
+**Modified:**
+- `VolumeSlider.qml` — added optional `trackColor`/`fillColor`/`knobColor` (defaults
+  unchanged), a `dragging` readonly property and a `dragged(v)` signal; SoundPanel
+  usage unaffected.
+- `qmldir` + `shell.qml` — `SoundPill` registered.
+- `~/.config/waybar/config` — `"pulseaudio"` → `"custom/sound"` spacer in
+  `modules-right` (old block kept for rollback).
+- `style.css` — `#custom-sound` reserves the slot (`min-width: 64px`, transparent).
+
+**IPC:** `qs ipc call volume up|down|set <int>` (`set` takes 0–100).
+
+**Geometry:** pill sits at x 1655–1718 collapsed (`rightMargin: 201`), pixel-identical
+to the old pulseaudio pill; expanded it grows to 154px leftward. Since §15 the
+bluetooth and wifi pills push this pill further left while they expand (PillBus).
+
+**Verified 2026-10-09:** slot alignment before/after the swap; expansion frames
+(64→154, right edge pinned, brightness pushed with a constant 11px gap); emulated
+drag applied (72%→47%) and volume restored exactly (raw 47183); external
+`pactl set-sink-volume 55%` reflected live; mute toggle reflected (glyph + color);
+collapse restores the exact baseline; `qs ipc call volume set` works.
+
+**Revert:**
+```bash
+rm ~/.config/quickshell/SoundPill.qml
+# remove "SoundPill 1.0 SoundPill.qml" from ~/.config/quickshell/qmldir and
+# "SoundPill {}" from shell.qml
+# Waybar: swap "custom/sound" back to "pulseaudio" in modules-right and remove the
+# "custom/sound" module block; style.css: remove the #custom-sound rule
+pkill -x waybar; setsid -f waybar >/dev/null 2>&1
+```
+
+---
+
+## 15. Hover-expanding Bluetooth & Wi-Fi pills with name-on-hover (2026-10-09)
+
+The Waybar `bluetooth` and `network` pills were replaced by Quickshell overlay pills
+that expand **leftward** on hover and reveal the connected device name(s) / the
+connected SSID. Same interaction as §13/§14, now as a full cascade: every pill
+publishes its live expansion delta to `PillBus.qml`, and every pill to its left binds
+its position shift to the sum of the deltas of the pills on its right (brightness ·
+sound · bluetooth · wifi) — the gaps stay constant while the row slides (push, never
+overlap).
+
+**New files (`~/.config/quickshell/`):**
+- `BluetoothPill.qml` — idle: same glyphs/colour as the old module (󰂱 connected /
+  󰂯 on / 󰂲 off, `#81a1c1`). Hover reveals the connected device name(s) joined with
+  ", " (e.g. "WH-1000XM4"); fallbacks: "No device" / "Off". Left-click opens the
+  BluetoothPanel (`qs ipc call bluetooth toggle` — exactly what the Waybar module's
+  on-click did).
+- `WifiPill.qml` — idle: the same 5 signal glyphs as the old module (F092F…F0928),
+  `#268bd2`; disconnected 󰤮 in `#fb958b`; ethernet 󰈀. Hover reveals the SSID
+  (e.g. "TinTin_5"); fallbacks "Ethernet" / "Disconnected". Left-click opens the
+  WifiPanel (`qs ipc call wifi toggle`).
+
+**Icon fidelity details:**
+- The Wi-Fi icon is picked by replicating Waybar 0.15's own pipeline: `/proc/net/wireless`
+  RSSI → `strength = 100 − |dBm + 45| / 45 · 100` → `floor(strength / 20)` → the same
+  5 format-icons. (NetworkManager's percentage is only the startup fallback.) This
+  matters because Waybar's "punish too-strong signals" formula disagrees with NM's
+  percentage at bucket edges — a one-off "wrong glyph" observation during testing was
+  traced to exactly this (the old bar had shown the strongest-signal icon), not to a
+  rendering bug.
+- Glyphs render in `Material Design Icons` — the first font in the old Waybar pill's
+  CSS stack — so shapes match the pre-Quickshell bar; ink placement measured within
+  0.5px. Name text stays JetBrainsMono Nerd Font.
+- Long names cap at 140px and elide with "…". Multiple connected BT devices are joined
+  with ", ".
+
+**Modified:**
+- `PillBus.qml` — generalized: live `soundPush`/`btPush`/`wifiPush`, max values and
+  the derived per-pill sums.
+- `SoundPill.qml` / `BrightnessPill.qml` — windows widened so they can slide left by
+  the pushes coming from their right; nothing else changed (resting positions
+  pixel-identical to before).
+- `~/.config/waybar/config` — `"bluetooth"`/`"network"` → `"custom/bluetooth"` /
+  `"custom/wifi"` spacers in `modules-right` (old module blocks kept for rollback).
+- `style.css` — `#custom-bluetooth` (`min-width: 27px`) and `#custom-wifi`
+  (`min-width: 42px`) reserve the exact slots.
+
+**Geometry:** bt slot 1729–1756 (`rightMargin: 164`), wifi slot 1766–1808
+(`rightMargin: 112`); both expand leftward with right edges pinned. Measured slots
+before and after the swap: identical, no reflow.
+
+**Verified 2026-10-09:** collapsed layout pixel-identical after the Waybar swap;
+hover frames for both pills (bt 27→110px, wifi 42→109px, left edges travel, gaps
+constant at 10–11px through the whole cascade); collapse restores the exact baseline;
+Wi-Fi → Bluetooth hand-off; pill clicks open the Bluetooth/Wifi panels (screenshots
+captured) and `qs ipc call ... hide` closes them; glyph shape/placement compared
+against pre-swap bar crops.
+
+**Notes:**
+- The old hover tooltips are gone by design; the info they showed now lives in the
+  pill expansion itself.
+- The only non-pushable neighbours are Waybar's mpris/tray (left of the brightness
+  pill, usually hidden): when the cluster slides they can be transiently covered.
+  The battery/power pills to the right never move.
+- No disruptive tests were run (no Wi-Fi/BT disconnect of the live connection): the
+  disconnected/ethernet/"no device" branches are code-reviewed paths; the panels
+  themselves are the place to connect/disconnect.
+
+**Revert:**
+```bash
+rm ~/.config/quickshell/BluetoothPill.qml ~/.config/quickshell/WifiPill.qml
+# remove "BluetoothPill 1.0 ..." / "WifiPill 1.0 ..." from qmldir and
+# "BluetoothPill {}" / "WifiPill {}" from shell.qml
+# SoundPill.qml / BrightnessPill.qml: restore their implicitWidth and pill x bindings
+# to the §13/§14 versions; PillBus.qml can stay or be deleted (only the pills use it)
+# Waybar: swap "custom/bluetooth"→"bluetooth", "custom/wifi"→"network" in
+# modules-right and remove the two spacer blocks; style.css: remove the
+# #custom-bluetooth / #custom-wifi rules
+pkill -x waybar; setsid -f waybar >/dev/null 2>&1
+```
+
+---
+
+## 16. Music pill tooltip removed, power button → 💢 (2026-10-09)
+
+Two small bar tweaks:
+
+- `custom/music-lyrics` (the 🎵 lyrics pill in the left cluster) no longer shows the
+  GTK hover tooltip: added `"tooltip": false` (custom modules default to showing
+  their output text as a tooltip).
+- `custom/powermenu` glyph `⏻` → `💢` (rendered in colour via Noto Color Emoji).
+  The emoji's larger advance made the pill ~8px wider and pushed the whole
+  right-hand cluster (battery + the spacers under the §14/§15 pills) 8px left, so
+  `#custom-powermenu` horizontal padding was reduced 12px → 8px to keep the pill's
+  old width — this restores the battery position and the uniform 10px gaps.
+
+**Verified 2026-10-09:** hovering the music pill shows no tooltip (screenshot);
+battery+power run back at x 1818–1913 (battery ink 1827–1865, same as pre-emoji);
+all §14/§15 pill slots unchanged; battery cluster gaps 10px again.
+
+**Revert:**
+```bash
+# ~/.config/waybar/config: remove the "tooltip": false line from custom/music-lyrics;
+# change custom/powermenu "format" back to "⏻ "
+# ~/.config/waybar/style.css: #custom-powermenu padding-left/right back to 12px
+pkill -x waybar; setsid -f waybar >/dev/null 2>&1
+```
+
+---
+
+## 17. Music pill: real play/pause state icon (2026-10-09)
+
+The lyrics pill now shows the actual MPD state instead of a static ♪. Two bugs in
+`~/.config/waybar/scripts/music-lyrics.sh` were behind it:
+
+- The state was parsed from **line 1** of `mpc status` — but line 1 is the current
+  song title; the `[playing]`/`[paused]` token is on line 2. The case therefore never
+  matched and every track (playing or paused) fell through to the ♪ "stop" glyph.
+  Fixed with `sed -n '2{s/^\[\([a-z]*\)\].*/\1/;p}'`.
+- The icon now shows the **action the click will perform**: **⏸ bars while playing
+  (press → pause), ▶ triangle while paused (press → play)**, ♪ when
+  stopped/disconnected. Variables renamed to `ICON_WHILE_PLAYING`/`ICON_WHILE_PAUSED`
+  and written as explicit `$'\uf04b'`-style escapes so they can't be mangled by
+  editors again.
+
+**Verified 2026-10-09:** playing → ⏸, `mpc pause` → ▶, `mpc play` → ⏸ again (live
+pill screenshots at each step); `bash -n` syntax check passes.
+
+**Revert:**
+```bash
+# ~/.config/waybar/scripts/music-lyrics.sh:
+#  - restore: state=$(printf '%s\n' "$status" | head -n1 | sed -E 's/^\[([a-z]+)\].*/\1/')
+#  - restore the original icon lines (literal glyphs: ICON_PLAY=U+F04C,
+#    ICON_PAUSE=U+F04B, ICON_STOP=U+F001) and the case labels back to
+#    $ICON_PLAY / $ICON_PAUSE
+```
+
+---
+
+## 18. All Waybar-opened Quickshell panels share the pill background (2026-10-09)
+
+Every Quickshell popover that can be opened from the Waybar now uses the same
+`#040404` frame background as the Waybar pills (`Theme.bg`):
+
+- `CalendarPanel.qml`: hover card `cardBg` `#1C1C1E` → `Theme.bg`; full popup
+  `monthBg` `#0B0B0D` → `Theme.bg`. The clock chip was already `#040404`.
+- `PowermenuPanel.qml`: frame `bg` `#11092D` → `Theme.bg`. Metrics, tile
+  (`#281657`) / selection (`#DF5296`) colours, the two side bars and `barText`
+  still match the rofi theme — only the window background changed.
+- Sound / Wi-Fi / Bluetooth panels already used `Theme.bg`; unchanged.
+
+**Verified 2026-10-09:** opened every panel and pixel-sampled screenshots —
+calendar popup and hover-card frames `#040404` (border, header and event chips
+unchanged); powermenu frame found at (560,371), 800x369, margin samples
+`#040404`; sound/wifi/bluetooth frames `#040404` dominant with their accents
+intact. Heads-up found while testing: in Quickshell 0.3.1,
+`qs ipc call <target> show` only prints the target's function list and does not
+open the panel (the CLI swallows the trailing `show` as its own subcommand);
+`toggle` — what the pills/Waybar call — works fine.
+
+**Revert:**
+```bash
+# ~/.config/quickshell/CalendarPanel.qml:
+#   cardBg:  Theme.bg → "#1C1C1E"
+#   monthBg: Theme.bg → "#0B0B0D"
+# ~/.config/quickshell/PowermenuPanel.qml:
+#   bg: Theme.bg → "#11092D"  (restore the rofi wording of the comment)
+# Save the files; Quickshell hot-reloads automatically.
+```
+
+---
+
+## 19. Dotfiles repo — full rice backup, setup.sh and AGENTS.md (2026-10-09)
+
+All rice configs now live in `~/Programming/dotfiles` and are symlinked into
+`~/.config`; assets are copied into the repo and symlinked to their destinations.
+The repo is source of truth — edit there, it is live immediately.
+
+- Config dirs: battery-alert, cava, dunst, eww, gtk-3.0, gtk-4.0, khal, mpd,
+  mpd-lyricsd, ncmpcpp, quickshell, rmpc, rofi, sway, systemd, vdirsyncer,
+  waybar, xkb (plus kitty/nvim from before).
+- Assets added to the repo: `fonts/{SFPro,newwave}`,
+  `icons/{vinyl.svg,Flat-Remix-Blue-Dark}`, `themes/Nightfox-*`,
+  `wallpapers/newwave-1.png`, `bin/mpd-lyricsd`, `scripts/{fetch-lyrics,lyrics-view}`,
+  `changes.md` itself.
+- Gitignored: `mpd/mpd.db`, `mpd/state`, `ncmpcpp/error.log`,
+  `systemd/user/*.wants/`, `vdirsyncer/*-password`, `scripts/.venv`.
+- Repointed: eww.yuck lyrics defpoll and `fetch-lyrics.service` ExecStart now
+  use `~/Programming/dotfiles/scripts/...`; fetch-lyrics shebang uses the
+  repo venv.
+- `setup.sh` (new): idempotent one-shot install for a new machine — packages
+  (pacman + AUR), path repair for different home/repo paths, symlinks with
+  backup, assets, lyrics venv, gsettings, systemd user units. Flags:
+  `--skip-packages`, `--copy-assets`, `--no-restart`.
+- `AGENTS.md` (new): the "make it consistent" playbook for agents — triggers,
+  exclusion lists, scan/register procedure. A pointer lives at
+  `~/Programming/AGENTS.md` so the trigger works outside the repo dir.
+
+**New machine:** `git clone <repo> ~/Programming/dotfiles && ./setup.sh`
+
+**Notes:**
+- eww had to be restarted after the move — it keys its IPC socket to the
+  canonical config path, so moving `~/.config/eww` breaks client↔daemon until
+  restart (`pkill -x eww; setsid -f eww daemon; eww open example`).
+- `~/.local/bin/fetch-lyrics` is a stale pre-rewrite script, superseded by
+  `scripts/fetch-lyrics` (left on disk, unused).
+- Still manual on a new machine: vdirsyncer passwords, Genius token, weather
+  API key.
+
+**Revert:** `git revert` the repo commits, or replace the `~/.config` symlinks
+with real copies of the repo dirs; config history is preserved in git.

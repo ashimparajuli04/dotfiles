@@ -16,9 +16,9 @@
     	"mpris",
 	"tray",
 	"custom/brightness",
-	"pulseaudio",
-	"bluetooth",
-        "network",
+	"custom/sound",
+	"custom/bluetooth",
+	"custom/wifi",
         "battery",
         "custom/powermenu"
         
@@ -42,6 +42,24 @@
     // Invisible slot holder for the Quickshell brightness pill
     // (BrightnessPill.qml renders on top of this). See changes.md §13.
     "custom/brightness": {
+        "format": " ",
+        "tooltip": false
+    },
+    // Invisible slot holder for the Quickshell sound pill (SoundPill.qml).
+    // See changes.md §14.
+    "custom/sound": {
+        "format": " ",
+        "tooltip": false
+    },
+    // Invisible slot holder for the Quickshell bluetooth pill
+    // (BluetoothPill.qml renders on top of this). See changes.md §15.
+    "custom/bluetooth": {
+        "format": " ",
+        "tooltip": false
+    },
+    // Invisible slot holder for the Quickshell wifi pill (WifiPill.qml).
+    // See changes.md §15.
+    "custom/wifi": {
         "format": " ",
         "tooltip": false
     },
@@ -171,7 +189,7 @@
         "tooltip": false
     },
     "custom/powermenu": {
-        "format": "⏻ ",
+        "format": "💢 ",
         "tooltip": false,
         "on-click": "qs ipc call powermenu toggle"
     },
@@ -221,6 +239,7 @@
     "exec": "~/.config/waybar/scripts/music-lyrics.sh",
     "interval": 1,
     "return-type": "text",
-    "on-click": "mpc toggle"
+    "on-click": "mpc toggle",
+    "tooltip": false
   },
 }

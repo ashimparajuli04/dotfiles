@@ -13,3 +13,7 @@ CalendarAgenda 1.0 CalendarAgenda.qml
 CalendarMonth 1.0 CalendarMonth.qml
 EventRow 1.0 EventRow.qml
 BrightnessPill 1.0 BrightnessPill.qml
+SoundPill 1.0 SoundPill.qml
+BluetoothPill 1.0 BluetoothPill.qml
+WifiPill 1.0 WifiPill.qml
+singleton PillBus 1.0 PillBus.qml
