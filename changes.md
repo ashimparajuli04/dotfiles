@@ -827,3 +827,17 @@ installed and its sway autostart is untouched for now; its window was closed
 proven itself. Measured: idle ~1% of one core, playing ~5% (cava 2.2% + 24 fps
 bar updates) — under 1% of the 8-thread CPU; quickshell PSS +~10 MB.
 
+---
+
+## 21. rmpc de-autostarted; `$mod+m` unbound (2026-10-09)
+
+- `sway/config`: removed the rmpc autostart (`kitty --class rmpc rmpc`) and its
+  workspace-3 assign — the Quickshell music widget's library/queue panel
+  replaces that role. rmpc stays installed; run `rmpc` from a terminal if
+  wanted.
+- `sway/config`: removed `bindsym $mod+m exec ...rofi/applets/bin/mpd.sh` (the
+  music panel opens by clicking the widget's cover art).
+- Takes effect on the next sway reload/restart; no reload was forced so the
+  currently running rmpc window is left alone.
+
+

@@ -295,7 +295,6 @@ titlebar_padding 1
 titlebar_border_thickness 0
 
 # Rofi Menus:
-bindsym $mod+m exec bash /home/ashim/.config/rofi/applets/bin/mpd.sh
 bindsym XF86PowerOff exec qs ipc call powermenu toggle
 
 # GTK Theme:
@@ -313,8 +312,9 @@ exec_always {
 exec --no-startup-id bash /home/ashim/.config/mpd/mpd-notify
 # mpd-lyricsd is managed by the systemd user service 'mpd-lyricsd.service' (auto-restarts)
 assign [app_id="Spotify"] workspace number 4
-assign [app_id="rmpc"] workspace number 3
-exec --no-startup-id kitty --class rmpc rmpc
+# rmpc is no longer auto-started or pinned to workspace 3 — the Quickshell
+# music widget (cover-art click → library/queue) replaces it. rmpc stays
+# installed; launch it manually from a terminal if you ever want the TUI.
 
 # Notifications:
 exec --no-startup-id dunst
