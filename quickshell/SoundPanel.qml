@@ -123,10 +123,16 @@ Scope {
         command: ["qs", "ipc", "call", "powermenu", "hide"]
     }
 
+    Process {
+        id: hideMusic
+        command: ["qs", "ipc", "call", "music", "hide"]
+    }
+
     function hideOthers() {
         hideBluetooth.running = true
         hideWifi.running = true
         hidePowermenu.running = true
+        hideMusic.running = true
     }
 
     function moveStream(stream, sink) {

@@ -10,4 +10,6 @@ ShellRoot {
     SoundPill {}
     BluetoothPill {}
     WifiPill {}
+    MusicWidget {}
+    MusicPanel {}
 }

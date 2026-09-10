@@ -17,3 +17,10 @@ SoundPill 1.0 SoundPill.qml
 BluetoothPill 1.0 BluetoothPill.qml
 WifiPill 1.0 WifiPill.qml
 singleton PillBus 1.0 PillBus.qml
+MusicWidget 1.0 MusicWidget.qml
+MusicPanel 1.0 MusicPanel.qml
+MusicButton 1.0 MusicButton.qml
+LyricsView 1.0 LyricsView.qml
+Visualizer 1.0 Visualizer.qml
+singleton MusicState 1.0 MusicState.qml
+singleton MusicStyle 1.0 MusicStyle.qml

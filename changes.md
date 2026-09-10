@@ -785,3 +785,45 @@ The repo is source of truth — edit there, it is live immediately.
 
 **Revert:** `git revert` the repo commits, or replace the `~/.config` symlinks
 with real copies of the repo dirs; config history is preserved in git.
+
+---
+
+## 20. Quickshell music widget — replaces the eww widget (2026-10-09)
+
+**Goal:** retire eww while folding the useful rmpc bits (library browsing,
+queue, shuffle, cava visualizer) into one Quickshell widget. waybar untouched.
+
+**New files** (in `quickshell/`, registered in `quickshell/qmldir`):
+- `MusicState.qml` (singleton) — event-driven MPD state: one long-lived
+  `mpc idleloop player options playlist update` process, short `mpc` queries
+  per event, wall-clock elapsed anchor (no per-second polling). mpc 0.35
+  quirks: `status` takes a POSITIONAL format (`-f` is ignored for it) and `|`
+  is an alternation operator, so formats separate fields with `\n`.
+- `MusicWidget.qml` — floating panel with the eww footprint and stacking
+  (bottom-left, 2%/3% margins, 20% x 20%, Bottom layer, never takes focus).
+  Cover art, title/artist, click-to-seek progress, prev/playpause/next,
+  shuffle + repeat (cycles off -> all -> single), rolling lyrics, visualizer.
+- `MusicStyle.qml` (singleton) — the eww palette (pink `#df6bac`, dark
+  `#1A182C`) so the widget looks like the old one.
+- `MusicButton.qml` — square 2px-bordered button; `active` inverts it.
+- `LyricsView.qml` — QML port of `scripts/lyrics-view` (.lrc rolling window +
+  `~/Music/.lyrics/lyrics.txt` fallback). Kills the old 2 s Python spawn
+  (~57 ms CPU per run).
+- `Visualizer.qml` + `cava.conf` — single long-lived cava (pipewire input, raw
+  ascii, 24 fps), neon bars as batched Rectangles; frames are dropped after 2 s
+  of silence, so idle costs no repaints. Reacts to any sink audio, not only mpd.
+- `MusicPanel.qml` — library/queue popover above the widget (click the cover;
+  IPC target `music`: toggle/library/queue/hide). Library sorted + searchable;
+  left-click queues & plays, middle appends, right-click (queue) removes, plus
+  a shuffle-all button.
+
+**Changed:** `shell.qml` adds `MusicWidget {}` + `MusicPanel {}`; the Wi-Fi,
+Bluetooth, Sound and Powermenu panels now hide the music panel when they open
+(and the music panel hides them).
+
+**Notes:** mpd exposes no MPRIS, so everything stays `mpc`-based. eww is still
+installed and its sway autostart is untouched for now; its window was closed
+(`eww open example` brings it back) and can be removed once the new widget has
+proven itself. Measured: idle ~1% of one core, playing ~5% (cava 2.2% + 24 fps
+bar updates) — under 1% of the 8-thread CPU; quickshell PSS +~10 MB.
+

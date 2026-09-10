@@ -137,6 +137,11 @@ Scope {
         command: ["qs", "ipc", "call", "powermenu", "hide"]
     }
 
+    Process {
+        id: hideMusic
+        command: ["qs", "ipc", "call", "music", "hide"]
+    }
+
     Connections {
         target: root.pendingNetwork
 
@@ -160,6 +165,7 @@ Scope {
                 hideBluetooth.running = true
                 hideSound.running = true
                 hidePowermenu.running = true
+                hideMusic.running = true
             }
         }
         function show() {
@@ -167,6 +173,7 @@ Scope {
             hideBluetooth.running = true
             hideSound.running = true
             hidePowermenu.running = true
+            hideMusic.running = true
         }
         function hide() { root.panelOpen = false }
     }

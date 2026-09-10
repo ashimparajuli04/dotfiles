@@ -73,6 +73,11 @@ Scope {
         command: ["qs", "ipc", "call", "powermenu", "hide"]
     }
 
+    Process {
+        id: hideMusic
+        command: ["qs", "ipc", "call", "music", "hide"]
+    }
+
     IpcHandler {
         target: "bluetooth"
         function toggle() {
@@ -81,6 +86,7 @@ Scope {
                 hideWifi.running = true
                 hideSound.running = true
                 hidePowermenu.running = true
+                hideMusic.running = true
             }
         }
         function show() {
@@ -88,6 +94,7 @@ Scope {
             hideWifi.running = true
             hideSound.running = true
             hidePowermenu.running = true
+            hideMusic.running = true
         }
         function hide() { root.panelOpen = false }
     }
