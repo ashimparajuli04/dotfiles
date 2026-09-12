@@ -221,18 +221,12 @@ bindsym $mod+r mode "resize"
     bindsym --locked XF86MonBrightnessDown exec brightnessctl set 5%-
     bindsym --locked XF86MonBrightnessUp exec brightnessctl set 5%+
 
-    # Screenshots (KDE-style): Print enters a mode, then pick the capture.
-    # satty annotates; Enter copies + saves, Esc cancels. See screenshot.sh.
-    set $printscreen_mode 'printscreen (r:region f:full w:window)'
-    mode $printscreen_mode {
-        bindsym r exec swaymsg 'mode "default"' && ~/.config/sway/scripts/screenshot.sh region
-        bindsym f exec swaymsg 'mode "default"' && ~/.config/sway/scripts/screenshot.sh full
-        bindsym w exec swaymsg 'mode "default"' && ~/.config/sway/scripts/screenshot.sh window
-
-        # Return to default mode
-        bindsym Escape mode "default"
-    }
-    bindsym Print mode $printscreen_mode
+    # Screenshots (KDE-style): Print selects a region, Shift+Print the full
+    # desktop, $mod+Print the focused window. satty annotates; Enter copies +
+    # saves, Esc cancels. See sway/scripts/screenshot.sh.
+    bindsym Print exec ~/.config/sway/scripts/screenshot.sh region
+    bindsym Shift+Print exec ~/.config/sway/scripts/screenshot.sh full
+    bindsym $mod+Print exec ~/.config/sway/scripts/screenshot.sh window
 
 #
 # Status Bar:

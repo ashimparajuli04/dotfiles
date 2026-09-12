@@ -845,8 +845,8 @@ bar updates) — under 1% of the 8-thread CPU; quickshell PSS +~10 MB.
 ## 22. Satty screenshots; Print capture mode (2026-10-09)
 
 - `sway/config`: replaced the broken `bindsym Print exec grim` (grim with no
-  filename just errors) with a KDE-style printscreen mode: `Print` →
-  `r` region (`slurp -d`), `f` full desktop, `w` focused window; `Esc` cancels.
+  filename just errors) with direct KDE-style binds: `Print` = region
+  (`slurp -d`), `Shift+Print` = full desktop, `$mod+Print` = focused window.
 - `sway/scripts/screenshot.sh` (new): capture wrapper; pipes grim into satty
   with the arrow tool, `wl-copy` clipboard, and
   `~/Pictures/Screenshots/Screenshot_%Y-%m-%d_%H-%M-%S.png` save target.
