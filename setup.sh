@@ -35,7 +35,8 @@ BACKUP="$HOME/.rice-backup-$(date +%Y%m%d-%H%M%S)"
 # ---------------------------------------------------------------------------
 PACMAN_PKGS=(
   waybar rofi mpd mpc ncmpcpp playerctl jq ffmpeg dunst libnotify swaybg
-  brightnessctl pipewire-pulse grim pavucontrol sassc papirus-icon-theme
+  brightnessctl pipewire-pulse grim satty wl-clipboard pavucontrol sassc
+  papirus-icon-theme
   bluez bluez-utils quickshell cava rmpc khal vdirsyncer uv
   ttf-jetbrains-mono-nerd ttf-iosevka-nerd ttf-material-icons
   ttf-material-design-icons-extended

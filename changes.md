@@ -840,4 +840,17 @@ bar updates) — under 1% of the 8-thread CPU; quickshell PSS +~10 MB.
 - Takes effect on the next sway reload/restart; no reload was forced so the
   currently running rmpc window is left alone.
 
+---
 
+## 22. Satty screenshots; Print capture mode (2026-10-09)
+
+- `sway/config`: replaced the broken `bindsym Print exec grim` (grim with no
+  filename just errors) with a KDE-style printscreen mode: `Print` →
+  `r` region (`slurp -d`), `f` full desktop, `w` focused window; `Esc` cancels.
+- `sway/scripts/screenshot.sh` (new): capture wrapper; pipes grim into satty
+  with the arrow tool, `wl-copy` clipboard, and
+  `~/Pictures/Screenshots/Screenshot_%Y-%m-%d_%H-%M-%S.png` save target.
+  Enter = copy + save, Ctrl+Shift+S = save as, Esc = exit.
+- `setup.sh`: added `satty` and `wl-clipboard` to `PACMAN_PKGS`.
+- Reloaded sway. No repo links added: the script lives inside the already
+  symlinked `sway/` config dir.
