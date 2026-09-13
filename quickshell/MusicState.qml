@@ -236,6 +236,10 @@ Scope {
 
     Process {
         id: coverProc
+        stderr: StdioCollector {
+            onStreamFinished: if (text.trim() !== "")
+                console.log("[music] cover ffmpeg: " + text.trim())
+        }
         onExited: function (exitCode, exitStatus) {
             root.coverBusy = false
             if (exitCode === 0) {
@@ -322,7 +326,7 @@ Scope {
         }
         root.coverBusy = true
         coverProc.command = ["ffmpeg", "-y", "-loglevel", "error",
-            root.musicDir + "/" + root.file, root.coverCache]
+            "-i", root.musicDir + "/" + root.file, root.coverCache]
         coverProc.running = true
     }
 

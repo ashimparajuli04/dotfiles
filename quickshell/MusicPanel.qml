@@ -18,6 +18,10 @@ Scope {
     readonly property real screenW: root.targetScreen ? root.targetScreen.width : 1920
     readonly property real screenH: root.targetScreen ? root.targetScreen.height : 1080
     readonly property real maxListHeight: Math.round(root.screenH * 0.5)
+    // sits directly above the music widget (bottom margin + widget height)
+    readonly property int panelBottom: Math.round(root.screenH * 0.03) + MusicStyle.widgetHeight + 6
+    readonly property int maxPanelHeight: Math.max(240,
+        Math.min(Math.round(root.screenH * 0.62), root.screenH - root.panelBottom - 40))
 
     readonly property var filteredLibrary: {
         if (root.filter === "")
@@ -41,6 +45,7 @@ Scope {
         hideSound.running = true
         hideWifi.running = true
         hidePowermenu.running = true
+        hideBattery.running = true
     }
 
     Process {
@@ -61,6 +66,11 @@ Scope {
     Process {
         id: hidePowermenu
         command: ["qs", "ipc", "call", "powermenu", "hide"]
+    }
+
+    Process {
+        id: hideBattery
+        command: ["qs", "ipc", "call", "battery", "hide"]
     }
 
     IpcHandler {
@@ -122,11 +132,11 @@ Scope {
         }
         margins {
             left: Math.round(root.screenW * 0.02)
-            bottom: Math.round(root.screenH * 0.03) + Math.round(root.screenH * 0.20) + 6
+            bottom: root.panelBottom
         }
 
-        implicitWidth: 384
-        implicitHeight: Math.min(frame.implicitHeight, Math.round(root.screenH * 0.62))
+        implicitWidth: MusicStyle.widgetWidth
+        implicitHeight: Math.min(frame.implicitHeight, root.maxPanelHeight)
         color: "transparent"
         exclusiveZone: 0
 

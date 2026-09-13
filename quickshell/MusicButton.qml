@@ -1,13 +1,14 @@
 import QtQuick
 
-// Small icon button for the music widget control row, styled after the eww
-// widget's buttons: square, 2px dark border, dark glyph. `active` inverts
-// the button (dark fill, pink glyph) for on-states like shuffle / repeat.
+// Icon button for the music widget: square, 2px dark border, dark glyph.
+// `active` inverts the button (dark fill, pink glyph) for on-states like
+// shuffle / repeat / play.
 Rectangle {
     id: root
 
     property string glyph: ""
     property bool active: false
+    property int glyphSize: 15
 
     signal clicked()
 
@@ -25,7 +26,7 @@ Rectangle {
         text: root.glyph
         color: root.active ? MusicStyle.bg : MusicStyle.fg
         font.family: MusicStyle.fontFamily
-        font.pixelSize: 15
+        font.pixelSize: root.glyphSize
     }
 
     HoverHandler {

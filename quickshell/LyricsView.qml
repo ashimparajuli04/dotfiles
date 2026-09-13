@@ -115,7 +115,7 @@ Item {
         visible: root.useLrc && root.lines.length > 0
         model: root.lines
         clip: true
-        spacing: 1
+        spacing: 3
         interactive: false
         currentIndex: root.activeIdx >= 0 ? root.activeIdx : 0
 
@@ -126,13 +126,11 @@ Item {
             required property int index
 
             width: lyricList.width
-            horizontalAlignment: Text.AlignHCenter
-            text: (index === root.activeIdx ? "▶ " : "") + modelData.text
-            color: index === root.activeIdx
-                ? MusicStyle.fg
-                : Qt.rgba(MusicStyle.fg.r, MusicStyle.fg.g, MusicStyle.fg.b, 0.55)
+            horizontalAlignment: Text.AlignLeft
+            text: (index === root.activeIdx ? "▶ " : "  ") + modelData.text
+            color: index === root.activeIdx ? MusicStyle.bg : MusicStyle.lyrics
             font.family: MusicStyle.fontFamily
-            font.pixelSize: 10
+            font.pixelSize: 13
             font.bold: index === root.activeIdx
             elide: Text.ElideRight
             maximumLineCount: 1
@@ -154,9 +152,9 @@ Item {
             id: fallbackTextItem
             width: fallbackFlick.width
             text: root.fallbackText !== "" ? root.fallbackText : "No lyrics"
-            color: Qt.rgba(MusicStyle.fg.r, MusicStyle.fg.g, MusicStyle.fg.b, 0.8)
+            color: MusicStyle.lyrics
             font.family: MusicStyle.fontFamily
-            font.pixelSize: 10
+            font.pixelSize: 13
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere
         }
     }

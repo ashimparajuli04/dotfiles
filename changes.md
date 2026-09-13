@@ -894,3 +894,28 @@ rm ~/.config/quickshell/wifi-copy-password.sh
 # the forget()/clear lines in onConnectionFailed
 pkill -x quickshell; setsid -f quickshell --no-duplicate
 ```
+
+---
+
+## 24. Music widget rebuilt to the original eww proportions (2026-10-09)
+
+The first Quickshell card was sized from the literal `20% x 20%` eww geometry —
+but eww grows its window to fit content, so the real widget was much bigger and
+the first version looked tiny. Rebuilt against a screenshot of the original:
+
+- Window: **466 px wide**, content-driven height (~520 px), **dark `#1A182C`
+  rounded backdrop** with 30 px padding; same bottom-left 2 %/3 % anchor and
+  Bottom layer (never takes focus).
+- Card: ~405 px wide pink card; **150 px cover**; 13 px title/artist in 2 px
+  bordered boxes (headings still omitted); full-width control row with five
+  buttons (prev/play-pause/next/shuffle/repeat, 26 px glyphs); thin
+  click-to-seek progress bar.
+- Lyrics: below the card on the backdrop, 13 px, **lavender `#A79BC8`**
+  (sampled from the original), active line pink with `▶`; ~9 visible lines.
+- Visualizer: intentionally left out for now (files kept: `Visualizer.qml`,
+  `cava.conf`). quickshell now idles at ~0 % CPU.
+- Fixed: cover extraction was missing `-i` in the ffmpeg command, so every
+  track showed the fallback art; real covers now extract on every track change.
+- `MusicStyle.qml` holds the measured layout constants; `MusicPanel.qml` got
+  the matching width (466) and sits directly above the widget.
+
