@@ -854,3 +854,43 @@ bar updates) — under 1% of the 8-thread CPU; quickshell PSS +~10 MB.
 - `setup.sh`: added `satty` and `wl-clipboard` to `PACMAN_PKGS`.
 - Reloaded sway. No repo links added: the script lives inside the already
   symlinked `sway/` config dir.
+
+---
+
+## 23. Wi-Fi panel: Forget saved networks, auto-drop failed passwords, right-click copy (2026-10-09)
+
+**Fixed:** entering a wrong password used to save a NetworkManager profile anyway
+(`connectWithPsk` → `AddAndActivateConnection` saves even when activation fails),
+and the panel offered no way to remove it — clicking the SAVED entry just retried
+the bad PSK forever.
+
+- `quickshell/WifiRow.qml` — new `Forget` text button on every known row (saved
+  and connected), styled like the Bluetooth rows; calls `network.forget()` so the
+  profile is deleted and the network returns to AVAILABLE (clicking it prompts for
+  the password again).
+- `quickshell/WifiPanel.qml` — when a password attempt started from the prompt
+  fails, the profile it just created is auto-`forget()`ed, the input is cleared
+  and refocused, and the error stays on screen for an immediate retry; nothing is
+  left saved with a wrong password.
+- Right-click any Wi-Fi entry copies its stored password to the clipboard —
+  deliberately silent (no toast, no highlight). `quickshell/wifi-copy-password.sh`
+  (new, executable, lives in the already symlinked config dir) matches the profile
+  by SSID, reads the secret with `nmcli -s` and pipes it to `wl-copy` via stdin so
+  it never appears in process arguments; on any failure the clipboard is not
+  touched.
+
+**Verified 2026-10-09:** `Forget` renders on CONNECTED and SAVED rows and not on
+AVAILABLE rows (screenshot); copy and forget exercised end-to-end through the
+panel with a throwaway profile (SSID matched to a visible AP, PSK `wrongpass`):
+clipboard received exactly the dummy PSK, then the profile disappeared from
+`nmcli connection show`; QML reloads clean. No real network or saved profile was
+touched.
+
+**Revert:**
+```bash
+rm ~/.config/quickshell/wifi-copy-password.sh
+# WifiRow.qml: remove the right-click MouseArea and the passwordCopyRequested signal
+# WifiPanel.qml: remove copySavedPassword(), the onPasswordCopyRequested lines and
+# the forget()/clear lines in onConnectionFailed
+pkill -x quickshell; setsid -f quickshell --no-duplicate
+```

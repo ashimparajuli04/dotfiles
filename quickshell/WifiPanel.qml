@@ -108,6 +108,16 @@ Scope {
         root.lastError = ""
     }
 
+    // Right-click on an entry copies the stored password to the clipboard.
+    // Deliberately silent: no toast, no color change, and failures do nothing.
+    function copySavedPassword(network) {
+        if (!network || !network.known || !network.name)
+            return
+        // The helper looks the profile up by SSID, reads the secret with
+        // nmcli -s and pipes it to wl-copy via stdin (never argv).
+        Quickshell.execDetached([Quickshell.shellDir + "/wifi-copy-password.sh", network.name])
+    }
+
     onPanelOpenChanged: {
         if (root.panelOpen) {
             root.lastError = ""
@@ -147,6 +157,14 @@ Scope {
 
         function onConnectionFailed(reason) {
             root.lastError = "Connection failed: " + ConnectionFailReason.toString(reason)
+            // A failed attempt still leaves its NetworkManager profile saved
+            // (with the wrong password). Drop it so the next try starts clean;
+            // forget() is a no-op if no profile was created.
+            if (root.pendingNetwork) {
+                root.pendingNetwork.forget()
+                pwInput.text = ""
+                pwInput.forceActiveFocus()
+            }
         }
 
         function onConnectedChanged() {
@@ -377,6 +395,7 @@ Scope {
                             delegate: WifiRow {
                                 network: modelData
                                 onPasswordRequested: root.promptPassword(network)
+                                onPasswordCopyRequested: root.copySavedPassword(network)
                             }
                         }
 
@@ -396,6 +415,7 @@ Scope {
                             delegate: WifiRow {
                                 network: modelData
                                 onPasswordRequested: root.promptPassword(network)
+                                onPasswordCopyRequested: root.copySavedPassword(network)
                             }
                         }
 
@@ -415,6 +435,7 @@ Scope {
                             delegate: WifiRow {
                                 network: modelData
                                 onPasswordRequested: root.promptPassword(network)
+                                onPasswordCopyRequested: root.copySavedPassword(network)
                             }
                         }
 

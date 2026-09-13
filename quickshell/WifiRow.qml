@@ -8,6 +8,7 @@ Rectangle {
 
     property var network
     signal passwordRequested()
+    signal passwordCopyRequested()
 
     readonly property bool busy: row.network.stateChanging
         || row.network.state === ConnectionState.Connecting
@@ -38,6 +39,13 @@ Rectangle {
             else
                 row.network.connect()
         }
+    }
+
+    // Right-click copies the saved password (silently — no visual feedback).
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.RightButton
+        onClicked: row.passwordCopyRequested()
     }
 
     RowLayout {
@@ -80,6 +88,25 @@ Rectangle {
                 color: Theme.muted
                 font.family: Theme.fontFamily
                 font.pixelSize: 11
+            }
+        }
+
+        Text {
+            visible: row.network.known && !row.busy
+            text: "Forget"
+            color: forgetHover.hovered ? Theme.fg : Theme.muted
+            font.family: Theme.fontFamily
+            font.pixelSize: 11
+
+            HoverHandler {
+                id: forgetHover
+                cursorShape: Qt.PointingHandCursor
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                anchors.margins: -3
+                onClicked: row.network.forget()
             }
         }
 
