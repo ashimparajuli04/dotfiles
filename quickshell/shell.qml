@@ -6,10 +6,12 @@ ShellRoot {
     SoundPanel {}
     PowermenuPanel {}
     CalendarPanel {}
+    BatteryPanel {}
     BrightnessPill {}
     SoundPill {}
     BluetoothPill {}
     WifiPill {}
+    BatteryPill {}
     MusicWidget {}
     MusicPanel {}
 }

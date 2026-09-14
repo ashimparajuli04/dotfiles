@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# power-mode — Low Power Mode for the AMD Ryzen 3500U (acpi-cpufreq).
+#
+#   on      boost off, every core capped to the lowest P-state (1.4 GHz)
+#   off     boost on, cap restored to the hardware max, governor schedutil
+#   toggle  flip between the two
+#   status  print "on" or "off" (read straight from sysfs)
+#
+# Driven by the Quickshell battery panel (BatteryPanel.qml) through
+# passwordless sudo. See changes.md §22.
+#
+# The machine's cpufreq states are 2.1 / 1.7 / 1.4 GHz (scaling_min_freq is
+# already 1.4 GHz), and boost adds the 2.4–3.7 GHz states on top, so "low
+# power" means: disable boost and pin the selector to 1.4 GHz while keeping
+# schedutil for a sane restore path.
+
+set -euo pipefail
+
+CPUFREQ=/sys/devices/system/cpu/cpufreq
+BOOST=$CPUFREQ/boost
+LOW_FREQ=1400000
+GOVERNOR=schedutil
+
+policies() {
+    ls -d "$CPUFREQ"/policy* 2>/dev/null || true
+}
+
+# Best effort: a machine without a given knob should not make the whole
+# toggle fail halfway through.
+write() {
+    echo "$1" > "$2" 2>/dev/null || true
+}
+
+low_on() {
+    write 0 "$BOOST"
+    local p
+    for p in $(policies); do
+        write "$LOW_FREQ" "$p/scaling_max_freq"
+        write "$GOVERNOR" "$p/scaling_governor"
+    done
+}
+
+low_off() {
+    local p
+    for p in $(policies); do
+        write "$(cat "$p/cpuinfo_max_freq")" "$p/scaling_max_freq"
+        write "$GOVERNOR" "$p/scaling_governor"
+    done
+    write 1 "$BOOST"
+}
+
+is_on() {
+    local boost=1 max= first
+    [ -r "$BOOST" ] && boost=$(cat "$BOOST")
+    first=$(policies | head -n 1)
+    if [ -n "$first" ] && [ -r "$first/scaling_max_freq" ]; then
+        max=$(cat "$first/scaling_max_freq")
+    fi
+    [ "$boost" = "0" ] && [ -n "$max" ] && [ "$max" -le "$LOW_FREQ" ]
+}
+
+case "${1:-status}" in
+    on)     low_on ;;
+    off)    low_off ;;
+    toggle) if is_on; then low_off; else low_on; fi ;;
+    status) if is_on; then echo on; else echo off; fi ;;
+    *)
+        echo "usage: power-mode {on|off|toggle|status}" >&2
+        exit 2
+        ;;
+esac

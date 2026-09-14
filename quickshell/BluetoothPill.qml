@@ -106,7 +106,7 @@ Scope {
             right: root.rightMargin
         }
 
-        implicitWidth: root.expandedWidth + PillBus.wifiMaxPush
+        implicitWidth: root.expandedWidth + PillBus.maxPushBt
         implicitHeight: root.pillHeight
         color: "transparent"
         exclusiveZone: 0
@@ -127,9 +127,9 @@ Scope {
         Rectangle {
             id: pill
             anchors.top: parent.top
-            // Right edge normally at 1756; the wifi pill (to the right)
-            // pushes this pill left while it expands.
-            x: win.width - width - PillBus.wifiPush
+            // Right edge normally at 1756; the wifi/battery pills (to
+            // the right) push this pill left while they expand.
+            x: win.width - width - PillBus.pushBt
             height: root.pillHeight
             width: root.expanded ? root.expandedWidth : root.collapsedWidth
             radius: 8

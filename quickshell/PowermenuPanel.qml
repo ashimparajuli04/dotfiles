@@ -93,6 +93,11 @@ Scope {
     }
 
     Process {
+        id: hideBattery
+        command: ["qs", "ipc", "call", "battery", "hide"]
+    }
+
+    Process {
         id: actionProc
     }
 
@@ -122,6 +127,7 @@ Scope {
             hideBluetooth.running = true
             hideSound.running = true
             hideMusic.running = true
+            hideBattery.running = true
             frame.forceActiveFocus()
         } else {
             tooltipTimer.stop()

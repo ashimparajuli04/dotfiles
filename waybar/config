@@ -19,7 +19,7 @@
 	"custom/sound",
 	"custom/bluetooth",
 	"custom/wifi",
-        "battery",
+        "custom/battery",
         "custom/powermenu"
         
     ],
@@ -153,39 +153,12 @@
         "tooltip": false,
         "on-click": "bash ~/.config/rofi/launchers/type-7/launcher.sh &"
     },
-    "battery": {
-        "format": "{icon} {capacity}%",
-        "format-icons": {
-            "charging": [
-                "󰢜",
-                "󰂆",
-                "󰂇",
-                "󰂈",
-                "󰢝",
-                "󰂉",
-                "󰢞",
-                "󰂊",
-                "󰂋",
-                "󰂅"
-            ],
-            "default": [
-                "󰁺",
-                "󰁻",
-                "󰁼",
-                "󰁽",
-                "󰁾",
-                "󰁿",
-                "󰂀",
-                "󰂁",
-                "󰂂",
-                "󰁹"
-            ]
-        },
-        "interval": 5,
-        "states": {
-            "warning": 25,
-            "critical": 10
-        },
+    // Invisible slot holder for the Quickshell battery pill
+    // (BatteryPill.qml draws on top of it; BatteryPanel.qml is the
+    // popover). Charge glyphs/colours now live in BatteryState.qml at
+    // ~/.config/quickshell/BatteryState.qml. See changes.md §22.
+    "custom/battery": {
+        "format": " ",
         "tooltip": false
     },
     "custom/powermenu": {

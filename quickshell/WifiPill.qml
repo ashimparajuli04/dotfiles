@@ -10,7 +10,8 @@ import Quickshell.Wayland
 //
 // Geometry: sits on the transparent `custom/wifi` Waybar spacer and
 // expands LEFTWARD (right edge pinned at x=1808). While it expands it
-// pushes the bluetooth pill (and everything left of it) via PillBus.
+// pushes the bluetooth pill (and everything left of it) via PillBus;
+// the battery pill (to the right) pushes this one in turn.
 Scope {
     id: root
 
@@ -178,7 +179,7 @@ Scope {
             right: root.rightMargin
         }
 
-        implicitWidth: root.expandedWidth
+        implicitWidth: root.expandedWidth + PillBus.maxPushWifi
         implicitHeight: root.pillHeight
         color: "transparent"
         exclusiveZone: 0
@@ -199,7 +200,9 @@ Scope {
         Rectangle {
             id: pill
             anchors.top: parent.top
-            anchors.right: parent.right
+            // Right edge normally at 1808; the battery pill (to the
+            // right) pushes this pill left while it expands.
+            x: win.width - width - PillBus.pushWifi
             height: root.pillHeight
             width: root.expanded ? root.expandedWidth : root.collapsedWidth
             radius: 8

@@ -919,3 +919,65 @@ the first version looked tiny. Rebuilt against a screenshot of the original:
 - `MusicStyle.qml` holds the measured layout constants; `MusicPanel.qml` got
   the matching width (466) and sits directly above the widget.
 
+---
+
+## 25. Battery pill + Low Power Mode panel (2026-10-09)
+
+**Goal:** the battery icon becomes a Quickshell pill like wifi/bluetooth/sound
+(icon-only, percentage on hover) and clicking it opens a popover with a
+working **Low Power Mode** switch.
+
+**New files:**
+- `quickshell/BatteryState.qml` (singleton) — UPower-backed battery state plus
+  the old Waybar battery glyphs and `#battery` palette. Quickshell's UPower
+  `percentage` is 0–1 (the service scales upower's 0–100 by 0.01), so it is
+  multiplied by 100. Health/capacity are read from the real laptop battery in
+  `UPower.devices` (`isLaptopBattery`), because `UPower.displayDevice` is a
+  composite without `Capacity`/`EnergyFull`.
+- `quickshell/BatteryPill.qml` — overlay on the new `custom/battery` spacer;
+  expands LEFTWARD on hover (icon-only → `󰁹 71%`), right edge at x=1877
+  (`rightMargin 43`, `collapsedWidth 63`), square right corners because the
+  old module was `border-radius: 8px 0 0 8px`. Publishes `batteryPush` /
+  `batteryMaxPush` to PillBus.
+- `quickshell/BatteryPanel.qml` — popover (IPC target `battery`:
+  toggle/show/hide): status, time left/to full, power draw, health
+  (`68% · 30.7 Wh`) and the **Low Power Mode** row with a `ToggleSwitch`.
+  Joins the mutual-hide ring with wifi/bluetooth/sound/powermenu/music.
+- `bin/power-mode` (→ `~/.local/bin/power-mode`, registered in setup.sh
+  `EXTRA_LINKS`) — `on`: boost off + all cores capped to 1.4 GHz (this CPU's
+  lowest P-state; `scaling_min_freq` is already 1.4 GHz); `off`: 2.1 GHz +
+  boost back, governor `schedutil`; `status` reads sysfs. The panel drives it
+  with `sudo -n`; setup.sh now installs a scoped
+  `/etc/sudoers.d/rice-power-mode` rule (NOPASSWD for just this script) so a
+  fresh machine works without prompts.
+
+**Changed:**
+- `waybar/config`: native `battery` module → invisible `custom/battery`
+  spacer; clicks go through the pill (`qs ipc call battery toggle`).
+- `waybar/style.css`: `#battery` rules (and the unused `blink` keyframes)
+  removed, `#custom-battery` spacer added (`min-width: 63px`), matching the
+  old module footprint pixel-for-pixel.
+- `quickshell/PillBus.qml`: `batteryPush`/`batteryMaxPush` added; sound/
+  brightness push sums include it. `WifiPill.qml`/`BluetoothPill.qml` now
+  bind position + window slack to their cascaded sums so the battery pill
+  pushes the row left into perfect gaps while expanding.
+- Each existing panel hides the battery panel and vice versa.
+- `setup.sh` + `AGENTS.md`: script link, `BatteryPanel.qml` in
+  `PATH_FIX_FILES`, asset-map row, sudoers step.
+
+**Notes:** `power-profiles-daemon` would be a no-op on this CPU (acpi-cpufreq,
+no amd-pstate/EPP/platform_profile), hence the direct cpufreq helper. Low
+Power Mode lives in sysfs, so it resets on reboot and the panel always shows
+the real state. Battery health (68 %) is UPower's `Capacity` = energy-full /
+energy-full-design (30.68/45 Wh, 1516 cycles) — not a UI artifact.
+
+**Verified:** pill footprint pixel-matched to the old module via screenshots;
+hover expands and cascades pushes (28 px); click opens the panel; the toggle
+flips sysfs through sudo (journal + `boost`/`scaling_max_freq` checks); health
+row reads the real battery; panels hide each other; no QML errors in `qs log`.
+
+**Revert:** `git show HEAD:waybar/config waybar/style.css` to restore the
+battery module, remove the three QML files + `bin/power-mode`, revert the
+PillBus/panel/shell/qmldir edits, and delete
+`/etc/sudoers.d/rice-power-mode`.
+

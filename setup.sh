@@ -57,6 +57,7 @@ CONFIG_DIRS=(
 EXTRA_LINKS=(
   "changes.md|$HOME/changes.md"
   "bin/mpd-lyricsd|$HOME/.local/bin/mpd-lyricsd"
+  "bin/power-mode|$HOME/.local/bin/power-mode"
   "icons/vinyl.svg|$HOME/.local/share/icons/vinyl.svg"
   "icons/Flat-Remix-Blue-Dark|$HOME/.local/share/icons/Flat-Remix-Blue-Dark"
   "fonts/SFPro|$HOME/.local/share/fonts/SFPro"
@@ -73,7 +74,7 @@ PATH_FIX_FILES=(
   sway/config waybar/config rofi/config.rasi eww/eww.yuck rmpc/config.ron
   vdirsyncer/config systemd/user/fetch-lyrics.service
   systemd/user/mpd-lyricsd.service scripts/fetch-lyrics
-  mpd-lyricsd/config.toml gtk-3.0/bookmarks
+  mpd-lyricsd/config.toml gtk-3.0/bookmarks quickshell/BatteryPanel.qml
 )
 
 # ---------------------------------------------------------------------------
@@ -217,6 +218,24 @@ for unit in mpd.service mpd-lyricsd.service fetch-lyrics.timer vdirsyncer.timer;
     say "could not enable $unit — run manually"
   fi
 done
+
+step "Low Power Mode sudo rule"
+# The Quickshell battery panel (BatteryPanel.qml) flips CPU boost/freq caps
+# through bin/power-mode; allow just that script without a password prompt.
+POWER_RULE="$(id -un) ALL=(root) NOPASSWD: $HOME/.local/bin/power-mode"
+if command -v sudo >/dev/null && command -v visudo >/dev/null; then
+  tmp="$(mktemp)"
+  printf '%s\n' "$POWER_RULE" > "$tmp"
+  if sudo visudo -c -f "$tmp" >/dev/null 2>&1; then
+    sudo install -m 440 -o root -g root "$tmp" /etc/sudoers.d/rice-power-mode
+    say "installed /etc/sudoers.d/rice-power-mode"
+  else
+    say "could not validate sudoers rule — Low Power Mode will ask for a password"
+  fi
+  rm -f "$tmp"
+else
+  say "no sudo/visudo — Low Power Mode will ask for a password"
+fi
 
 for p in google-password icloud-password; do
   f="$REPO/vdirsyncer/$p"

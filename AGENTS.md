@@ -104,6 +104,7 @@ Restart the affected app (waybar/dunst/eww/quickshell) or `swaymsg reload`.
 |---|---|
 | `changes.md` | `~/changes.md` |
 | `bin/mpd-lyricsd` | `~/.local/bin/mpd-lyricsd` |
+| `bin/power-mode` | `~/.local/bin/power-mode` |
 | `icons/vinyl.svg` | `~/.local/share/icons/vinyl.svg` |
 | `icons/Flat-Remix-Blue-Dark` | `~/.local/share/icons/Flat-Remix-Blue-Dark` |
 | `fonts/SFPro` | `~/.local/share/fonts/SFPro` |

@@ -152,6 +152,11 @@ Scope {
         command: ["qs", "ipc", "call", "music", "hide"]
     }
 
+    Process {
+        id: hideBattery
+        command: ["qs", "ipc", "call", "battery", "hide"]
+    }
+
     Connections {
         target: root.pendingNetwork
 
@@ -184,6 +189,7 @@ Scope {
                 hideSound.running = true
                 hidePowermenu.running = true
                 hideMusic.running = true
+                hideBattery.running = true
             }
         }
         function show() {
@@ -192,6 +198,7 @@ Scope {
             hideSound.running = true
             hidePowermenu.running = true
             hideMusic.running = true
+            hideBattery.running = true
         }
         function hide() { root.panelOpen = false }
     }
