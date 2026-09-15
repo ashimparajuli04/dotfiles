@@ -26,7 +26,7 @@ Scope {
     // screen's right edge. Both tuned with screenshots — see changes.md.
     readonly property int collapsedWidth: 70
     readonly property int expandedWidth: 200
-    readonly property int rightMargin: 276
+    readonly property int rightMargin: 240
     readonly property int pillHeight: 24
 
     // ---------- state ----------
@@ -163,7 +163,7 @@ Scope {
         Rectangle {
             id: pill
             anchors.top: parent.top
-            // Right edge normally at 1643; the sound/bt/wifi pills (to
+            // Right edge normally at 1680; the sound/bt/wifi pills (to
             // the right) push this pill left while they expand — the
             // shifts cascade, see PillBus.qml.
             x: win.width - width - PillBus.pushBrightness

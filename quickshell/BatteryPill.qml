@@ -15,8 +15,10 @@ Scope {
     id: root
 
     // ---------- geometry ----------
-    // Tuned against the real bar with screenshots — see changes.md §22.
-    readonly property int collapsedWidth: 63
+    // Tuned against the real bar with screenshots — see changes.md §25.
+    // Snug icon-only pill (same size as the bluetooth pill), right edge
+    // pinned at x=1877 against the powermenu.
+    readonly property int collapsedWidth: 27
     readonly property int rightMargin: 43       // screen right edge → window right edge
     readonly property int pillHeight: 24
     readonly property int pctCap: 60            // hover text elides beyond this

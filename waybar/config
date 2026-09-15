@@ -183,7 +183,7 @@
 
   "custom/discord": {
     "format": "{}",
-    "exec": "/home/ashim/.config/waybar/scripts/app-icon.sh Discord \uf066f",
+    "exec": "/home/ashim/.config/waybar/scripts/app-icon.sh Discord \udb81\ude6f",
     "interval": 2,
     "hide-empty-text": true,
     "tooltip": false,
@@ -191,7 +191,7 @@
   },
   "custom/qbittorrent": {
     "format": "{}",
-    "exec": "/home/ashim/.config/waybar/scripts/app-icon.sh qbittorrent \uf05d2",
+    "exec": "/home/ashim/.config/waybar/scripts/app-icon.sh qbittorrent \udb81\uddd2",
     "interval": 2,
     "hide-empty-text": true,
     "tooltip": false,

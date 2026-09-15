@@ -9,7 +9,7 @@ import Quickshell.Wayland
 // BrightnessPill.qml / SoundPill.qml.
 //
 // Geometry: sits on the transparent `custom/wifi` Waybar spacer and
-// expands LEFTWARD (right edge pinned at x=1808). While it expands it
+// expands LEFTWARD (right edge pinned at x=1844). While it expands it
 // pushes the bluetooth pill (and everything left of it) via PillBus;
 // the battery pill (to the right) pushes this one in turn.
 Scope {
@@ -19,9 +19,9 @@ Scope {
     readonly property color disconnectedColor: "#fb958b" // waybar #network.disconnected
 
     // ---------- geometry ----------
-    // Tuned against the real bar with screenshots — see changes.md §15.
+    // Tuned against the real bar with screenshots — see changes.md §15/§25.
     readonly property int collapsedWidth: 42
-    readonly property int rightMargin: 112      // screen right edge → window right edge
+    readonly property int rightMargin: 76       // screen right edge → window right edge
     readonly property int pillHeight: 24
     readonly property int nameCap: 140          // hover text elides beyond this
 
@@ -200,7 +200,7 @@ Scope {
         Rectangle {
             id: pill
             anchors.top: parent.top
-            // Right edge normally at 1808; the battery pill (to the
+            // Right edge normally at 1844; the battery pill (to the
             // right) pushes this pill left while it expands.
             x: win.width - width - PillBus.pushWifi
             height: root.pillHeight

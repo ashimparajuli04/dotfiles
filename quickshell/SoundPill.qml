@@ -14,7 +14,7 @@ import Quickshell.Wayland
 // default one, just like the keys do.
 //
 // Geometry: sits on the transparent `custom/sound` Waybar spacer and
-// expands LEFTWARD (right edge pinned at x=1719), unlike the brightness
+// expands LEFTWARD (right edge pinned at x=1755), unlike the brightness
 // pill. While it expands it pushes the brightness pill left via
 // PillBus.soundPush; the bluetooth and wifi pills (to its right) push
 // this pill in turn, so the whole row keeps its gaps (see PillBus.qml).
@@ -27,10 +27,10 @@ Scope {
     readonly property color mutedColor: "#fb958b"
 
     // ---------- geometry ----------
-    // Tuned against the real bar with screenshots — see changes.md §14.
+    // Tuned against the real bar with screenshots — see changes.md §14/§25.
     readonly property int collapsedWidth: 64
-    readonly property int expandedWidth: 154    // right edge stays at x=1719
-    readonly property int rightMargin: 201      // screen right edge → window right edge
+    readonly property int expandedWidth: 154    // right edge stays at x=1755
+    readonly property int rightMargin: 165      // screen right edge → window right edge
     readonly property int pillHeight: 24
 
     // ---------- state ----------
@@ -56,19 +56,21 @@ Scope {
 
     // Same glyphs the old Waybar module used: mute → 󰝟, headphones →
     // the  FontAwesome headphone glyph, otherwise 󰕿/󰖀/󰕾 by level.
+    // Plane-15 codepoints use surrogate pairs: a 5-hex-digit \u escape is
+    // invalid in JS and truncates to a 4-digit glyph + a literal character.
     readonly property string glyph: {
         if (root.muted)
-            return "\uf075f"
+            return "\udb81\udf5f"
         var d = ((root.prop("device.icon-name") || "") + " "
             + (root.sink ? root.sink.name : "") + " " + (root.sink ? root.sink.description : "")).toLowerCase()
         if (d.indexOf("headphone") !== -1 || d.indexOf("headset") !== -1
             || d.indexOf("earbud") !== -1 || d.indexOf("bluez") !== -1)
             return "\uf025"
         if (root.shownFraction < 0.33)
-            return "\uf057f"
+            return "\udb81\udd7f"
         if (root.shownFraction < 0.66)
-            return "\uf0580"
-        return "\uf057e"
+            return "\udb81\udd80"
+        return "\udb81\udd7e"
     }
 
     // ---------- volume ----------
@@ -172,7 +174,7 @@ Scope {
         Rectangle {
             id: pill
             anchors.top: parent.top
-            // Right edge normally at 1719; the bluetooth/wifi pills (to
+            // Right edge normally at 1755; the bluetooth/wifi pills (to
             // the right) push this pill left while they expand.
             x: win.width - width - PillBus.pushSound
             height: root.pillHeight

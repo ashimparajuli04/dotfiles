@@ -278,16 +278,16 @@ window#waybar.hidden {
 }
 
 /* Invisible slot for the Quickshell battery pill (BatteryPill.qml draws
-   on top of it); reserves the old battery pill footprint. The powermenu's
-   -12px margin-left still sits against it exactly as before.
-   See changes.md §22. */
+   on top of it); snug icon-only footprint (27px, like bluetooth), so the
+   wifi pill and everything left of it sits 36px further right.
+   See changes.md §25. */
 #custom-battery {
   background-color: transparent;
   padding: 0;
   margin-top: 5px;
   margin-bottom: 0px;
   margin-right: 10px;
-  min-width: 63px;
+  min-width: 27px;
 }
 
 #custom-lock {

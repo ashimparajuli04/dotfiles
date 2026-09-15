@@ -936,9 +936,9 @@ working **Low Power Mode** switch.
   composite without `Capacity`/`EnergyFull`.
 - `quickshell/BatteryPill.qml` — overlay on the new `custom/battery` spacer;
   expands LEFTWARD on hover (icon-only → `󰁹 71%`), right edge at x=1877
-  (`rightMargin 43`, `collapsedWidth 63`), square right corners because the
-  old module was `border-radius: 8px 0 0 8px`. Publishes `batteryPush` /
-  `batteryMaxPush` to PillBus.
+  (`rightMargin 43`), snug **27 px** collapsed width like the bluetooth pill,
+  square right corners because the old module was `border-radius: 8px 0 0 8px`.
+  Publishes `batteryPush` / `batteryMaxPush` to PillBus.
 - `quickshell/BatteryPanel.qml` — popover (IPC target `battery`:
   toggle/show/hide): status, time left/to full, power draw, health
   (`68% · 30.7 Wh`) and the **Low Power Mode** row with a `ToggleSwitch`.
@@ -955,12 +955,15 @@ working **Low Power Mode** switch.
 - `waybar/config`: native `battery` module → invisible `custom/battery`
   spacer; clicks go through the pill (`qs ipc call battery toggle`).
 - `waybar/style.css`: `#battery` rules (and the unused `blink` keyframes)
-  removed, `#custom-battery` spacer added (`min-width: 63px`), matching the
-  old module footprint pixel-for-pixel.
+  removed, `#custom-battery` spacer added (`min-width: 27px`).
 - `quickshell/PillBus.qml`: `batteryPush`/`batteryMaxPush` added; sound/
   brightness push sums include it. `WifiPill.qml`/`BluetoothPill.qml` now
   bind position + window slack to their cascaded sums so the battery pill
   pushes the row left into perfect gaps while expanding.
+- The snug battery slot moves everything left of it right by 36 px, so the
+  wifi/bluetooth/sound/brightness pills got matching `rightMargin` updates
+  (112→76, 164→128, 201→165, 276→240) keeping them pixel-aligned with their
+  Waybar spacers.
 - Each existing panel hides the battery panel and vice versa.
 - `setup.sh` + `AGENTS.md`: script link, `BatteryPanel.qml` in
   `PATH_FIX_FILES`, asset-map row, sudoers step.
@@ -971,13 +974,40 @@ Power Mode lives in sysfs, so it resets on reboot and the panel always shows
 the real state. Battery health (68 %) is UPower's `Capacity` = energy-full /
 energy-full-design (30.68/45 Wh, 1516 cycles) — not a UI artifact.
 
-**Verified:** pill footprint pixel-matched to the old module via screenshots;
-hover expands and cascades pushes (28 px); click opens the panel; the toggle
-flips sysfs through sudo (journal + `boost`/`scaling_max_freq` checks); health
-row reads the real battery; panels hide each other; no QML errors in `qs log`.
+**Verified:** pill and row positions re-measured with screenshots (all four
+neighbouring pills shift exactly +36 px, gaps intact); hover expands and
+cascades pushes (28 px); click opens the panel; the toggle flips sysfs
+through sudo (journal + `boost`/`scaling_max_freq` checks); health row reads
+the real battery; panels hide each other; no QML errors in `qs log`.
 
 **Revert:** `git show HEAD:waybar/config waybar/style.css` to restore the
 battery module, remove the three QML files + `bin/power-mode`, revert the
 PillBus/panel/shell/qmldir edits, and delete
 `/etc/sudoers.d/rice-power-mode`.
 
+
+---
+
+## 26. Sound pill glyphs were mangled by 5-digit `\u` escapes (2026-10-09)
+
+**Bug:** the sound pill's four volume glyphs in `SoundPill.qml` were written as
+five-hex-digit JS escapes (`"\uf075f"` etc.). JS `\uXXXX` consumes exactly 4 hex
+digits, so each string silently became an old FontAwesome glyph plus a literal
+character: mute → fa-comment + `f`, low → fa-times-circle + `f`, medium →
+fa-check-circle + `0`, high → fa-times-circle + `e`. With the sink muted, the
+Waybar slot showed a speech bubble + `f` instead of 󰝟.
+
+**Fixed:**
+- `quickshell/SoundPill.qml` — plane-15 codepoints now use surrogate pairs
+  (same convention as `MusicWidget.qml`): `\udb81\udf5f` mute, `\udb81\udd7f`
+  low, `\udb81\udd80` medium, `\udb81\udd7e` high; comment added to the glyph
+  property warning about 5-digit escapes.
+- `waybar/config` — same latent bug in the `custom/discord` and
+  `custom/qbittorrent` exec icons (jsoncpp also truncates `\u` at 4 digits):
+  `\udb81\ude6f` (md-discord), `\udb81\uddd2` (md-card-account-details).
+
+**Verified:** quickshell hot-reload; screenshots of all four states (cycled
+volume via `pactl`, raw volume 91701 / muted state restored exactly) match the
+rendered reference glyphs; `waybar/config` re-parses as valid JSON.
+
+**Revert:** `git revert <this commit>`.
