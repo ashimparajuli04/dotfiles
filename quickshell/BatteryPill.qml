@@ -16,10 +16,12 @@ Scope {
 
     // ---------- geometry ----------
     // Tuned against the real bar with screenshots — see changes.md §25.
-    // Snug icon-only pill (same size as the bluetooth pill), right edge
-    // pinned at x=1877 against the powermenu.
+    // Snug icon-only pill (same size as the bluetooth pill). The right edge
+    // reaches x=1883 — 6 px into the powermenu's black padding, up to the
+    // 💢 ink — so the icon sits centred between the wifi gap and the emoji
+    // instead of hugging the left side.
     readonly property int collapsedWidth: 27
-    readonly property int rightMargin: 43       // screen right edge → window right edge
+    readonly property int rightMargin: 37       // screen right edge → window right edge
     readonly property int pillHeight: 24
     readonly property int pctCap: 60            // hover text elides beyond this
 

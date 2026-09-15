@@ -935,10 +935,12 @@ working **Low Power Mode** switch.
   `UPower.devices` (`isLaptopBattery`), because `UPower.displayDevice` is a
   composite without `Capacity`/`EnergyFull`.
 - `quickshell/BatteryPill.qml` — overlay on the new `custom/battery` spacer;
-  expands LEFTWARD on hover (icon-only → `󰁹 71%`), right edge at x=1877
-  (`rightMargin 43`), snug **27 px** collapsed width like the bluetooth pill,
-  square right corners because the old module was `border-radius: 8px 0 0 8px`.
-  Publishes `batteryPush` / `batteryMaxPush` to PillBus.
+  expands LEFTWARD on hover (icon-only → `󰁹 71%`), snug **27 px** collapsed
+  width like the bluetooth pill. The right edge reaches x=1883 (6 px into
+  the powermenu's black padding, up to the 💢 ink) and the right corners are
+  square (old module was `border-radius: 8px 0 0 8px`), so the icon sits
+  optically centred between the wifi gap and the emoji. Publishes
+  `batteryPush` / `batteryMaxPush` to PillBus.
 - `quickshell/BatteryPanel.qml` — popover (IPC target `battery`:
   toggle/show/hide): status, time left/to full, power draw, health
   (`68% · 30.7 Wh`) and the **Low Power Mode** row with a `ToggleSwitch`.
@@ -964,6 +966,9 @@ working **Low Power Mode** switch.
   wifi/bluetooth/sound/brightness pills got matching `rightMargin` updates
   (112→76, 164→128, 201→165, 276→240) keeping them pixel-aligned with their
   Waybar spacers.
+- `WifiPill.qml`: the signal glyphs no longer carry the old Waybar trailing
+  space (the pill centres its content, so the space pushed the ink 4 px left);
+  the wifi icon is now optically centred (15 px air on both sides).
 - Each existing panel hides the battery panel and vice versa.
 - `setup.sh` + `AGENTS.md`: script link, `BatteryPanel.qml` in
   `PATH_FIX_FILES`, asset-map row, sudoers step.
@@ -975,10 +980,12 @@ the real state. Battery health (68 %) is UPower's `Capacity` = energy-full /
 energy-full-design (30.68/45 Wh, 1516 cycles) — not a UI artifact.
 
 **Verified:** pill and row positions re-measured with screenshots (all four
-neighbouring pills shift exactly +36 px, gaps intact); hover expands and
-cascades pushes (28 px); click opens the panel; the toggle flips sysfs
-through sudo (journal + `boost`/`scaling_max_freq` checks); health row reads
-the real battery; panels hide each other; no QML errors in `qs log`.
+neighbouring pills shift exactly +36 px, gaps intact); pixel-peeped glyph
+centring — wifi 15/15 px air, battery 9/10 px between its left edge, the
+icon and the emoji; hover expands and cascades pushes (28 px); click opens
+the panel; the toggle flips sysfs through sudo (journal +
+`boost`/`scaling_max_freq` checks); health row reads the real battery;
+panels hide each other; no QML errors in `qs log`.
 
 **Revert:** `git show HEAD:waybar/config waybar/style.css` to restore the
 battery module, remove the three QML files + `bin/power-mode`, revert the

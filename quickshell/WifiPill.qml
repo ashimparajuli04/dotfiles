@@ -72,10 +72,11 @@ Scope {
         return out
     }
 
-    // Same glyphs as the old Waybar module (signal glyphs carry the
-    // trailing space the Waybar format-icons entries have, so the ink
-    // lands in the same spot).
-    readonly property var wifiIcons: ["󰤯 ", "󰤟 ", "󰤢 ", "󰤥 ", "󰤨 "]
+    // Same glyphs as the old Waybar module (signal glyphs there carried a
+    // trailing space because the module's paddings were asymmetric; the
+    // Quickshell pill centres its content, so the space would push the ink
+    // 4 px left — dropped here).
+    readonly property var wifiIcons: ["󰤯", "󰤟", "󰤢", "󰤥", "󰤨"]
 
     // Waybar picked the icon from its own signal percentage; until the
     // first /proc sample lands, use NetworkManager's percentage with the
