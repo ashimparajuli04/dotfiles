@@ -207,26 +207,29 @@ window#waybar.hidden {
 }
 
 /* Invisible slot for the Quickshell brightness pill (BrightnessPill.qml
-   draws on top of it); it only reserves the pill's footprint so the
-   neighbours don't move. See changes.md §13. */
+   draws on top of it); snug icon-only footprint (27px, like bluetooth) —
+   the percentage text was dropped, the pill shows the level glyph only.
+   See changes.md §28. */
 #custom-brightness {
   background-color: transparent;
   padding: 0;
   margin-top: 5px;
   margin-bottom: 0px;
   margin-right: 10px;
-  min-width: 70px;
+  min-width: 27px;
 }
 
 /* Invisible slot for the Quickshell sound pill (SoundPill.qml draws on
-   top of it); reserves the old pulseaudio pill footprint. See changes.md §14. */
+   top of it); snug icon-only footprint (27px, like bluetooth) — the
+   percentage text was dropped, the pill shows the level glyph only.
+   See changes.md §28. */
 #custom-sound {
   background-color: transparent;
   padding: 0;
   margin-top: 5px;
   margin-bottom: 0px;
   margin-right: 10px;
-  min-width: 64px;
+  min-width: 27px;
 }
 
 /* Invisible slot for the Quickshell bluetooth pill (BluetoothPill.qml

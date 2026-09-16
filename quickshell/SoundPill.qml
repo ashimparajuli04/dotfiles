@@ -27,9 +27,9 @@ Scope {
     readonly property color mutedColor: "#fb958b"
 
     // ---------- geometry ----------
-    // Tuned against the real bar with screenshots — see changes.md §14/§25.
-    readonly property int collapsedWidth: 64
-    readonly property int expandedWidth: 154    // right edge stays at x=1755
+    // Tuned against the real bar with screenshots — see changes.md §14/§25/§28.
+    readonly property int collapsedWidth: 27
+    readonly property int expandedWidth: 118    // right edge stays at x=1755
     readonly property int rightMargin: 165      // screen right edge → window right edge
     readonly property int pillHeight: 24
 
@@ -276,16 +276,6 @@ Scope {
                         if (!hover.hovered)
                             closeTimer.restart()
                     }
-                }
-
-                Text {
-                    id: pct
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root.shownPercent + "%"
-                    color: root.muted ? root.mutedColor : root.accent
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 13
-                    font.bold: true
                 }
             }
         }

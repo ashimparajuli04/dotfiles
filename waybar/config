@@ -36,7 +36,7 @@
     },
     "backlight": {
         // "device": "acpi_video1",
-        "format": "{icon} {percent}%",
+        "format": "{icon}",
         "format-icons": ["", "", "", "", "", "", "", "", ""]
     },
     // Invisible slot holder for the Quickshell brightness pill
@@ -131,8 +131,8 @@
         "interval": 5
     },
     "pulseaudio": {
-        "format": "{icon}{volume}%",
-        "format-bluetooth": "{icon}{volume}%",
+        "format": "{icon}",
+        "format-bluetooth": "{icon}",
         "nospacing": 1,
         "tooltip-format": "Volume : {volume}%",
         "format-muted": "󰝟 ",

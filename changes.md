@@ -992,6 +992,42 @@ battery module, remove the three QML files + `bin/power-mode`, revert the
 PillBus/panel/shell/qmldir edits, and delete
 `/etc/sudoers.d/rice-power-mode`.
 
+---
+
+## 26. Low Power Mode tier 2 — ryzenadj APU power caps (2026-10-09)
+
+**Goal:** stack a second, stronger savings tier on the battery panel's Low
+Power Mode switch.
+
+- `bin/power-mode` grows modes: `max` (tier 1 + APU caps), `limit-on`,
+  `limit-off`, `limit-status`. Tier 2 caps the whole APU (CPU + Vega iGPU)
+  at 6/8/10 W (STAPM / PPT slow / PPT fast) via `ryzenadj`; the stock limits
+  (15/20/25 W) are captured to `/run/power-mode/ryzenadj-defaults` on first
+  enable and restored by `limit-off`/`off`. Everything is volatile — a
+  reboot resets both the limits and the state file to firmware defaults.
+- `BatteryPanel.qml`: the Low Power Mode card now has two stacked rows
+  ("Low Power Mode" + "Power Limit") with a divider. Tier 2 implies tier 1;
+  turning tier 1 off also drops tier 2. Same sudo'd helper, so the existing
+  scoped sudoers rule covers the new modes.
+- Packages: `ryzenadj-git` + `ryzen_smu-dkms-git` (AUR),
+  `dkms`/`linux-headers` (repo). Without the SMU module ryzenadj can write
+  limits but not read the PM table (no capture/verify), so
+  `/etc/modules-load.d/rice-ryzen-smu.conf` autoloads it; `setup.sh` now
+  installs both the packages and that file.
+
+**Measured** (8-thread `yes` load, battery `power_now`): tier 1 only
+~9.2–9.5 W (package ~8 W); tier 1+2 ~8.0–8.6 W (STAPM avg ~5.9 W). Tier 2
+also bounds GPU-heavy loads. Frequency-bound python loop: 12.4 s with tier 1
+vs 7.1 s uncapped — the caps do bite.
+
+**Verified:** panel clicks flip both tiers end-to-end (journal + PM-table
+checks); `limit-off` restores the captured stock limits exactly; final state
+left at tier 1 on, tier 2 off.
+
+**Revert:** drop the tier-2 code paths from `bin/power-mode`, the second
+row in `BatteryPanel.qml`, and (if unwanted) the packages +
+`/etc/modules-load.d/rice-ryzen-smu.conf`.
+
 
 ---
 
@@ -1042,5 +1078,40 @@ had no ceiling either.
 `qs ipc call volume set 150` clamps to 100%; normal 30% → 40% stepping still
 works; pill screenshot shows `100%`. The sink (previously at 140%) is reset
 to 100%.
+
+**Revert:** `git revert <this commit>`.
+
+---
+
+## 28. Brightness and sound pills are icon-only (drop the `%` readout) (2026-10-09)
+
+**Change:** the last two pills that still printed a `%` value now show just
+the level glyph, matching the snug bluetooth/battery chips and the native
+Waybar `format: "{icon}"` + `format-icons` pattern (level → glyph, no text).
+The glyph mapping itself was already in place (9 circle-fill brightness
+glyphs, speaker low/med/high + mute) — only the trailing readout is gone.
+
+- `quickshell/BrightnessPill.qml` — `pct` Text removed; `collapsedWidth`
+  70→27, `expandedWidth` 200→172 (trimmed by the removed 23px text + 5px
+  spacing so the expanded slider keeps its 25px padding), `rightMargin`
+  240→203 (37px rightward shift from the sound slot below it).
+- `quickshell/SoundPill.qml` — `pct` Text removed; `collapsedWidth` 64→27,
+  `expandedWidth` 154→118 (keeps the expanded row's 8px padding);
+  `rightMargin` 165 unchanged (right edge stays pinned at x=1755).
+- `waybar/style.css` — `#custom-brightness` / `#custom-sound` `min-width`
+  70px / 64px → 27px; the tray and mpris modules to their left shift right
+  by 80px to close the gap (Waybar packs `modules-right` from the edge).
+- `waybar/config` — the unused native `backlight` / `pulseaudio` blocks now
+  use `"format": "{icon}"` (were `{icon} {percent}%` / `{icon}{volume}%`),
+  keeping the dead config in sync with the design.
+
+**Verified:** Waybar SIGUSR2 + Quickshell hot reload; screenshot-measured
+pill runs: brightness 1690..1717 (w 27), sound 1728..1755 (w 27) — the 11px
+gap to each other and to bluetooth is intact; everything right of brightness
+unchanged (bt 1765..1792, wifi 1802..1844, battery+powermenu 1856..1913).
+Expanded brightness (172px) has symmetric 27/27px air around glyph+slider;
+expanded sound measured 118px wide with a 91px push and the same 11px gap.
+Glyph ink sits 9/8px from the pill edges in both collapsed chips (1px
+optical rounding). No QML errors in `qs log`.
 
 **Revert:** `git revert <this commit>`.

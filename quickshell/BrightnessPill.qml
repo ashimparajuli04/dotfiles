@@ -21,12 +21,13 @@ Scope {
     readonly property color accent: "#2aa198"
 
     // ---------- geometry ----------
-    // collapsedWidth should match the Waybar spacer slot width set in
-    // style.css (#custom-brightness); rightMargin is measured from the
-    // screen's right edge. Both tuned with screenshots — see changes.md.
-    readonly property int collapsedWidth: 70
-    readonly property int expandedWidth: 200
-    readonly property int rightMargin: 240
+    // Icon-only, snug like the bluetooth/battery pills. collapsedWidth
+    // should match the Waybar spacer slot width set in style.css
+    // (#custom-brightness); rightMargin is measured from the screen's
+    // right edge. Both tuned with screenshots — see changes.md §28.
+    readonly property int collapsedWidth: 27
+    readonly property int expandedWidth: 172
+    readonly property int rightMargin: 203
     readonly property int pillHeight: 24
 
     // ---------- state ----------
@@ -163,7 +164,7 @@ Scope {
         Rectangle {
             id: pill
             anchors.top: parent.top
-            // Right edge normally at 1680; the sound/bt/wifi pills (to
+            // Right edge normally at 1717; the sound/bt/wifi pills (to
             // the right) push this pill left while they expand — the
             // shifts cascade, see PillBus.qml.
             x: win.width - width - PillBus.pushBrightness
@@ -251,16 +252,6 @@ Scope {
                         if (!hover.hovered)
                             closeTimer.restart()
                     }
-                }
-
-                Text {
-                    id: pct
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root.shownPercent + "%"
-                    color: root.accent
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 13
-                    font.bold: true
                 }
             }
         }
