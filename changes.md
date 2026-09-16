@@ -1018,3 +1018,29 @@ volume via `pactl`, raw volume 91701 / muted state restored exactly) match the
 rendered reference glyphs; `waybar/config` re-parses as valid JSON.
 
 **Revert:** `git revert <this commit>`.
+
+---
+
+## 27. Volume capped at 100% (no more runaway over-amplification) (2026-10-09)
+
+**Bug:** nothing stopped volume from climbing past 100%: the Sway volume keys
+ran `pactl set-sink-volume +5%` (which happily steps past 100% — the desktop
+had drifted to 140%), and the sound pill's wheel / `qs ipc call volume` paths
+had no ceiling either.
+
+**Fixed:**
+- `sway/config` — `XF86AudioRaiseVolume` now runs
+  `wpctl set-volume -l 1.0 \@DEFAULT_AUDIO_SINK@ 5%+` (WirePlumber's limit);
+  the lower key uses the same tool (`5%-`). wpctl reports/accepts the same
+  1.0 = 100% scale as pactl.
+- `quickshell/SoundPill.qml` — `applyVolume()` clamps to [0, 1], covering the
+  wheel nudge, the slider drag and `qs ipc call volume up|down|set`; the
+  displayed fraction/percent clamp to 100% too, so even an externally
+  over-amplified sink shows 100% instead of an inflated number.
+
+**Verified:** from 95% a `5%+` lands exactly at 100% and repeats stay at 100%;
+`qs ipc call volume set 150` clamps to 100%; normal 30% → 40% stepping still
+works; pill screenshot shows `100%`. The sink (previously at 140%) is reset
+to 100%.
+
+**Revert:** `git revert <this commit>`.

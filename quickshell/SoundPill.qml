@@ -41,8 +41,10 @@ Scope {
     property bool expanded: false
 
     readonly property bool dragActive: slider.dragging
-    readonly property real shownFraction: root.dragActive ? slider.shown : root.volume
-    readonly property int shownPercent: Math.max(0, Math.round(root.shownFraction * 100))
+    // Never display more than 100%: above that is over-amplification the
+    // UI should not offer (see changes.md §27).
+    readonly property real shownFraction: Math.max(0, Math.min(1, root.dragActive ? slider.shown : root.volume))
+    readonly property int shownPercent: Math.round(root.shownFraction * 100)
 
     // Keep live bindings on the displayed node: untracked nodes may not
     // push property updates (see changes.md §11).
@@ -74,9 +76,11 @@ Scope {
     }
 
     // ---------- volume ----------
+    // Hard ceiling at 100%: wheel, drag and IPC all funnel through here,
+    // so the UI can never dial in over-amplification.
     function applyVolume(v) {
         if (root.sink && root.sink.audio)
-            root.sink.audio.volume = Math.max(0, v)
+            root.sink.audio.volume = Math.max(0, Math.min(1, v))
     }
 
     // Drag updates are coalesced to at most every 30ms (see BrightnessPill).
