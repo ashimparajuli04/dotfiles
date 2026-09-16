@@ -41,8 +41,9 @@ PACMAN_PKGS=(
   ttf-jetbrains-mono-nerd ttf-iosevka-nerd ttf-material-icons
   ttf-material-design-icons-extended
   python-requests python-unidecode python-jinja
+  dkms linux-headers
 )
-AUR_PKGS=(eww-git bibata-cursor-theme-bin)
+AUR_PKGS=(eww-git bibata-cursor-theme-bin ryzenadj-git ryzen_smu-dkms-git)
 
 # ---------------------------------------------------------------------------
 # What gets placed where
@@ -235,6 +236,16 @@ if command -v sudo >/dev/null && command -v visudo >/dev/null; then
   rm -f "$tmp"
 else
   say "no sudo/visudo — Low Power Mode will ask for a password"
+fi
+
+step "ryzen_smu module autoload"
+# ryzenadj needs the SMU kernel module to read the PM table (power-mode
+# tier 2 captures and verifies the APU limits through it).
+if [ -d /etc/modules-load.d ]; then
+  printf 'ryzen_smu\n' | sudo tee /etc/modules-load.d/rice-ryzen-smu.conf >/dev/null 2>&1 \
+    && sudo modprobe ryzen_smu 2>/dev/null \
+    && say "installed /etc/modules-load.d/rice-ryzen-smu.conf" \
+    || say "could not set up ryzen_smu — the Power Limit tier will not work"
 fi
 
 for p in google-password icloud-password; do

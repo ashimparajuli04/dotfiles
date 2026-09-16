@@ -6,10 +6,11 @@ import Quickshell.Wayland
 
 // Battery popover, opened by clicking the battery pill (or `qs ipc call
 // battery toggle`). Live charge info comes from UPower (BatteryState.qml);
-// the Low Power Mode switch drives `~/.local/bin/power-mode` through
-// passwordless sudo (boost off + 1.4 GHz cap — see bin/power-mode).
+// the two Low Power Mode tiers drive `~/.local/bin/power-mode` through
+// passwordless sudo — tier 1 caps the CPU frequency, tier 2 additionally
+// caps the whole APU's wattage via ryzenadj (see bin/power-mode).
 // Same popover pattern as SoundPanel.qml: click-catcher, Escape close,
-// only one panel open at a time. See changes.md §22.
+// only one panel open at a time. See changes.md §25/§26.
 Scope {
     id: root
 
@@ -17,9 +18,10 @@ Scope {
 
     property bool panelOpen: false
     property bool lowPower: false
+    property bool powerLimit: false
 
     // ---------- low power mode ----------
-    // Reading sysfs needs no privileges; flipping it does (sudo -n, the
+    // Reading state needs no privileges; flipping it does (sudo -n, the
     // machine already has passwordless sudo — setup.sh also drops a
     // scoped sudoers rule so this works on a fresh machine).
     Process {
@@ -35,14 +37,39 @@ Scope {
     }
 
     Process {
+        id: limitStatusProc
+        command: [root.helper, "limit-status"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                if (!setProc.running)
+                    root.powerLimit = String(text).trim() === "on"
+            }
+        }
+    }
+
+    Process {
         id: setProc
-        onExited: if (!statusProc.running)
-            statusProc.running = true
+        onExited: {
+            if (!statusProc.running)
+                statusProc.running = true
+            if (!limitStatusProc.running)
+                limitStatusProc.running = true
+        }
     }
 
     function setLowPower(on) {
         root.lowPower = on            // optimistic; the refresh corrects it
+        if (!on)
+            root.powerLimit = false   // tier 2 stacks on tier 1
         setProc.command = ["sudo", "-n", root.helper, on ? "on" : "off"]
+        setProc.running = true
+    }
+
+    function setPowerLimit(on) {
+        root.powerLimit = on          // optimistic; the refresh corrects it
+        if (on)
+            root.lowPower = true      // tier 2 implies tier 1
+        setProc.command = ["sudo", "-n", root.helper, on ? "max" : "limit-off"]
         setProc.running = true
     }
 
@@ -51,8 +78,14 @@ Scope {
         repeat: true
         running: root.panelOpen
         triggeredOnStart: true
-        onTriggered: if (!setProc.running && !statusProc.running)
-            statusProc.running = true
+        onTriggered: {
+            if (setProc.running)
+                return
+            if (!statusProc.running)
+                statusProc.running = true
+            if (!limitStatusProc.running)
+                limitStatusProc.running = true
+        }
     }
 
     // ---------- live values ----------
@@ -301,53 +334,110 @@ Scope {
                     }
                 }
 
-                // ---- Low Power Mode ----
+                // ---- Low Power Mode (tier 1) + Power Limit (tier 2) ----
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.topMargin: 10
-                    implicitHeight: 52
+                    implicitHeight: lpCol.implicitHeight + 24
                     radius: 12
                     color: Qt.rgba(Theme.bgAlt.r, Theme.bgAlt.g, Theme.bgAlt.b, 0.35)
 
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: 12
-                        anchors.rightMargin: 12
+                    ColumnLayout {
+                        id: lpCol
+                        anchors {
+                            top: parent.top
+                            left: parent.left
+                            right: parent.right
+                            margins: 12
+                        }
                         spacing: 10
 
-                        Text {
-                            text: "󰉁"
-                            color: root.lowPower ? Theme.active : Theme.muted
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 18
-                        }
-
-                        ColumnLayout {
+                        // Tier 1: CPU frequency cap.
+                        RowLayout {
                             Layout.fillWidth: true
-                            spacing: 0
+                            spacing: 10
 
                             Text {
-                                Layout.fillWidth: true
-                                text: "Low Power Mode"
-                                color: Theme.fg
+                                text: "󰉁"
+                                color: root.lowPower ? Theme.active : Theme.muted
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 13
-                                font.bold: true
+                                font.pixelSize: 18
                             }
 
-                            Text {
+                            ColumnLayout {
                                 Layout.fillWidth: true
-                                text: "CPU capped at 1.4 GHz, boost off"
-                                color: Theme.muted
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 10
-                                elide: Text.ElideRight
+                                spacing: 0
+
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: "Low Power Mode"
+                                    color: Theme.fg
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 13
+                                    font.bold: true
+                                }
+
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: "CPU capped at 1.4 GHz, boost off"
+                                    color: Theme.muted
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 10
+                                    elide: Text.ElideRight
+                                }
+                            }
+
+                            ToggleSwitch {
+                                checked: root.lowPower
+                                onToggled: root.setLowPower(!root.lowPower)
                             }
                         }
 
-                        ToggleSwitch {
-                            checked: root.lowPower
-                            onToggled: root.setLowPower(!root.lowPower)
+                        Rectangle {
+                            Layout.fillWidth: true
+                            implicitHeight: 1
+                            color: Qt.rgba(1, 1, 1, 0.08)
+                        }
+
+                        // Tier 2: whole-APU power limit (ryzenadj).
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 10
+
+                            Text {
+                                text: "󰊚"
+                                color: root.powerLimit ? Theme.active : Theme.muted
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 18
+                            }
+
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 0
+
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: "Power Limit"
+                                    color: Theme.fg
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 13
+                                    font.bold: true
+                                }
+
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: "APU capped at 6 W · ryzenadj"
+                                    color: Theme.muted
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 10
+                                    elide: Text.ElideRight
+                                }
+                            }
+
+                            ToggleSwitch {
+                                checked: root.powerLimit
+                                onToggled: root.setPowerLimit(!root.powerLimit)
+                            }
                         }
                     }
                 }
