@@ -1031,7 +1031,7 @@ row in `BatteryPanel.qml`, and (if unwanted) the packages +
 
 ---
 
-## 26. Sound pill glyphs were mangled by 5-digit `\u` escapes (2026-10-09)
+## 27. Sound pill glyphs were mangled by 5-digit `\u` escapes (2026-10-09)
 
 **Bug:** the sound pill's four volume glyphs in `SoundPill.qml` were written as
 five-hex-digit JS escapes (`"\uf075f"` etc.). JS `\uXXXX` consumes exactly 4 hex
