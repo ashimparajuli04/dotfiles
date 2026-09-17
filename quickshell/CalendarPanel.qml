@@ -257,7 +257,10 @@ Scope {
 
     Timer {
         id: closeTimer
-        interval: 500
+        // 0 ms: hide on the next event-loop tick (no visible linger). The
+        // zero interval is still cancellable in the same tick, so a pointer
+        // move from the chip onto the card cancels the close as before.
+        interval: 0
         repeat: false
         onTriggered: root.cardVisible = false
     }

@@ -1115,3 +1115,26 @@ Glyph ink sits 9/8px from the pill edges in both collapsed chips (1px
 optical rounding). No QML errors in `qs log`.
 
 **Revert:** `git revert <this commit>`.
+
+---
+
+## 29. Calendar hover card closes with no delay (2026-10-09)
+
+**Change:** the quickshell clock chip's hover card (CalendarPanel.qml) used a
+500 ms `closeTimer` grace period before hiding after the pointer left the chip
+or the agenda card — that is what made the "time panel" linger after
+un-hovering. `closeTimer.interval` is now `0`: the card hides on the next
+event-loop tick (visually instant).
+
+The zero-interval timer is still cancellable in the same tick, so moving the
+pointer from the clock straight onto the agenda card still cancels the close
+(the agenda stays scrollable) — only the visible linger is gone. The full
+popup (opened by click) and all other panels are untouched.
+
+**Verified:** quickshell hot reload (`Reloading configuration... Configuration
+Loaded`); no QML errors in `qs log` (only the pre-existing textinput warnings).
+Pointer-hover feel left for manual confirmation — no pointer-automation tool
+(ydotool/wtype) on this machine.
+
+**Revert:** set `closeTimer.interval` back to `500` in
+`quickshell/CalendarPanel.qml` (or `git revert <this commit>`).
