@@ -141,11 +141,23 @@ Scope {
     readonly property real expandedWidth: root.collapsedWidth
         + (nameText.implicitWidth > 0 ? 5 + Math.min(nameText.implicitWidth, root.nameCap) : 0)
 
-    Timer {
-        id: closeTimer
-        interval: 260
-        onTriggered: if (!hover.hovered)
-            root.expanded = false
+    // Hover only expands the pill; collapsing is driven by
+    // PillBus.collapseTick and only happens after the whole pill row has
+    // been unhovered. Switching quickly to the bluetooth pill (or any
+    // other) therefore never collapses this one and never slides the row
+    // under the cursor — see PillBus.qml.
+    Binding {
+        target: PillBus
+        property: "hoverWifi"
+        value: hover.hovered
+    }
+
+    Connections {
+        target: PillBus
+        function onCollapseTickChanged() {
+            if (!hover.hovered)
+                root.expanded = false
+        }
     }
 
     Process {
@@ -225,14 +237,8 @@ Scope {
 
             HoverHandler {
                 id: hover
-                onHoveredChanged: {
-                    if (hovered) {
-                        closeTimer.stop()
-                        root.expanded = true
-                    } else {
-                        closeTimer.restart()
-                    }
-                }
+                onHoveredChanged: if (hovered)
+                    root.expanded = true
             }
 
             Row {

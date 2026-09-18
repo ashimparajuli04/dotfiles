@@ -113,11 +113,23 @@ Scope {
         }
     }
 
-    Timer {
-        id: closeTimer
-        interval: 260
-        onTriggered: if (!hover.hovered && !root.dragActive)
-            root.expanded = false
+    // Hover — or an active slider drag — keeps this pill engaged in
+    // PillBus; collapsing is driven by PillBus.collapseTick and only
+    // happens after no pill in the row is engaged. A drag can therefore
+    // never be collapsed mid-drag, and releasing it outside the pill
+    // resumes the normal grace period — see PillBus.qml.
+    Binding {
+        target: PillBus
+        property: "hoverBrightness"
+        value: hover.hovered || root.dragActive
+    }
+
+    Connections {
+        target: PillBus
+        function onCollapseTickChanged() {
+            if (!hover.hovered && !root.dragActive)
+                root.expanded = false
+        }
     }
 
     IpcHandler {
@@ -182,14 +194,8 @@ Scope {
 
             HoverHandler {
                 id: hover
-                onHoveredChanged: {
-                    if (hovered) {
-                        closeTimer.stop()
-                        root.expanded = true
-                    } else {
-                        closeTimer.restart()
-                    }
-                }
+                onHoveredChanged: if (hovered)
+                    root.expanded = true
             }
 
             WheelHandler {
@@ -248,9 +254,10 @@ Scope {
                     }
 
                     onMoved: function (v) {
+                        // Releasing the drag re-engages the normal grace
+                        // period (the PillBus hover binding drops when
+                        // dragActive goes false — see PillBus.qml).
                         root.applyPercent(v * 100)
-                        if (!hover.hovered)
-                            closeTimer.restart()
                     }
                 }
             }

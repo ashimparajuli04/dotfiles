@@ -32,11 +32,23 @@ Scope {
     readonly property real expandedWidth: root.collapsedWidth
         + (pctText.implicitWidth > 0 ? 5 + Math.min(pctText.implicitWidth, root.pctCap) : 0)
 
-    Timer {
-        id: closeTimer
-        interval: 260
-        onTriggered: if (!hover.hovered)
-            root.expanded = false
+    // Hover only expands the pill; collapsing is driven by
+    // PillBus.collapseTick and only happens after the whole pill row has
+    // been unhovered. Switching quickly to/from a neighbour therefore
+    // never collapses this one and never slides the row under the
+    // cursor — see PillBus.qml.
+    Binding {
+        target: PillBus
+        property: "hoverBattery"
+        value: hover.hovered
+    }
+
+    Connections {
+        target: PillBus
+        function onCollapseTickChanged() {
+            if (!hover.hovered)
+                root.expanded = false
+        }
     }
 
     Process {
@@ -118,14 +130,8 @@ Scope {
 
             HoverHandler {
                 id: hover
-                onHoveredChanged: {
-                    if (hovered) {
-                        closeTimer.stop()
-                        root.expanded = true
-                    } else {
-                        closeTimer.restart()
-                    }
-                }
+                onHoveredChanged: if (hovered)
+                    root.expanded = true
             }
 
             Row {

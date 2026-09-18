@@ -1138,3 +1138,42 @@ Pointer-hover feel left for manual confirmation — no pointer-automation tool
 
 **Revert:** set `closeTimer.interval` back to `500` in
 `quickshell/CalendarPanel.qml` (or `git revert <this commit>`).
+
+---
+
+## 30. Pill row hover hold — quick switches keep the pill you left open (2026-10-09)
+
+**Problem:** each pill collapsed on its own 260 ms timer even when the pointer
+had already moved onto a neighbour. Collapsing a pill pushes the row (the
+pills left of it slide right), so a quick wifi → bluetooth switch slid
+bluetooth out from under the cursor — the hover was lost and the row
+flickered/jumped.
+
+**Change — one shared hover hold for the whole pill row:**
+- `quickshell/PillBus.qml` — each pill publishes `hoverBrightness` /
+  `hoverSound` / `hoverBt` / `hoverWifi` / `hoverBattery`; `hoverAny` gates a
+  single shared **500 ms** idle timer that bumps `collapseTick` only after
+  the *whole* row has been left.
+- `quickshell/{BrightnessPill,SoundPill,BluetoothPill,WifiPill,BatteryPill}.qml`
+  — per-pill `closeTimer`s removed. Hover only expands; collapse happens off
+  `collapseTick`, and only if the pill isn't hovered. Sound/brightness count
+  an active slider drag as engaged, so a drag can never be collapsed
+  mid-drag, and releasing it outside the pill resumes the normal grace.
+- Behaviour: switching quickly between pills (any pair, any direction —
+  battery→wifi, wifi→bt, bt→sound, sound→brightness, …) keeps every
+  already-expanded pill open while the pointer is on one of them; leaving the
+  row collapses them all together in one synchronized animation, so the gaps
+  stay exact. A pill that already fully collapsed stays collapsed
+  (re-expanding would shift the row under the cursor — the same flicker this
+  avoids).
+
+**Verified:** `PillBus` exercised with a standalone `qs -p` test config using
+the pills' exact patterns (`Binding` publishing hover, `Connections` on
+`collapseTick`): quick switch → no collapse broadcast; no collapse at 200 ms
+after leaving; collapse broadcast after the 500 ms grace; hover holds a
+running timer; collapse resumes after the hold is released — 5/5 pass. Hot
+reload clean ("Configuration Loaded", no QML errors); resting bar screenshot
+unchanged. The pointer-level hover sweep itself is left for manual
+confirmation (no pointer-automation tool on this machine, same as §29).
+
+**Revert:** `git revert <this commit>`.
