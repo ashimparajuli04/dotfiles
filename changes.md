@@ -1177,3 +1177,33 @@ unchanged. The pointer-level hover sweep itself is left for manual
 confirmation (no pointer-automation tool on this machine, same as §29).
 
 **Revert:** `git revert <this commit>`.
+
+---
+
+## 31. Power menu image — girl (`z.png`) replaced with a `clove.png` crop (2026-10-09)
+
+**Change:** the powermenu's image side panel showed the rofi example girl
+(`rofi/images/z.png`, 510x420). It now shows Clove, pre-cropped from
+`~/Downloads/clove.png` (1656x2070) to the panel's exact 500:369 aspect
+(full width, top 1222px: head through torso, legs cropped off) and
+downscaled to 1000x738.
+
+- `rofi/images/clove.png` — new (1000x738, 393K). `rofi/images/z.png`
+  removed; nothing else referenced it.
+- `quickshell/PowermenuPanel.qml` — image source → `clove.png`; the
+  `imgWidth` natural-size math `510/420` → `1000/738`. Because the crop
+  matches the panel aspect, scaling it to the panel height makes it
+  exactly 500px wide: it fills the box once instead of leaving the old
+  52px repeat strip. Note: the formula line sits *below* its comment —
+  updating only the comment leaves the old 448px width (she renders
+  squished; that bug was caught and fixed).
+- `rofi/powermenu/type-6/style-5.rasi` — imagebox `background-image`
+  url → `clove.png` (keeps the mirrored rofi theme in sync).
+
+**Verified:** Quickshell hot reload; panel screenshot at (560,371) —
+image fills the 500x369 pane edge to edge, no repeat seam, and a stacked
+comparison against the source crop shows no distortion.
+
+**Revert:** `git revert <this commit>` (z.png comes back, the panel
+returns to the girl). To re-crop from the original:
+`ffmpeg -i clove.png -vf "crop=1656:1222:0:0,scale=1000:738" rofi/images/clove.png`

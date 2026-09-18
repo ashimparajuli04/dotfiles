@@ -257,9 +257,9 @@ Scope {
             }
 
             // ---- Image panel (right half) ----
-            // Rofi scales z.png (510x420) to the panel height, keeps the
-            // aspect ratio, anchors it top-left and repeats it horizontally;
-            // the clipped strip on the right shows the next tile's edge.
+            // clove.png is pre-cropped to the panel's 500:369 aspect ratio,
+            // so scaling it to the panel height fills the box width exactly.
+            // The second copy behind it stays clipped and never shows.
             Item {
                 id: imageBox
                 x: 300
@@ -268,9 +268,9 @@ Scope {
                 height: 369
                 clip: true
 
-                readonly property string src: "file://" + Quickshell.shellDir + "/../rofi/images/z.png"
-                // 510/420 are the natural dimensions of z.png.
-                readonly property real imgWidth: 510 * (height / 420)
+                readonly property string src: "file://" + Quickshell.shellDir + "/../rofi/images/clove.png"
+                // 1000/738 are the natural dimensions of clove.png.
+                readonly property real imgWidth: 1000 * (height / 738)
 
                 Image {
                     x: 0
