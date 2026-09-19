@@ -9,3 +9,7 @@ vdirsyncer/*-password
 
 # --- local venv for the lyrics scripts ---
 scripts/.venv/
+
+# --- Python bytecode ---
+__pycache__/
+*.pyc

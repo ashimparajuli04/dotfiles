@@ -1242,3 +1242,45 @@ lyrics service and Quickshell widget are unaffected.
 **Revert:** `git revert <this commit>` restores `eww/`, the sway autostart and
 the `setup.sh` entries. The `eww-git` package was left installed (now unused) —
 remove with `yay -Rns eww-git` if desired.
+
+---
+
+## 33. Dynamic workspace numbers — compact to 1..N, bar shows only used (2026-10-09)
+
+**Symptom:** sway destroys an empty workspace as soon as it loses focus, but it
+never renumbers the survivors. Close the window(s) on workspace 1, switch away,
+and you are left on "2" — pressing `Mod+1` then creates a brand-new empty
+workspace instead of focusing the one you already have. The Waybar dots also
+always showed 1–5 (pinned by `persistent-workspaces`) whatever was in use.
+
+**Change — keep numbers contiguous, show only used workspaces:**
+- `sway/scripts/workspace-compact.py` (new) — subscribes to
+  `swaymsg -t subscribe -m '["workspace","window"]'`, coalesces bursts with a
+  150 ms debounce, then renames the numeric workspaces so their numbers run
+  `1..N` in order. Renames go ascending and only onto free numbers, so they
+  never collide with sway's own empty-workspace teardown. Single-instance via
+  `flock`; logs to `/tmp/opencode/sway-workspace-compact.log`.
+- `sway/config` — `exec --no-startup-id ~/.config/sway/scripts/workspace-compact.py`.
+- `waybar/config` — dropped `persistent-workspaces`; the `sway/workspaces`
+  module now renders only workspaces that actually exist.
+
+**Behaviour:** a workspace that is empty but still focused keeps its dot (your
+rule is "empty *and* out of view"); when you leave it sway removes it, the rest
+compact, and `Mod+<n>`, the 3-finger swipes (`gesture-workspace.py`) and the
+dots all stay contiguous.
+
+**Caveat:** `assign [app_id="Spotify"] workspace number 4` is now approximate —
+with compaction the 4th slot is not guaranteed to be numbered 4. Spotify is not
+installed, so the line was left as-is.
+
+**Note:** the helper is started from a sway `exec` line, which sway only runs at
+startup (a `swaymsg reload` does not re-run it here), so it was also launched
+once by hand to bring it up in the current session.
+
+**Verified:** `sway -C -c sway/config` clean; Waybar parses the new config and
+reloads without errors; live test created workspace 5 → the helper renamed it to
+3 → leaving it removed the workspace and left 1,2.
+
+**Revert:** `git revert <this commit>` (also restores `persistent-workspaces`
+and removes the helper) or delete the sway `exec` line and the
+`waybar/config` change by hand.

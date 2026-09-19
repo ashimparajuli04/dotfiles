@@ -326,6 +326,11 @@ exec --no-startup-id dunst
 # Focus apps' windows when they request attention (e.g. clicking Discord's tray icon):
 exec --no-startup-id bash /home/ashim/.config/sway/scripts/urgent-focus.sh
 
+# Keep workspace numbers contiguous: sway destroys an empty, unfocused
+# workspace but never renumbers the rest, so after workspace 1 empties you are
+# left on "2". This helper renames the survivors to 1..N (see changes.md §33).
+exec --no-startup-id ~/.config/sway/scripts/workspace-compact.py
+
 # Waybar (replaces the built-in swaybar):
 # wait for MPD first, so waybar's 'mpd' module doesn't get stuck disconnected
 exec --no-startup-id sh -c 'for i in $(seq 1 50); do mpc status >/dev/null 2>&1 && break; sleep 0.2; done; exec waybar'
