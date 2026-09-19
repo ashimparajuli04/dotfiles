@@ -1284,3 +1284,30 @@ reloads without errors; live test created workspace 5 → the helper renamed it 
 **Revert:** `git revert <this commit>` (also restores `persistent-workspaces`
 and removes the helper) or delete the sway `exec` line and the
 `waybar/config` change by hand.
+
+---
+
+## 34. Swipe-right at the right edge no longer spawns an empty workspace (2026-10-09)
+
+**Symptom:** on the rightmost workspace a right 3-finger swipe always ran
+`workspace number n+1`. If the workspace you were on was empty, sway created
+the new one and destroyed the empty one you left — a no-op with a flicker (and
+the §33 compaction helper renumbered the fresh one straight back down). The
+left edge already refused at workspace 1; the right edge had no bound.
+
+**Change — `sway/scripts/gesture-workspace.py`:**
+- Added `has_windows()` / `focused_has_windows()`. Emptiness is detected by
+  walking `swaymsg -t get_tree` for a leaf `con`: this sway reports
+  `window: null` on leaf views, so the window id can't be used to identify one.
+- A right/next swipe now creates the new workspace **only when the current one
+  holds a window**. From an empty workspace at the right edge it logs and
+  returns, mirroring the left-edge guard.
+- Left/prev swipes are unchanged (still bounded at workspace 1).
+
+**Behaviour:** rightmost occupied + swipe right → fresh empty workspace; that
+empty workspace + swipe right again → nothing. `Mod+N` still creates on demand.
+
+**Verified:** live test — from occupied ws 2 a right swipe created 3; a second
+right swipe was a no-op; a left swipe returned to 2 and removed 3.
+
+**Revert:** `git revert <this commit>`.
