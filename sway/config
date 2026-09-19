@@ -330,10 +330,6 @@ exec --no-startup-id bash /home/ashim/.config/sway/scripts/urgent-focus.sh
 # wait for MPD first, so waybar's 'mpd' module doesn't get stuck disconnected
 exec --no-startup-id sh -c 'for i in $(seq 1 50); do mpc status >/dev/null 2>&1 && break; sleep 0.2; done; exec waybar'
 
-# EWW (music widget, bottom left):
-exec --no-startup-id eww daemon
-exec --no-startup-id sh -c "sleep 1 && eww open example"
-
 # Battery Alert:
 exec --no-startup-id /home/ashim/.config/battery-alert/battery-alert
 

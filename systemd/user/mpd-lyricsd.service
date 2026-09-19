@@ -1,5 +1,5 @@
 [Unit]
-Description=MPD lyrics daemon (feeds the eww lyrics widget)
+Description=MPD lyrics daemon (feeds the music widget's plain-text lyrics fallback)
 Documentation=file:///home/ashim/.config/mpd-lyricsd/config.toml
 Wants=mpd.service
 After=mpd.service

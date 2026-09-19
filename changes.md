@@ -1207,3 +1207,38 @@ comparison against the source crop shows no distortion.
 **Revert:** `git revert <this commit>` (z.png comes back, the panel
 returns to the girl). To re-crop from the original:
 `ffmpeg -i clove.png -vf "crop=1656:1222:0:0,scale=1000:738" rofi/images/clove.png`
+
+---
+
+## 32. eww music widget retired — Quickshell MusicWidget is the only one (2026-10-09)
+
+**Symptom:** the music widget rendered **twice**, both cards stacked in the
+bottom-left corner.
+
+**Cause:** §20 replaced the eww widget with the Quickshell `MusicWidget` but
+deliberately left the eww sway autostart in place "for now" and only closed the
+eww window manually. A sway reload / re-login brought `eww daemon` +
+`eww open example` back, so the old eww `example` window (anchored bottom-left,
+`x 2% / y 3%` in `eww/eww.yuck`) appeared alongside the Quickshell widget
+(anchored bottom-left, `2% / 3%` margins in `quickshell/MusicWidget.qml`).
+
+**Change — eww fully removed, Quickshell kept:**
+- `sway/config` — dropped the `eww daemon` and `sleep 1 && eww open example`
+  autostart lines (comment block removed too).
+- `eww/` — deleted from the repo (`git rm -r`); `~/.config/eww` symlink removed.
+- `setup.sh` — `eww-git` removed from `AUR_PKGS`; `eww` removed from
+  `CONFIG_DIRS`; `eww/eww.yuck` removed from `PATH_FIX_FILES`.
+- `systemd/user/mpd-lyricsd.service` — description reworded (it no longer feeds
+  an eww widget; it still supplies the widget's plain-text lyrics fallback).
+- `scripts/lyrics-view` — docstring reworded ("eww desktop widget" → "desktop
+  music widget").
+
+**Runtime:** `eww close example` + `pkill -x eww`; no eww processes remain.
+
+**Verified:** `sway -C -c sway/config` clean; no eww references left in the
+tracked configs (only historical comments in Quickshell/`changes.md`); the MPD
+lyrics service and Quickshell widget are unaffected.
+
+**Revert:** `git revert <this commit>` restores `eww/`, the sway autostart and
+the `setup.sh` entries. The `eww-git` package was left installed (now unused) —
+remove with `yay -Rns eww-git` if desired.

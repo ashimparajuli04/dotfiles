@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Time-synced lyrics viewer for the eww desktop widget.
+Time-synced lyrics viewer for the desktop music widget.
 
 Reads the current MPD track, finds the matching .lrc file in
 ~/.local/share/lyrics/, and outputs a rolling window of lines

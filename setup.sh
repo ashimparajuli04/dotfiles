@@ -43,13 +43,13 @@ PACMAN_PKGS=(
   python-requests python-unidecode python-jinja
   dkms linux-headers
 )
-AUR_PKGS=(eww-git bibata-cursor-theme-bin ryzenadj-git ryzen_smu-dkms-git)
+AUR_PKGS=(bibata-cursor-theme-bin ryzenadj-git ryzen_smu-dkms-git)
 
 # ---------------------------------------------------------------------------
 # What gets placed where
 # ---------------------------------------------------------------------------
 CONFIG_DIRS=(
-  kitty nvim battery-alert cava dunst eww gtk-3.0 gtk-4.0 khal mpd
+  kitty nvim battery-alert cava dunst gtk-3.0 gtk-4.0 khal mpd
   mpd-lyricsd ncmpcpp quickshell rmpc rofi sway systemd vdirsyncer
   waybar xkb
 )
@@ -72,7 +72,7 @@ EXTRA_LINKS=(
 
 # Text files whose hardcoded /home/ashim paths are rewritten on a new machine
 PATH_FIX_FILES=(
-  sway/config waybar/config rofi/config.rasi eww/eww.yuck rmpc/config.ron
+  sway/config waybar/config rofi/config.rasi rmpc/config.ron
   vdirsyncer/config systemd/user/fetch-lyrics.service
   systemd/user/mpd-lyricsd.service scripts/fetch-lyrics
   mpd-lyricsd/config.toml gtk-3.0/bookmarks quickshell/BatteryPanel.qml
