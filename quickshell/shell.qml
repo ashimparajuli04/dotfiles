@@ -12,6 +12,7 @@ ShellRoot {
     BluetoothPill {}
     WifiPill {}
     BatteryPill {}
+    TrayWidget {}
     MusicWidget {}
     MusicPanel {}
 }

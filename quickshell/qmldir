@@ -19,11 +19,13 @@ WifiPill 1.0 WifiPill.qml
 singleton PillBus 1.0 PillBus.qml
 BatteryPill 1.0 BatteryPill.qml
 BatteryPanel 1.0 BatteryPanel.qml
+TrayWidget 1.0 TrayWidget.qml
+TrayMenu 1.0 TrayMenu.qml
+TrayMenuRow 1.0 TrayMenuRow.qml
 singleton BatteryState 1.0 BatteryState.qml
 MusicWidget 1.0 MusicWidget.qml
 MusicPanel 1.0 MusicPanel.qml
 MusicButton 1.0 MusicButton.qml
 LyricsView 1.0 LyricsView.qml
-Visualizer 1.0 Visualizer.qml
 singleton MusicState 1.0 MusicState.qml
 singleton MusicStyle 1.0 MusicStyle.qml

@@ -9,9 +9,10 @@ import Quickshell.Wayland
 // BrightnessPill.qml / SoundPill.qml.
 //
 // Geometry: sits on the transparent `custom/wifi` Waybar spacer and
-// expands LEFTWARD (right edge pinned at x=1844). While it expands it
-// pushes the bluetooth pill (and everything left of it) via PillBus;
-// the battery pill (to the right) pushes this one in turn.
+// expands LEFTWARD (right edge pinned at x=1849, flush against the
+// battery pill; joined row — changes.md §32). While it expands it pushes
+// the bluetooth pill (and everything left of it) via PillBus; the
+// battery pill (to the right) pushes this one in turn.
 Scope {
     id: root
 
@@ -20,8 +21,11 @@ Scope {
 
     // ---------- geometry ----------
     // Tuned against the real bar with screenshots — see changes.md §15/§25.
-    readonly property int collapsedWidth: 42
-    readonly property int rightMargin: 76       // screen right edge → window right edge
+    // Joined row (§32): rightMargin 71 = 44 (battery) + 27 (battery width),
+    // so this pill's right edge sits flush against the battery pill. Width is
+    // 27 to match the other pills, so every icon sits an even 27px apart.
+    readonly property int collapsedWidth: 27
+    readonly property int rightMargin: 71       // screen right edge → window right edge
     readonly property int pillHeight: 24
     readonly property int nameCap: 140          // hover text elides beyond this
 
@@ -138,8 +142,10 @@ Scope {
             signalProc.running = true
     }
 
-    readonly property real expandedWidth: root.collapsedWidth
-        + (nameText.implicitWidth > 0 ? 5 + Math.min(nameText.implicitWidth, root.nameCap) : 0)
+    // Rounded to whole pixels so the pushed (collapsed) pills shift by an
+    // exact integer and the joined row never shows a sub-pixel seam.
+    readonly property int expandedWidth: Math.round(root.collapsedWidth
+        + (nameText.implicitWidth > 0 ? 5 + Math.min(nameText.implicitWidth, root.nameCap) : 0))
 
     // Hover only expands the pill; collapsing is driven by
     // PillBus.collapseTick and only happens after the whole pill row has
@@ -170,7 +176,7 @@ Scope {
     Binding {
         target: PillBus
         property: "wifiPush"
-        value: Math.max(0, pill.width - root.collapsedWidth)
+        value: Math.max(0, Math.round(pill.width - root.collapsedWidth))
     }
 
     Binding {
@@ -213,12 +219,14 @@ Scope {
         Rectangle {
             id: pill
             anchors.top: parent.top
-            // Right edge normally at 1844; the battery pill (to the
-            // right) pushes this pill left while it expands.
+            // Right edge normally at 1856, flush against the battery
+            // pill; the battery pill (to the right) pushes this pill left
+            // while it expands.
             x: win.width - width - PillBus.pushWifi
             height: root.pillHeight
             width: root.expanded ? root.expandedWidth : root.collapsedWidth
-            radius: 8
+            // Middle segment of the joined row: square corners.
+            radius: 0
             color: "#040404"
 
             Behavior on width {

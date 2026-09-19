@@ -5,7 +5,8 @@ import QtQuick
 // Shared state between the bar pills. Each pill that expands LEFTWARD
 // publishes its live expansion delta here; every pill to its left binds
 // its position shift to the sum of the deltas of the pills on its right,
-// so the row keeps its gaps while pills expand (push instead of overlap).
+// so the joined row stays flush while pills expand (push instead of
+// overlap; see changes.md §32).
 //
 // Layout (left → right): brightness · sound · bluetooth · wifi · battery
 QtObject {
@@ -24,6 +25,12 @@ QtObject {
     property real wifiMaxPush: 0
     property real batteryMaxPush: 0
 
+    // Brightness is the leftmost pill, so nothing inside PillBus needs its
+    // own expansion — but external consumers (the Waybar tray spacer, via
+    // TrayShift.qml) do, to know the cluster's full leftward reach.
+    property real brightnessPush: 0
+    property real brightnessMaxPush: 0
+
     // The shift applied to a pill's position (sum of the pushes of every
     // expanding pill to its right).
     readonly property real pushBt: wifiPush + batteryPush
@@ -37,13 +44,20 @@ QtObject {
     readonly property real maxPushSound: btMaxPush + wifiMaxPush + batteryMaxPush
     readonly property real maxPushBrightness: soundMaxPush + btMaxPush + wifiMaxPush + batteryMaxPush
 
+    // Total leftward reach of the cluster from its collapsed position — the
+    // sum of every pill's live delta. The Waybar tray spacer shifts the
+    // system tray left by this much so a hover-expanding pill never covers
+    // it (see TrayShift.qml / changes.md §35).
+    readonly property real reach: pushBrightness + brightnessPush
+    readonly property real maxReach: maxPushBrightness + brightnessMaxPush
+
     // ---------- hover hold ----------
     // Each pill publishes its hover state here. An expanded pill must NOT
     // collapse while the pointer is on any other pill: the collapse would
     // push the row and slide the pill under the cursor (the wifi →
     // bluetooth flicker). Instead, a single shared grace timer runs only
     // while the whole row is unhovered; when it fires, every expanded pill
-    // collapses together, so the row keeps its gaps.
+    // collapses together, so the joined row stays flush.
     property bool hoverBrightness: false
     property bool hoverSound: false
     property bool hoverBt: false
@@ -65,7 +79,7 @@ QtObject {
     }
 
     // Grace period once the pointer has left the whole row. 500 ms: enough
-    // time to cross the ~10 px gap between pills (or change your mind)
+    // time to change your mind (the joined pills have no gaps to cross)
     // without feeling sluggish when leaving the bar.
     property Timer idleTimer: Timer {
         interval: 500

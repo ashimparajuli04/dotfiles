@@ -8,9 +8,6 @@ import Quickshell.Wayland
 // (bottom-left, 2% / 3% margins) and same stacking (Bottom layer, never takes
 // focus). Sized to the original eww widget: dark backdrop, 150 px cover,
 // 2px-bordered text boxes, controls below, lyrics underneath.
-//
-// The visualizer is intentionally left out for now (re-added later; the
-// Widget-side cava plumbing lives in Visualizer.qml / cava.conf).
 Scope {
     id: root
 

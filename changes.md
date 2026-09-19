@@ -1311,3 +1311,114 @@ empty workspace + swipe right again → nothing. `Mod+N` still creates on demand
 right swipe was a no-op; a left swipe returned to 2 and removed 3.
 
 **Revert:** `git revert <this commit>`.
+
+---
+
+## 35. Hover-expanding pills push the system tray instead of covering it (2026-10-09)
+
+**Symptom:** the live pill row (brightness/sound/bluetooth/wifi/battery) is a
+set of Quickshell overlays sitting on transparent Waybar spacer slots.
+`PillBus` already pushed the *other pills* while one expands, but the system
+tray is a native Waybar module to their left — Waybar's box layout never
+reflowed, so an expanding pill drew straight over the tray icons (Discord,
+qBittorrent, …).
+
+**Fix — a Waybar spacer whose width follows the cluster's live reach:**
+- `quickshell/PillBus.qml` — brightness is leftmost, so nothing inside the bus
+  consumed its own expansion; added `brightnessPush` / `brightnessMaxPush` and
+  `readonly reach = pushBrightness + brightnessPush` (plus `maxReach`).
+- `quickshell/BrightnessPill.qml` — publishes `brightnessPush`
+  (`pill.width - collapsedWidth`) and `brightnessMaxPush`, mirroring the
+  other pills.
+- `quickshell/TrayShift.qml` (new; registered in `shell.qml` + `qmldir`) —
+  quantises `PillBus.reach` to a 10px grid and streams
+  `{"text":"<zwsp>","class":"w<N>"}` over a FIFO
+  (`$XDG_RUNTIME_DIR/qs-trayshift.fifo`) through a persistent feeder shell.
+  Event-driven — it only writes when the bucket changes, no polling.
+- `waybar/scripts/trayshift-read.sh` (new) — long-running `cat` of the FIFO;
+  Waybar reads its stdout continuously and re-lays out on every line.
+- `waybar/config` — `custom/trayshift` inserted between `tray` and
+  `custom/brightness`, `return-type: json`.
+- `waybar/style.css` — `#custom-trayshift` transparent and zero-width;
+  generated `#custom-trayshift.w0 … .w700` rules (10px grid) set `min-width`.
+
+**Result:** while any pill expands, the spacer widens by the exact leftward
+reach of the cluster, so `tray` (and `mpris`) slide left and stay visible; the
+Quickshell pills keep their fixed screen positions. Collapsing returns the
+spacer to zero.
+
+**Verified:** `qs log` clean; FIFO held open by both ends; expanding the
+brightness pill via IPC shifted the tray ~150px left (measured from a
+screenshot) with the Quickshell pills stationary; the collapsed state restored
+it. Waybar treats the long-running `exec` as a stream, so no `interval`
+polling is needed.
+
+**Caveat:** both Quickshell and Waybar must be up — if Quickshell isn't
+running the spacer stays zero-width and the tray simply behaves as before.
+
+**Revert:** `git revert <this commit>`.
+
+---
+
+## 36. System tray is a Quickshell overlay; native Waybar tray retired (2026-10-10)
+
+**Symptom:** §35 kept the tray as a native Waybar module and shoved it left
+with a FIFO-fed spacer — discrete 10px relayouts that stepped and lagged
+behind the smooth QML pill animation ("the tray moves weirdly on hover").
+
+**Fix — the tray becomes a Quickshell pill like the others:**
+- `quickshell/TrayWidget.qml` (new; registered in `qmldir` + `shell.qml`) —
+  renders `SystemTray.items` (`Quickshell.Services.SystemTray`) as icons on the
+  Overlay layer, on the transparent `custom/tray` Waybar spacer immediately
+  left of the brightness pill. Right edge pinned 189px from the screen edge
+  (10px gap to the brightness pill) and it slides left by `PillBus.reach` —
+  the same animation clock as the pills, so it moves in perfect sync.
+  Left-click = `activate()`, middle = `secondaryActivate()`, wheel = `scroll()`;
+  passive items are dimmed and needs-attention items get a red backdrop
+  (mirrors the old `#tray > .passive` / `.needs-attention`).
+- `quickshell/TrayMenu.qml` + `quickshell/TrayMenuRow.qml` (new) — the
+  right-click context menu, drawn by Quickshell itself from `QsMenuOpener`:
+  separators, check/radio indicators, item icons and one submenu level. Closes
+  on outside click (transparent catcher) or Escape; opening it hides the other
+  popovers.
+- Removed the whole §35 mechanism: `quickshell/TrayShift.qml`,
+  `waybar/scripts/trayshift-read.sh`, the `custom/trayshift` module and its
+  `#custom-trayshift.w0 … .w700` CSS.
+- `waybar/config` — `"tray"` + `"custom/trayshift"` → `"custom/tray"` (spacer);
+  the old `tray` module block is kept (unused) for rollback.
+- `waybar/style.css` — `#custom-tray` reserves a fixed 100px (room for ~4
+  icons) so the native `mpris` module to its left stays clear; the tray overlay
+  itself never reflows Waybar.
+
+**Why not the native Qt menu:** `QsMenuAnchor` (+ `//@ pragma UseQApplication`)
+builds a QMenu popup that must attach as an `xdg_popup`, but a layer-shell
+surface can't be an xdg_popup parent — Wayland rejects it ("popup is not an
+xdg_popup") and the menu closes instantly. The `QsMenuOpener` route avoids that
+and matches the New Wave theme. (The `UseQApplication` pragma was tried and
+removed — it is not needed.)
+
+**Caveats:**
+- SNI-only: legacy XEmbed tray icons will not appear (Waybar's tray could host
+  them). Everything here (Discord, qBittorrent) is SNI.
+- The Waybar slot is a FIXED width; more than ~4 icons would overflow it (icons
+  are right-aligned and grow leftward). Raise `#custom-tray` min-width if needed.
+- Only one submenu level is supported.
+- `mpris` is still a native Waybar module left of the reserved slot, so a pill
+  expansion can transiently cover it (it is usually hidden).
+
+**Verified 2026-10-10:** tray shows Discord + qBittorrent; a brightness-pill
+expansion slides the tray left in sync with a constant 10px gap (screenshots);
+Discord and qBittorrent context menus render with separators and icons
+(screenshots); `qs` log clean.
+
+**Revert:**
+```bash
+rm ~/.config/quickshell/TrayWidget.qml ~/.config/quickshell/TrayMenu.qml \
+   ~/.config/quickshell/TrayMenuRow.qml
+# remove TrayWidget/TrayMenu/TrayMenuRow from qmldir and TrayWidget {} from shell.qml
+# waybar/config: "custom/tray" → "tray" + "custom/trayshift"
+# style.css: remove #custom-tray and recreate the §35 #custom-trayshift rules
+# (TrayShift.qml + trayshift-read.sh were uncommitted, so recreate them from §35)
+pkill -x quickshell; setsid -f quickshell --no-duplicate
+pkill -x waybar; setsid -f waybar >/dev/null 2>&1
+```

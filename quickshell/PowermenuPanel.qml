@@ -15,9 +15,9 @@ Scope {
     property string userHost: ""
     property string uptime: ""
 
-    // Metrics and accent colours are copied from the rofi powermenu theme
-    // (~/.config/rofi/powermenu/type-6/style-5.rasi): centered 800x369 frame,
-    // 2x3 icon grid, image side panel. The frame background uses Theme.bg so
+    // Metrics and accent colours are copied from the old adi1090x rofi
+    // powermenu theme: centred 800x369 frame, 2x3 icon grid, image side
+    // panel. The frame background uses Theme.bg so
     // it matches every other Quickshell panel. See changes.md §18.
     readonly property color bg: Theme.bg
     readonly property color bgAlt: "#281657"

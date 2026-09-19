@@ -8,7 +8,9 @@ import Quickshell.Wayland
 // WifiPill.qml / SoundPill.qml.
 //
 // Geometry: sits on the transparent `custom/battery` Waybar spacer and
-// expands LEFTWARD (right edge pinned at x=1877). The battery is the
+// expands LEFTWARD (right edge pinned at x=1876). The row is joined
+// flush now (changes.md §32): this pill abuts the wifi pill on the left
+// and the powermenu continues on the right. The battery is the
 // rightmost Quickshell pill, so while it expands it pushes the wifi pill
 // (and everything left of it) via PillBus. See changes.md §22.
 Scope {
@@ -17,11 +19,11 @@ Scope {
     // ---------- geometry ----------
     // Tuned against the real bar with screenshots — see changes.md §25.
     // Snug icon-only pill (same size as the bluetooth pill). The right edge
-    // reaches x=1883 — 6 px into the powermenu's black padding, up to the
-    // 💢 ink — so the icon sits centred between the wifi gap and the emoji
-    // instead of hugging the left side.
+    // reaches x=1876; the left edge (1849) abuts the wifi pill: joined row,
+    // changes.md §32. rightMargin is 7px more than the old flush value so the
+    // battery→powermenu icon gap matches the row's even 27px spacing.
     readonly property int collapsedWidth: 27
-    readonly property int rightMargin: 37       // screen right edge → window right edge
+    readonly property int rightMargin: 44       // screen right edge → window right edge
     readonly property int pillHeight: 24
     readonly property int pctCap: 60            // hover text elides beyond this
 
@@ -29,8 +31,10 @@ Scope {
     // All battery values live in BatteryState.qml (UPower-backed).
     property bool expanded: false
 
-    readonly property real expandedWidth: root.collapsedWidth
-        + (pctText.implicitWidth > 0 ? 5 + Math.min(pctText.implicitWidth, root.pctCap) : 0)
+    // Rounded to whole pixels so the pushed (collapsed) pills shift by an
+    // exact integer and the joined row never shows a sub-pixel seam.
+    readonly property int expandedWidth: Math.round(root.collapsedWidth
+        + (pctText.implicitWidth > 0 ? 5 + Math.min(pctText.implicitWidth, root.pctCap) : 0))
 
     // Hover only expands the pill; collapsing is driven by
     // PillBus.collapseTick and only happens after the whole pill row has
@@ -61,7 +65,7 @@ Scope {
     Binding {
         target: PillBus
         property: "batteryPush"
-        value: Math.max(0, pill.width - root.collapsedWidth)
+        value: Math.max(0, Math.round(pill.width - root.collapsedWidth))
     }
 
     Binding {
@@ -107,11 +111,10 @@ Scope {
             anchors.right: parent.right
             height: root.pillHeight
             width: root.expanded ? root.expandedWidth : root.collapsedWidth
-            radius: 8
-            // The old Waybar module was `border-radius: 8px 0 0 8px`:
-            // square right corners where the powermenu sat against it.
-            topRightRadius: 0
-            bottomRightRadius: 0
+            // Joined row (changes.md §32): square corners on both sides —
+            // the wifi pill abuts on the left, the powermenu continues to
+            // the right.
+            radius: 0
             color: "#040404"
 
             Behavior on width {

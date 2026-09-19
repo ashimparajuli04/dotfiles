@@ -14,7 +14,7 @@
     "modules-center": [],
     "modules-right": [
     	"mpris",
-	"tray",
+	"custom/tray",
 	"custom/brightness",
 	"custom/sound",
 	"custom/bluetooth",
@@ -23,21 +23,13 @@
         "custom/powermenu"
         
     ],
-    "wlr/taskbar": {
-        "format": "{icon}",
-        "on-click": "activate",
-        "on-click-right": "fullscreen",
-        "icon-theme": "Flat-Remix-Blue-Dark",
-        "icon-size": 16,
-        "tooltip-format": "{title}",
-        "rewrite": {
-            "rmpc": "kitty"
-        }
-    },
-    "backlight": {
-        // "device": "acpi_video1",
-        "format": "{icon}",
-        "format-icons": ["", "", "", "", "", "", "", "", ""]
+    // Invisible slot holder for the Quickshell system tray (TrayWidget.qml
+    // draws the tray icons on top of it). A fixed min-width in style.css
+    // reserves room so the native mpris module to its left stays clear of
+    // the tray. Supersedes the §35 trayshift FIFO hack; see changes.md §36.
+    "custom/tray": {
+        "format": " ",
+        "tooltip": false
     },
     // Invisible slot holder for the Quickshell brightness pill
     // (BrightnessPill.qml renders on top of this). See changes.md §13.
@@ -71,84 +63,6 @@
         "format-icons": {},
         "all-outputs": true
     },
-    "memory": {
-        "interval": 5,
-        "format": "   {}% ",
-        "max-length": 10
-    },
-    "cpu": {
-        "interval": 5,
-        "format": "   {}% ",
-        "max-length": 10
-    },
-    "tray": {
-        "icon-size": 16,
-        "spacing": 10,
-        "show-passive-items": true,
-        "reverse-direction": true
-    },
-    "clock": {
-        "tooltip-format": "<tt>{calendar}</tt>",
-        "format-alt": "   {:%a, %d %b %Y} ",
-        "format": "   {:%I:%M %p} "
-    },
-    "network": {
-        "format-wifi": "{icon}",
-        "format-disconnected": "󰤮",
-        "format-icons": [
-            "󰤯 ",
-            "󰤟 ",
-            "󰤢 ",
-            "󰤥 ",
-            "󰤨 "
-        ],
-        "tooltip-format-disconnected": "Disconnected",
-        "tooltip-format-wifi": "{icon} {essid}\n⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
-        "on-click": "qs ipc call wifi toggle",
-        "format-ethernet": "󰈀",
-        "tooltip-format-ethernet": "󰀂  {ifname}\n⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
-        "nospacing": 1,
-        "interval": 5
-    },
-    "bluetooth": {
-        "format": "{icon}",
-        "format-icons": {
-            "disabled": "󰂲",
-            "off": "󰂲",
-            "on": "󰂯",
-            "connected": "󰂱",
-            "default": "󰂯"
-        },
-        "tooltip-format": "{controller_alias}",
-        "tooltip-format-no-controller": "No Bluetooth controller",
-        "tooltip-format-connected": "{controller_alias}\n{num_connections} connected\n\n{device_enumerate}",
-        "tooltip-format-enumerate-connected": "{device_alias}",
-        "on-click": "qs ipc call bluetooth toggle",
-        "interval": 5
-    },
-    "pulseaudio": {
-        "format": "{icon}",
-        "format-bluetooth": "{icon}",
-        "nospacing": 1,
-        "tooltip-format": "Volume : {volume}%",
-        "format-muted": "󰝟 ",
-        "format-icons": {
-            "headphone": " ",
-            "default": [
-                "󰕿 ",
-                "󰖀 ",
-                "󰕾 "
-            ]
-        },
-        "on-click": "qs ipc call sound toggle",
-        "on-click-right": "pavucontrol",
-        "scroll-step": 1
-    },
-    "custom/launcher": {
-        "format": "  ",
-        "tooltip": false,
-        "on-click": "bash ~/.config/rofi/launchers/type-7/launcher.sh &"
-    },
     // Invisible slot holder for the Quickshell battery pill
     // (BatteryPill.qml draws on top of it; BatteryPanel.qml is the
     // popover). Charge glyphs/colours now live in BatteryState.qml at
@@ -177,22 +91,6 @@
 	"ignored-players": ["firefox"]
 },
 
-  "custom/discord": {
-    "format": "{}",
-    "exec": "/home/ashim/.config/waybar/scripts/app-icon.sh Discord \udb81\ude6f",
-    "interval": 2,
-    "hide-empty-text": true,
-    "tooltip": false,
-    "on-click": "/home/ashim/.config/waybar/scripts/app-toggle.sh discord discord"
-  },
-  "custom/qbittorrent": {
-    "format": "{}",
-    "exec": "/home/ashim/.config/waybar/scripts/app-icon.sh qbittorrent \udb81\uddd2",
-    "interval": 2,
-    "hide-empty-text": true,
-    "tooltip": false,
-    "on-click": "/home/ashim/.config/waybar/scripts/app-toggle.sh qbittorrent qbittorrent"
-  },
   "custom/weather": {
     "format": "{}",
     "format-alt": "{alt}",
@@ -210,5 +108,5 @@
     "return-type": "text",
     "on-click": "mpc toggle",
     "tooltip": false
-  },
+  }
 }

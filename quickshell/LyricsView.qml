@@ -6,8 +6,9 @@ import Quickshell.Io
 // currently playing line (Apple Music style), fed by the same wall-clock
 // elapsed time that drives the progress bar — no polling, no helper process.
 //
-// Port of scripts/lyrics-view: reads ~/.local/share/lyrics/<stem>.lrc and
-// falls back to the Genius plain text at ~/Music/.lyrics/lyrics.txt.
+// Port of the former scripts/lyrics-view helper: reads
+// ~/.local/share/lyrics/<stem>.lrc and falls back to the Genius plain text
+// at ~/Music/.lyrics/lyrics.txt.
 Item {
     id: root
 

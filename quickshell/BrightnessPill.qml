@@ -24,10 +24,13 @@ Scope {
     // Icon-only, snug like the bluetooth/battery pills. collapsedWidth
     // should match the Waybar spacer slot width set in style.css
     // (#custom-brightness); rightMargin is measured from the screen's
-    // right edge. Both tuned with screenshots — see changes.md §28.
+    // right edge. The row is joined flush now (changes.md §32):
+    // rightMargin 152 puts this pill's right edge against the sound
+    // pill's left edge, and it carries the rounded left end of the
+    // cluster. Tuned with screenshots — see changes.md §28.
     readonly property int collapsedWidth: 27
     readonly property int expandedWidth: 172
-    readonly property int rightMargin: 203
+    readonly property int rightMargin: 152
     readonly property int pillHeight: 24
 
     // ---------- state ----------
@@ -37,10 +40,12 @@ Scope {
 
     readonly property bool dragActive: slider.dragging
 
-    // Same icon set as the old Waybar backlight module (Nerd Font
-    // "brightness" glyphs): the circle fills up as brightness rises.
-    readonly property var iconGlyphs: ["\ue38d", "\ue3d3", "\ue3d1", "\ue3cf",
-        "\ue3ce", "\ue3cd", "\ue3ca", "\ue3c8", "\ue39b"]
+    // Material Design brightness glyphs (nf-md-brightness_1 … _7): the
+    // sun grows its rays as brightness rises. Plane-15 codepoints use
+    // surrogate pairs — a 5-hex-digit \u escape is invalid in JS and
+    // truncates to a 4-digit glyph + a literal character (changes.md §26).
+    readonly property var iconGlyphs: ["\udb80\udcda", "\udb80\udcdb", "\udb80\udcdc",
+        "\udb80\udcdd", "\udb80\udcde", "\udb80\udcdf", "\udb80\udce0"]
     readonly property string iconGlyph: {
         var i = Math.round(root.shownPercent / 100 * (root.iconGlyphs.length - 1))
         i = Math.max(0, Math.min(root.iconGlyphs.length - 1, i))
@@ -132,6 +137,22 @@ Scope {
         }
     }
 
+    // Publish the live expansion delta. Nothing inside PillBus consumes it
+    // (brightness is leftmost), but PillBus.reach exposes the cluster's full
+    // leftward reach so the Waybar tray spacer can slide the system tray out
+    // of the way — see TrayShift.qml / PillBus.qml.
+    Binding {
+        target: PillBus
+        property: "brightnessPush"
+        value: Math.max(0, Math.round(pill.width - root.collapsedWidth))
+    }
+
+    Binding {
+        target: PillBus
+        property: "brightnessMaxPush"
+        value: root.expandedWidth - root.collapsedWidth
+    }
+
     IpcHandler {
         target: "brightness"
         function up() { root.nudge(5) }
@@ -176,13 +197,18 @@ Scope {
         Rectangle {
             id: pill
             anchors.top: parent.top
-            // Right edge normally at 1717; the sound/bt/wifi pills (to
-            // the right) push this pill left while they expand — the
-            // shifts cascade, see PillBus.qml.
+            // Right edge normally at 1760, flush against the sound pill;
+            // the sound/bt/wifi/battery pills (to the right) push this
+            // pill left while they expand — the shifts cascade, see
+            // PillBus.qml.
             x: win.width - width - PillBus.pushBrightness
             height: root.pillHeight
             width: root.expanded ? root.expandedWidth : root.collapsedWidth
             radius: 8
+            // Leftmost segment: the rounded left cap of the joined row,
+            // square where the sound pill continues to the right.
+            topRightRadius: 0
+            bottomRightRadius: 0
             color: "#040404"
 
             Behavior on width {

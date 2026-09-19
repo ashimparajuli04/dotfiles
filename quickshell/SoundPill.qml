@@ -14,12 +14,14 @@ import Quickshell.Wayland
 // default one, just like the keys do.
 //
 // Geometry: sits on the transparent `custom/sound` Waybar spacer and
-// expands LEFTWARD (right edge pinned at x=1755), unlike the brightness
+// expands LEFTWARD (right edge pinned at x=1795, flush against the
+// bluetooth pill; joined row — changes.md §32), unlike the brightness
 // pill. While it expands it pushes the brightness pill left via
 // PillBus.soundPush; the bluetooth and wifi pills (to its right) push
-// this pill in turn, so the whole row keeps its gaps (see PillBus.qml).
-// Left of the brightness pill the space is empty (mpris/tray pills, if
-// visible, are the only thing that can be transiently covered).
+// this pill in turn, so the joined row stays flush when it grows (see
+// PillBus.qml). Left of the brightness pill the space is empty
+// (mpris/tray pills, if visible, are the only thing that can be
+// transiently covered).
 Scope {
     id: root
 
@@ -28,9 +30,11 @@ Scope {
 
     // ---------- geometry ----------
     // Tuned against the real bar with screenshots — see changes.md §14/§25/§28.
+    // Joined row (§32): rightMargin 125 = 98 (bluetooth) + 27 (its width),
+    // so this pill's right edge sits flush against the bluetooth pill.
     readonly property int collapsedWidth: 27
-    readonly property int expandedWidth: 118    // right edge stays at x=1755
-    readonly property int rightMargin: 165      // screen right edge → window right edge
+    readonly property int expandedWidth: 118    // right edge stays at x=1795
+    readonly property int rightMargin: 125      // screen right edge → window right edge
     readonly property int pillHeight: 24
 
     // ---------- state ----------
@@ -140,7 +144,7 @@ Scope {
     Binding {
         target: PillBus
         property: "soundPush"
-        value: Math.max(0, pill.width - root.collapsedWidth)
+        value: Math.max(0, Math.round(pill.width - root.collapsedWidth))
     }
 
     Binding {
@@ -190,12 +194,14 @@ Scope {
         Rectangle {
             id: pill
             anchors.top: parent.top
-            // Right edge normally at 1755; the bluetooth/wifi pills (to
-            // the right) push this pill left while they expand.
+            // Right edge normally at 1787, flush against the bluetooth
+            // pill; the bluetooth/wifi/battery pills (to the right) push
+            // this pill left while they expand.
             x: win.width - width - PillBus.pushSound
             height: root.pillHeight
             width: root.expanded ? root.expandedWidth : root.collapsedWidth
-            radius: 8
+            // Middle segment of the joined row: square corners.
+            radius: 0
             color: "#040404"
 
             Behavior on width {
