@@ -25,13 +25,9 @@ Scope {
     function open(handle, right) {
         if (!handle)
             return
-        // Close any other open popover first (mirrors the panel behaviour).
-        hideBt.running = true
-        hideWifi.running = true
-        hideSound.running = true
-        hidePowermenu.running = true
-        hideBattery.running = true
-        hideMusic.running = true
+        // Close any other open popover first (mirrors the panel behaviour) —
+        // in-process via PillBus (no `qs ipc` subprocesses). See PillBus.qml.
+        PillBus.hideOthers("")
         root.subEntry = null
         root.menuHandle = handle
         root.anchorRight = right
@@ -43,13 +39,6 @@ Scope {
         root.menuHandle = null
         root.subEntry = null
     }
-
-    Process { id: hideBt; command: ["qs", "ipc", "call", "bluetooth", "hide"] }
-    Process { id: hideWifi; command: ["qs", "ipc", "call", "wifi", "hide"] }
-    Process { id: hideSound; command: ["qs", "ipc", "call", "sound", "hide"] }
-    Process { id: hidePowermenu; command: ["qs", "ipc", "call", "powermenu", "hide"] }
-    Process { id: hideBattery; command: ["qs", "ipc", "call", "battery", "hide"] }
-    Process { id: hideMusic; command: ["qs", "ipc", "call", "music", "hide"] }
 
     QsMenuOpener { id: mainOpener; menu: root.menuHandle }
     QsMenuOpener { id: subOpener; menu: root.subEntry }

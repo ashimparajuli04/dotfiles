@@ -86,4 +86,14 @@ QtObject {
         onTriggered: if (!bus.hoverAny)
             bus.collapseTick++
     }
+
+    // ---------- in-process panel coordination ----------
+    // Pills/popovers used to talk to each other by spawning
+    // `qs ipc call <target> toggle|hide` subprocesses — ~50 ms CPU each, and
+    // one panel open forked five of them. These signals replace that entirely:
+    // a pill broadcasts togglePanel(name); a popover broadcasts hideOthers(name)
+    // when it opens. Every panel listens and toggles/closes itself in-process.
+    // The external IpcHandlers stay (Waybar still calls `qs ipc call`).
+    signal togglePanel(string name)
+    signal hideOthers(string name)
 }

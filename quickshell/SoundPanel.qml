@@ -107,38 +107,10 @@ Scope {
         listFlick.contentY = Math.max(0, Math.min(listFlick.contentY - delta, maxY))
     }
 
-    // Only one popover at a time: opening this one closes the others.
-    Process {
-        id: hideBluetooth
-        command: ["qs", "ipc", "call", "bluetooth", "hide"]
-    }
-
-    Process {
-        id: hideWifi
-        command: ["qs", "ipc", "call", "wifi", "hide"]
-    }
-
-    Process {
-        id: hidePowermenu
-        command: ["qs", "ipc", "call", "powermenu", "hide"]
-    }
-
-    Process {
-        id: hideMusic
-        command: ["qs", "ipc", "call", "music", "hide"]
-    }
-
-    Process {
-        id: hideBattery
-        command: ["qs", "ipc", "call", "battery", "hide"]
-    }
-
+    // Only one popover at a time: opening this one asks every other panel to
+    // close — in-process via PillBus (no `qs ipc` subprocesses). See PillBus.qml.
     function hideOthers() {
-        hideBluetooth.running = true
-        hideWifi.running = true
-        hidePowermenu.running = true
-        hideMusic.running = true
-        hideBattery.running = true
+        PillBus.hideOthers("sound")
     }
 
     function moveStream(stream, sink) {
@@ -166,6 +138,7 @@ Scope {
     }
 
     IpcHandler {
+        id: ipc
         target: "sound"
         function toggle() {
             root.hideOthers()
@@ -176,6 +149,14 @@ Scope {
             root.hideOthers()
         }
         function hide() { root.panelOpen = false }
+    }
+
+    // In-process pill → panel toggle and panel → panel "close the others"
+    // (replaces the old `qs ipc call` subprocesses). See PillBus.qml.
+    Connections {
+        target: PillBus
+        function onTogglePanel(name) { if (name === "sound") ipc.toggle() }
+        function onHideOthers(name) { if (name !== "sound") ipc.hide() }
     }
 
     // Transparent click-catcher: closes the popover when clicking anywhere

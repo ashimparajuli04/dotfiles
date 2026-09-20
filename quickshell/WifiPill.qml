@@ -166,10 +166,8 @@ Scope {
         }
     }
 
-    Process {
-        id: panelProc
-        command: ["qs", "ipc", "call", "wifi", "toggle"]
-    }
+    // Panel toggling is in-process via PillBus.togglePanel (no `qs ipc`
+    // subprocess). See PillBus.qml.
 
     // Publish the live expansion delta so everything to the left slides
     // out of the way in perfect sync (see PillBus.qml).
@@ -240,7 +238,7 @@ Scope {
                 anchors.fill: parent
                 acceptedButtons: Qt.LeftButton
                 cursorShape: Qt.PointingHandCursor
-                onClicked: panelProc.running = true
+                onClicked: PillBus.togglePanel("wifi")
             }
 
             HoverHandler {

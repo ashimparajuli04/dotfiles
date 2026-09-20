@@ -131,31 +131,8 @@ Scope {
         }
     }
 
-    // Opening this popover closes the others, and vice versa.
-    Process {
-        id: hideBluetooth
-        command: ["qs", "ipc", "call", "bluetooth", "hide"]
-    }
-
-    Process {
-        id: hideSound
-        command: ["qs", "ipc", "call", "sound", "hide"]
-    }
-
-    Process {
-        id: hidePowermenu
-        command: ["qs", "ipc", "call", "powermenu", "hide"]
-    }
-
-    Process {
-        id: hideMusic
-        command: ["qs", "ipc", "call", "music", "hide"]
-    }
-
-    Process {
-        id: hideBattery
-        command: ["qs", "ipc", "call", "battery", "hide"]
-    }
+    // Opening this popover closes the others, in-process via PillBus
+    // (no `qs ipc` subprocesses). See PillBus.qml.
 
     Connections {
         target: root.pendingNetwork
@@ -181,26 +158,26 @@ Scope {
     }
 
     IpcHandler {
+        id: ipc
         target: "wifi"
         function toggle() {
             root.panelOpen = !root.panelOpen
-            if (root.panelOpen) {
-                hideBluetooth.running = true
-                hideSound.running = true
-                hidePowermenu.running = true
-                hideMusic.running = true
-                hideBattery.running = true
-            }
+            if (root.panelOpen)
+                PillBus.hideOthers("wifi")
         }
         function show() {
             root.panelOpen = true
-            hideBluetooth.running = true
-            hideSound.running = true
-            hidePowermenu.running = true
-            hideMusic.running = true
-            hideBattery.running = true
+            PillBus.hideOthers("wifi")
         }
         function hide() { root.panelOpen = false }
+    }
+
+    // In-process pill → panel toggle and panel → panel "close the others"
+    // (replaces the old `qs ipc call` subprocesses). See PillBus.qml.
+    Connections {
+        target: PillBus
+        function onTogglePanel(name) { if (name === "wifi") ipc.toggle() }
+        function onHideOthers(name) { if (name !== "wifi") ipc.hide() }
     }
 
     // Transparent click-catcher: closes the popover when clicking anywhere

@@ -41,39 +41,12 @@ Scope {
         root.panelOpen = true
         MusicState.refreshLibrary()
         MusicState.refreshQueue()
-        hideBluetooth.running = true
-        hideSound.running = true
-        hideWifi.running = true
-        hidePowermenu.running = true
-        hideBattery.running = true
-    }
-
-    Process {
-        id: hideBluetooth
-        command: ["qs", "ipc", "call", "bluetooth", "hide"]
-    }
-
-    Process {
-        id: hideSound
-        command: ["qs", "ipc", "call", "sound", "hide"]
-    }
-
-    Process {
-        id: hideWifi
-        command: ["qs", "ipc", "call", "wifi", "hide"]
-    }
-
-    Process {
-        id: hidePowermenu
-        command: ["qs", "ipc", "call", "powermenu", "hide"]
-    }
-
-    Process {
-        id: hideBattery
-        command: ["qs", "ipc", "call", "battery", "hide"]
+        // Close the other popovers in-process (no `qs ipc` subprocesses).
+        PillBus.hideOthers("music")
     }
 
     IpcHandler {
+        id: ipc
         target: "music"
         function toggle() {
             if (root.panelOpen)
@@ -85,6 +58,14 @@ Scope {
         function hide() { root.panelOpen = false }
         function library() { root.open(0) }
         function queue() { root.open(1) }
+    }
+
+    // In-process pill → panel toggle and panel → panel "close the others"
+    // (replaces the old `qs ipc call` subprocesses). See PillBus.qml.
+    Connections {
+        target: PillBus
+        function onTogglePanel(name) { if (name === "music") ipc.toggle() }
+        function onHideOthers(name) { if (name !== "music") ipc.hide() }
     }
 
     onPanelOpenChanged: {

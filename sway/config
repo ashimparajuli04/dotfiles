@@ -339,7 +339,9 @@ exec --no-startup-id sh -c 'for i in $(seq 1 50); do mpc status >/dev/null 2>&1 
 exec --no-startup-id /home/ashim/.config/battery-alert/battery-alert
 
 # Quickshell (Bluetooth / Wi-Fi / Sound / Power popovers, toggled from the Waybar icons):
-exec --no-startup-id quickshell --no-duplicate
+# QSG_RHI_BACKEND=vulkan → RADV keeps the qs footprint ~90 MB / ~75 threads
+# below the default OpenGL path (Mesa GL grows a lot when panels open). See changes.md §37.
+exec --no-startup-id env QSG_RHI_BACKEND=vulkan quickshell --no-duplicate
 
 # Brightness CTRL (F2/F3, in addition to the Fn keys above):
 bindsym F2 exec brightnessctl set 5%-

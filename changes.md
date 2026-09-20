@@ -1450,3 +1450,32 @@ no longer re-sorts the whole month. Behaviour verified via `qs ipc call calendar
 open` / `hide` — clean `qs` log.
 
 **Revert:** `git revert <this commit>`.
+
+---
+
+## 38. Quickshell footprint: Vulkan RHI backend + in-process panel coordination (2026-10-10)
+
+**Why:** the rice's Quickshell shell was ~346 MB PSS / 70 threads, and every
+pill click / popover open forked `qs` subprocesses.
+
+**Changes:**
+- `sway/config` — Quickshell launches with `env QSG_RHI_BACKEND=vulkan`. Mesa's
+  OpenGL path (radeonsi) keeps a large thread pool and CPU-side buffers and
+  ballooned when panels opened; RADV stays flat. Measured fresh/steady GL
+  331/376 MB vs Vulkan 282/284 MB, threads 98 → 23 (~90 MB / ~75 threads).
+  Note: `libLLVM` is loaded by **both** drivers, so it is not the differentiator.
+- `quickshell/PillBus.qml` — new `togglePanel(name)` / `hideOthers(name)` signals.
+- `quickshell/*Pill.qml` — pills toggle their panel via `PillBus.togglePanel`
+  instead of `Process { command: ["qs","ipc","call",…,"toggle"] }`.
+- `quickshell/*Panel.qml` + `quickshell/TrayMenu.qml` — opening a popover
+  broadcasts `PillBus.hideOthers(self)`; every other panel closes itself via a
+  `Connections` block. Removed ~26 `qs ipc call … hide` subprocesses (a single
+  popover open used to fork five; measured ~52 ms CPU per fork). The external
+  `IpcHandler`s remain for Waybar / sway keybinds.
+
+**Result:** PSS 345.8 → ~266 MB, threads 70 → 22. Toggling a pill spawns no `qs`
+process (verified), and opening a second popover closes the first (verified by
+screenshot).
+
+**Revert:** `git revert <this commit>`; also drop `env QSG_RHI_BACKEND=vulkan`
+from the Quickshell `exec` line in `sway/config`.
