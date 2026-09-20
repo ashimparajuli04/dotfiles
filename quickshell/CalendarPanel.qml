@@ -508,29 +508,13 @@ Scope {
                     Layout.fillWidth: true
                     spacing: 8
 
-                    Rectangle {
-                        implicitWidth: 28
-                        implicitHeight: 28
-                        radius: 14
-                        color: prevHover.hovered ? root.pillHover : root.pillBg
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: "\uF053"
-                            color: root.textPrimary
-                            font.family: root.fontFamily
-                            font.pixelSize: 11
-                        }
-
-                        HoverHandler {
-                            id: prevHover
-                            cursorShape: Qt.PointingHandCursor
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: root.shiftMonth(-1)
-                        }
+                    PillButton {
+                        glyph: "\uF053"
+                        fontFamily: root.fontFamily
+                        bgColor: root.pillBg
+                        hoverColor: root.pillHover
+                        textColor: root.textPrimary
+                        onClicked: root.shiftMonth(-1)
                     }
 
                     Text {
@@ -543,89 +527,35 @@ Scope {
                         horizontalAlignment: Text.AlignHCenter
                     }
 
-                    Rectangle {
-                        implicitWidth: 28
-                        implicitHeight: 28
-                        radius: 14
-                        color: nextHover.hovered ? root.pillHover : root.pillBg
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: "\uF054"
-                            color: root.textPrimary
-                            font.family: root.fontFamily
-                            font.pixelSize: 11
-                        }
-
-                        HoverHandler {
-                            id: nextHover
-                            cursorShape: Qt.PointingHandCursor
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: root.shiftMonth(1)
-                        }
+                    PillButton {
+                        glyph: "\uF054"
+                        fontFamily: root.fontFamily
+                        bgColor: root.pillBg
+                        hoverColor: root.pillHover
+                        textColor: root.textPrimary
+                        onClicked: root.shiftMonth(1)
                     }
 
-                    Rectangle {
-                        implicitWidth: todayText.implicitWidth + 22
-                        implicitHeight: 28
-                        radius: 14
-                        color: todayHover.hovered ? root.pillHover : root.pillBg
-
-                        Text {
-                            id: todayText
-                            anchors.centerIn: parent
-                            text: "Today"
-                            color: root.textPrimary
-                            font.family: root.fontFamily
-                            font.pixelSize: 11
-                        }
-
-                        HoverHandler {
-                            id: todayHover
-                            cursorShape: Qt.PointingHandCursor
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: root.goToday()
-                        }
+                    PillButton {
+                        label: "Today"
+                        fontFamily: root.fontFamily
+                        bgColor: root.pillBg
+                        hoverColor: root.pillHover
+                        textColor: root.textPrimary
+                        onClicked: root.goToday()
                     }
 
-                    Rectangle {
-                        implicitWidth: 28
-                        implicitHeight: 28
-                        radius: 14
-                        color: (refreshArea.containsMouse || root.syncing) ? root.pillHover : root.pillBg
-
-                        Text {
-                            id: refreshGlyph
-                            anchors.centerIn: parent
-                            text: "\uF021"
-                            color: root.syncError !== "" ? root.red : root.textPrimary
-                            font.family: root.fontFamily
-                            font.pixelSize: 13
-
-                            NumberAnimation on rotation {
-                                running: root.syncing
-                                from: 0
-                                to: 360
-                                duration: 900
-                                loops: Animation.Infinite
-                                onRunningChanged: if (!running)
-                                    refreshGlyph.rotation = 0
-                            }
-                        }
-
-                        MouseArea {
-                            id: refreshArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.doSync()
-                        }
+                    PillButton {
+                        glyph: "\uF021"
+                        fontSize: 13
+                        spinning: root.syncing
+                        alert: root.syncError !== ""
+                        fontFamily: root.fontFamily
+                        bgColor: root.pillBg
+                        hoverColor: root.pillHover
+                        textColor: root.textPrimary
+                        alertColor: root.red
+                        onClicked: root.doSync()
                     }
                 }
 
@@ -634,7 +564,11 @@ Scope {
                     Layout.fillWidth: true
                     viewYear: root.viewYear
                     viewMonth: root.viewMonth
-                    events: root.mergedEvents
+                    // Grid uses monthEvents only: reloadMonth() already fetches
+                    // the whole visible grid range, so keying it off mergedEvents
+                    // made every 5-min hover refresh rebuild all 42 cells for no
+                    // visible change. The hover card/agenda still use mergedEvents.
+                    events: root.monthEvents
                     selectedDay: CalUtil.fmtDate(root.selectedDate)
                     todayStr: root.todayStr
                     onDayClicked: function (ds) { root.selectDay(ds) }

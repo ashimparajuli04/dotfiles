@@ -35,19 +35,19 @@ Item {
                 "ds": ds,
                 "num": d.getDate(),
                 "inMonth": d.getMonth() === root.viewMonth,
-                "isToday": ds === root.todayStr,
-                "isSelected": ds === root.selectedDay,
                 "items": CalUtil.eventsOn(root.events, ds)
             })
         }
         root.cells = out
     }
 
+    // Heavy: rebuilds the whole cell model (re-runs eventsOn per day) and
+    // hands the Repeater a fresh array, so it only fires when the grid's
+    // CONTENT changes. Selection / "today" highlighting are bound per-cell in
+    // the delegate, so clicking a day no longer tears down all 42 delegates.
     onViewYearChanged: rebuild()
     onViewMonthChanged: rebuild()
     onEventsChanged: rebuild()
-    onTodayStrChanged: rebuild()
-    onSelectedDayChanged: rebuild()
     Component.onCompleted: rebuild()
 
     RowLayout {
@@ -90,6 +90,9 @@ Item {
 
                 required property var modelData
 
+                readonly property bool isToday: modelData.ds === root.todayStr
+                readonly property bool isSelected: modelData.ds === root.selectedDay
+
                 Layout.fillWidth: true
                 Layout.preferredHeight: 72
 
@@ -106,15 +109,15 @@ Item {
                     width: 26
                     height: 26
                     radius: 13
-                    color: cell.modelData.isToday ? root.todayColor : (cell.modelData.isSelected ? "#3A3A3C" : "transparent")
+                    color: cell.isToday ? root.todayColor : (cell.isSelected ? "#3A3A3C" : "transparent")
 
                     Text {
                         anchors.centerIn: parent
                         text: cell.modelData.num
-                        color: cell.modelData.isToday ? "#FFFFFF" : (cell.modelData.inMonth ? "#FFFFFF" : root.otherMonthColor)
+                        color: cell.isToday ? "#FFFFFF" : (cell.modelData.inMonth ? "#FFFFFF" : root.otherMonthColor)
                         font.family: root.fontFamily
                         font.pixelSize: 12
-                        font.bold: cell.modelData.isToday || cell.modelData.isSelected
+                        font.bold: cell.isToday || cell.isSelected
                     }
                 }
 

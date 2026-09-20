@@ -1422,3 +1422,31 @@ rm ~/.config/quickshell/TrayWidget.qml ~/.config/quickshell/TrayMenu.qml \
 pkill -x quickshell; setsid -f quickshell --no-duplicate
 pkill -x waybar; setsid -f waybar >/dev/null 2>&1
 ```
+
+---
+
+## 37. Calendar panel: reusable PillButton + selecting a day no longer rebuilds the grid (2026-10-10)
+
+**Why:** `CalendarPanel.qml` was 680 lines, and `CalendarMonth.rebuild()` ran on
+every selection / "today" change — re-running `CalUtil.eventsOn` (scan + sort)
+for all 42 days and handing the Repeater a fresh `cells` array, so clicking a
+day destroyed and recreated every delegate. The popup header also had four
+near-identical copy-pasted buttons.
+
+**Changes:**
+- `quickshell/PillButton.qml` (new; registered in `qmldir`) — one 28px pill
+  button (glyph or label, hover state, optional `spinning` / `alert`) replacing
+  the four hand-copied header Rectangles in `CalendarPanel.qml`.
+- `quickshell/CalendarMonth.qml` — `rebuild()` now stores only content
+  (`ds` / `num` / `inMonth` / `items`); `isToday` / `isSelected` are derived
+  per-cell in the delegate, and the `onTodayStrChanged` / `onSelectedDayChanged`
+  rebuild triggers are gone. Selecting a day is a cheap property change again.
+- `quickshell/CalendarPanel.qml` — the month grid binds `events: root.monthEvents`
+  instead of `mergedEvents`, so the periodic hover fetch no longer rebuilds the
+  grid for no visible change. (Hover card / agenda still use `mergedEvents`.)
+
+**Result:** 680 → 610 lines in the panel (PillButton is +73), and clicking a day
+no longer re-sorts the whole month. Behaviour verified via `qs ipc call calendar
+open` / `hide` — clean `qs` log.
+
+**Revert:** `git revert <this commit>`.
