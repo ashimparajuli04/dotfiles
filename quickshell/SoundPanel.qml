@@ -8,7 +8,7 @@ import Quickshell.Wayland
 Scope {
     id: root
 
-    property bool panelOpen: false
+    property bool panelOpen: true
     property int currentTab: 0
 
     readonly property var tabModel: [
@@ -107,11 +107,8 @@ Scope {
         listFlick.contentY = Math.max(0, Math.min(listFlick.contentY - delta, maxY))
     }
 
-    // Only one popover at a time: opening this one asks every other panel to
-    // close — in-process via PillBus (no `qs ipc` subprocesses). See PillBus.qml.
-    function hideOthers() {
-        PillBus.hideOthers("sound")
-    }
+    // Only one popover at a time is handled by PillBus (opening one closes the
+    // others). See PillBus.qml / PanelIpc.qml.
 
     function moveStream(stream, sink) {
         if (!stream || !sink || moveProc.running)
@@ -127,37 +124,20 @@ Scope {
         id: moveProc
     }
 
-    onPanelOpenChanged: {
-        if (root.panelOpen)
-            listFlick.contentY = 0
-    }
+    // The panel exists only while open (shell.qml lazy-loads it), so "opened"
+    // side effects run in Component.onCompleted. Closing sets panelOpen false,
+    // which PillBus mirrors so the LazyLoader tears the panel down.
+    onPanelOpenChanged: PillBus.soundOpen = root.panelOpen
+
+    Component.onCompleted: listFlick.contentY = 0
 
     onCurrentTabChanged: {
         if (typeof listFlick !== "undefined")
             listFlick.contentY = 0
     }
 
-    IpcHandler {
-        id: ipc
-        target: "sound"
-        function toggle() {
-            root.hideOthers()
-            root.panelOpen = !root.panelOpen
-        }
-        function show() {
-            root.panelOpen = true
-            root.hideOthers()
-        }
-        function hide() { root.panelOpen = false }
-    }
-
-    // In-process pill → panel toggle and panel → panel "close the others"
-    // (replaces the old `qs ipc call` subprocesses). See PillBus.qml.
-    Connections {
-        target: PillBus
-        function onTogglePanel(name) { if (name === "sound") ipc.toggle() }
-        function onHideOthers(name) { if (name !== "sound") ipc.hide() }
-    }
+    // IPC for this panel lives in the always-on PanelIpc.qml (this component is
+    // lazy-loaded, so its own IpcHandler would vanish when closed).
 
     // Transparent click-catcher: closes the popover when clicking anywhere
     // outside of it. Starts below the 29px Waybar so the bar stays clickable.

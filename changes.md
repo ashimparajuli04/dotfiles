@@ -1479,3 +1479,36 @@ screenshot).
 
 **Revert:** `git revert <this commit>`; also drop `env QSG_RHI_BACKEND=vulkan`
 from the Quickshell `exec` line in `sway/config`.
+
+---
+
+## 39. Popovers are lazy-loaded — instantiated only while open (2026-10-10)
+
+**Why:** every popover (`SoundPanel` … `PowermenuPanel`) was instantiated at
+login and kept its whole QML tree resident even while closed.
+
+**Changes:**
+- `quickshell/PillBus.qml` — owns the open state (`soundOpen` … `powermenuOpen`)
+  with `toggleOpen` / `show` / `close` / `closeOthers` / `closeAll` (replaces
+  the §38 `togglePanel` / `hideOthers` signals).
+- `quickshell/PanelIpc.qml` (new; registered in `qmldir`) — the always-on
+  external IPC surface. The six popover `IpcHandler`s moved here (with tab
+  handling for `music`), because a lazy panel's own handler would vanish when
+  unloaded. `brightness`, `volume` and `calendar` stay on their eager
+  pill / CalendarPanel.
+- `quickshell/shell.qml` — each popover is now
+  `LazyLoader { active: PillBus.<name>Open; XPanel {} }`; the pills, tray, music
+  widget and the calendar clock chip stay eager.
+- Each popover: `panelOpen` defaults `true` (the component exists only while
+  open); `onPanelOpenChanged` mirrors the close back to PillBus; "opened" side
+  effects moved to `Component.onCompleted`, "closed" ones to
+  `Component.onDestruction`; the panel's own `IpcHandler` / `Connections`
+  removed.
+
+**Measured:** at rest PSS 265.6 → 246.9 MB (−19). The saving is largely
+one-shot: Quickshell's compiled-QML type cache and jemalloc arenas keep ~8 MB
+per panel after its first open (all six opened once ≈ 272 MB again). Open
+latency is ~10–25 ms (imperceptible). Trade-off: panels now re-run their load
+work on every open (Wi-Fi scan, music library scan).
+
+**Revert:** `git revert <this commit>`.

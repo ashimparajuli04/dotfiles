@@ -8,7 +8,7 @@ import Quickshell.Wayland
 Scope {
     id: root
 
-    property bool panelOpen: false
+    property bool panelOpen: true
     property var pendingNetwork: null
     property string lastError: ""
 
@@ -118,17 +118,21 @@ Scope {
         Quickshell.execDetached([Quickshell.shellDir + "/wifi-copy-password.sh", network.name])
     }
 
-    onPanelOpenChanged: {
-        if (root.panelOpen) {
-            root.lastError = ""
-            listFlick.contentY = 0
-            root.startScan()
-        } else {
-            root.pendingNetwork = null
-            root.lastError = ""
-            if (root.wifiDevice)
-                root.wifiDevice.scannerEnabled = false
-        }
+    // Lazy-loaded (shell.qml): "opened" side effects run at load, "closed" ones
+    // at destruction; closing mirrors panelOpen back to the bus.
+    onPanelOpenChanged: PillBus.wifiOpen = root.panelOpen
+
+    Component.onCompleted: {
+        root.lastError = ""
+        listFlick.contentY = 0
+        root.startScan()
+    }
+
+    Component.onDestruction: {
+        root.pendingNetwork = null
+        root.lastError = ""
+        if (root.wifiDevice)
+            root.wifiDevice.scannerEnabled = false
     }
 
     // Opening this popover closes the others, in-process via PillBus
@@ -157,28 +161,8 @@ Scope {
         }
     }
 
-    IpcHandler {
-        id: ipc
-        target: "wifi"
-        function toggle() {
-            root.panelOpen = !root.panelOpen
-            if (root.panelOpen)
-                PillBus.hideOthers("wifi")
-        }
-        function show() {
-            root.panelOpen = true
-            PillBus.hideOthers("wifi")
-        }
-        function hide() { root.panelOpen = false }
-    }
-
-    // In-process pill → panel toggle and panel → panel "close the others"
-    // (replaces the old `qs ipc call` subprocesses). See PillBus.qml.
-    Connections {
-        target: PillBus
-        function onTogglePanel(name) { if (name === "wifi") ipc.toggle() }
-        function onHideOthers(name) { if (name !== "wifi") ipc.hide() }
-    }
+    // IPC for this panel lives in the always-on PanelIpc.qml (this component is
+    // lazy-loaded, so its own IpcHandler would vanish when closed).
 
     // Transparent click-catcher: closes the popover when clicking anywhere
     // outside of it. Starts below the 29px Waybar so the bar stays clickable.

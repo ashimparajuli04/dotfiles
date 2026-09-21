@@ -87,13 +87,69 @@ QtObject {
             bus.collapseTick++
     }
 
-    // ---------- in-process panel coordination ----------
-    // Pills/popovers used to talk to each other by spawning
-    // `qs ipc call <target> toggle|hide` subprocesses — ~50 ms CPU each, and
-    // one panel open forked five of them. These signals replace that entirely:
-    // a pill broadcasts togglePanel(name); a popover broadcasts hideOthers(name)
-    // when it opens. Every panel listens and toggles/closes itself in-process.
-    // The external IpcHandlers stay (Waybar still calls `qs ipc call`).
-    signal togglePanel(string name)
-    signal hideOthers(string name)
+    // ---------- panel open state (drives lazy loading) ----------
+    // shell.qml wraps each popover in a LazyLoader keyed to these flags, so a
+    // panel exists only while open and is destroyed when closed (~0 cost shut).
+    // Pills call toggleOpen(); external `qs ipc call` reaches them through the
+    // always-on PanelIpc. Removes the old `qs ipc` subprocess coordination and
+    // lets the heavy popovers stay unloaded. See changes.md §39.
+    property bool soundOpen: false
+    property bool batteryOpen: false
+    property bool bluetoothOpen: false
+    property bool wifiOpen: false
+    property bool musicOpen: false
+    property bool powermenuOpen: false
+    property int musicTab: 0
+
+    readonly property var panelNames: ["sound", "battery", "bluetooth", "wifi", "music", "powermenu"]
+
+    function isOpen(name) {
+        switch (name) {
+        case "sound": return soundOpen
+        case "battery": return batteryOpen
+        case "bluetooth": return bluetoothOpen
+        case "wifi": return wifiOpen
+        case "music": return musicOpen
+        case "powermenu": return powermenuOpen
+        }
+        return false
+    }
+
+    function setOpen(name, v) {
+        switch (name) {
+        case "sound": soundOpen = v; break
+        case "battery": batteryOpen = v; break
+        case "bluetooth": bluetoothOpen = v; break
+        case "wifi": wifiOpen = v; break
+        case "music": musicOpen = v; break
+        case "powermenu": powermenuOpen = v; break
+        }
+    }
+
+    function closeOthers(name) {
+        for (var i = 0; i < panelNames.length; i++)
+            if (panelNames[i] !== name)
+                setOpen(panelNames[i], false)
+    }
+
+    function closeAll() {
+        for (var i = 0; i < panelNames.length; i++)
+            setOpen(panelNames[i], false)
+    }
+
+    function show(name) {
+        closeOthers(name)
+        setOpen(name, true)
+    }
+
+    function close(name) {
+        setOpen(name, false)
+    }
+
+    function toggleOpen(name) {
+        var v = !isOpen(name)
+        if (v)
+            closeOthers(name)
+        setOpen(name, v)
+    }
 }

@@ -7,7 +7,7 @@ import Quickshell.Wayland
 Scope {
     id: root
 
-    property bool panelOpen: false
+    property bool panelOpen: true
     property int selectedIndex: 0
     property int hoveredIndex: -1
     property int tooltipIndex: -1
@@ -92,38 +92,28 @@ Scope {
         }
     }
 
-    onPanelOpenChanged: {
-        if (root.panelOpen) {
-            // Rofi highlights the first entry on open.
-            root.selectedIndex = 0
-            root.hoveredIndex = -1
-            root.tooltipIndex = -1
-            tooltipTimer.stop()
-            root.refreshInfo()
-            PillBus.hideOthers("powermenu")
-            frame.forceActiveFocus()
-        } else {
-            tooltipTimer.stop()
-            root.hoveredIndex = -1
-            root.tooltipIndex = -1
-        }
+    // Lazy-loaded (shell.qml): "opened" side effects run at load, "closed" ones
+    // at destruction; closing mirrors panelOpen back to the bus.
+    onPanelOpenChanged: PillBus.powermenuOpen = root.panelOpen
+
+    Component.onCompleted: {
+        // Rofi highlights the first entry on open.
+        root.selectedIndex = 0
+        root.hoveredIndex = -1
+        root.tooltipIndex = -1
+        tooltipTimer.stop()
+        root.refreshInfo()
+        frame.forceActiveFocus()
     }
 
-    IpcHandler {
-        id: ipc
-        target: "powermenu"
-        function toggle() { root.panelOpen = !root.panelOpen }
-        function show() { root.panelOpen = true }
-        function hide() { root.panelOpen = false }
+    Component.onDestruction: {
+        tooltipTimer.stop()
+        root.hoveredIndex = -1
+        root.tooltipIndex = -1
     }
 
-    // In-process pill → panel toggle and panel → panel "close the others"
-    // (replaces the old `qs ipc call` subprocesses). See PillBus.qml.
-    Connections {
-        target: PillBus
-        function onTogglePanel(name) { if (name === "powermenu") ipc.toggle() }
-        function onHideOthers(name) { if (name !== "powermenu") ipc.hide() }
-    }
+    // IPC for this panel lives in the always-on PanelIpc.qml (this component is
+    // lazy-loaded, so its own IpcHandler would vanish when closed).
 
     // Transparent click-catcher: closes the popover when clicking anywhere
     // outside of it. The Waybar's 30px exclusive zone is applied by the

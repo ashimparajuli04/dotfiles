@@ -26,8 +26,8 @@ Scope {
         if (!handle)
             return
         // Close any other open popover first (mirrors the panel behaviour) —
-        // in-process via PillBus (no `qs ipc` subprocesses). See PillBus.qml.
-        PillBus.hideOthers("")
+        // in-process via PillBus (see PillBus.qml).
+        PillBus.closeAll()
         root.subEntry = null
         root.menuHandle = handle
         root.anchorRight = right

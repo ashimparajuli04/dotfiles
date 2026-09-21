@@ -16,7 +16,7 @@ Scope {
 
     readonly property string helper: "/home/ashim/.local/bin/power-mode"
 
-    property bool panelOpen: false
+    property bool panelOpen: true
     property bool lowPower: false
     property bool powerLimit: false
 
@@ -142,33 +142,12 @@ Scope {
     }
 
     // ---------- popover plumbing ----------
-    // Only one popover at a time: opening this one asks every other panel to
-    // close — in-process via PillBus (no `qs ipc` subprocesses). See PillBus.qml.
-    function hideOthers() {
-        PillBus.hideOthers("battery")
-    }
+    // Only one popover at a time is handled by PillBus; this panel is
+    // lazy-loaded (shell.qml), so closing mirrors panelOpen back to the bus.
+    onPanelOpenChanged: PillBus.batteryOpen = root.panelOpen
 
-    IpcHandler {
-        id: ipc
-        target: "battery"
-        function toggle() {
-            root.hideOthers()
-            root.panelOpen = !root.panelOpen
-        }
-        function show() {
-            root.panelOpen = true
-            root.hideOthers()
-        }
-        function hide() { root.panelOpen = false }
-    }
-
-    // In-process pill → panel toggle and panel → panel "close the others"
-    // (replaces the old `qs ipc call` subprocesses). See PillBus.qml.
-    Connections {
-        target: PillBus
-        function onTogglePanel(name) { if (name === "battery") ipc.toggle() }
-        function onHideOthers(name) { if (name !== "battery") ipc.hide() }
-    }
+    // IPC for this panel lives in the always-on PanelIpc.qml (this component is
+    // lazy-loaded, so its own IpcHandler would vanish when closed).
 
     // Transparent click-catcher: closes the popover when clicking anywhere
     // outside of it. Starts below the 29px Waybar so the bar stays clickable.

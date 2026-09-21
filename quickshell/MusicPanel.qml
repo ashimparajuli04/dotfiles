@@ -10,7 +10,7 @@ import Quickshell.Wayland
 Scope {
     id: root
 
-    property bool panelOpen: false
+    property bool panelOpen: true
     property int tab: 0               // 0 = library, 1 = queue
     property string filter: ""
 
@@ -36,43 +36,24 @@ Scope {
         return p.replace(/\.[^.\/]+$/, "")
     }
 
-    function open(t) {
-        root.tab = t
-        root.panelOpen = true
+    // IPC for this panel lives in the always-on PanelIpc.qml (this component is
+    // lazy-loaded, so its own IpcHandler would vanish when closed).
+
+    // Lazy-loaded (shell.qml): "opened" side effects run at load; closing
+    // mirrors panelOpen back to the bus. PanelIpc sets PillBus.musicTab first.
+    onPanelOpenChanged: PillBus.musicOpen = root.panelOpen
+
+    Component.onCompleted: {
+        root.tab = PillBus.musicTab
         MusicState.refreshLibrary()
         MusicState.refreshQueue()
-        // Close the other popovers in-process (no `qs ipc` subprocesses).
-        PillBus.hideOthers("music")
+        root.filter = ""
+        searchInput.forceActiveFocus()
     }
 
-    IpcHandler {
-        id: ipc
-        target: "music"
-        function toggle() {
-            if (root.panelOpen)
-                root.panelOpen = false
-            else
-                root.open(root.tab)
-        }
-        function show() { root.open(root.tab) }
-        function hide() { root.panelOpen = false }
-        function library() { root.open(0) }
-        function queue() { root.open(1) }
-    }
-
-    // In-process pill → panel toggle and panel → panel "close the others"
-    // (replaces the old `qs ipc call` subprocesses). See PillBus.qml.
     Connections {
         target: PillBus
-        function onTogglePanel(name) { if (name === "music") ipc.toggle() }
-        function onHideOthers(name) { if (name !== "music") ipc.hide() }
-    }
-
-    onPanelOpenChanged: {
-        if (root.panelOpen) {
-            root.filter = ""
-            searchInput.forceActiveFocus()
-        }
+        function onMusicTabChanged() { root.tab = PillBus.musicTab }
     }
 
     // Transparent click-catcher below the Waybar.

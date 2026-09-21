@@ -129,8 +129,7 @@ Scope {
         }
     }
 
-    // Panel toggling is in-process via PillBus.togglePanel (no `qs ipc`
-    // subprocess). See PillBus.qml.
+    // Panel toggling is in-process via PillBus (no `qs ipc` subprocess). See PillBus.qml.
     Process {
         id: pavuProc
         command: ["pavucontrol"]
@@ -216,7 +215,7 @@ Scope {
                     if (mouse.button === Qt.RightButton)
                         pavuProc.running = true
                     else
-                        PillBus.togglePanel("sound")
+                        PillBus.toggleOpen("sound")
                 }
             }
 

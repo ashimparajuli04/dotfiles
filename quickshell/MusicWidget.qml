@@ -88,15 +88,13 @@ Scope {
                                     smooth: true
                                 }
 
-                                Process {
-                                    id: openLibraryProc
-                                    command: ["qs", "ipc", "call", "music", "library"]
-                                }
-
                                 MouseArea {
                                     anchors.fill: parent
                                     cursorShape: Qt.PointingHandCursor
-                                    onClicked: openLibraryProc.running = true
+                                    onClicked: {
+                                        PillBus.musicTab = 0
+                                        PillBus.show("music")
+                                    }
                                 }
                             }
 

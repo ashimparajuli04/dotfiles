@@ -8,7 +8,7 @@ import Quickshell.Wayland
 Scope {
     id: root
 
-    property bool panelOpen: false
+    property bool panelOpen: true
     readonly property var adapter: Bluetooth.defaultAdapter
     readonly property bool powered: root.adapter !== null && root.adapter !== undefined ? root.adapter.enabled : false
 
@@ -57,31 +57,12 @@ Scope {
         onTriggered: if (root.adapter) root.adapter.discovering = false
     }
 
-    // Opening this popover closes the others, in-process via PillBus
-    // (no `qs ipc` subprocesses). See PillBus.qml.
+    // Only one popover at a time is handled by PillBus; this panel is
+    // lazy-loaded (shell.qml), so closing mirrors panelOpen back to the bus.
+    onPanelOpenChanged: PillBus.bluetoothOpen = root.panelOpen
 
-    IpcHandler {
-        id: ipc
-        target: "bluetooth"
-        function toggle() {
-            root.panelOpen = !root.panelOpen
-            if (root.panelOpen)
-                PillBus.hideOthers("bluetooth")
-        }
-        function show() {
-            root.panelOpen = true
-            PillBus.hideOthers("bluetooth")
-        }
-        function hide() { root.panelOpen = false }
-    }
-
-    // In-process pill → panel toggle and panel → panel "close the others"
-    // (replaces the old `qs ipc call` subprocesses). See PillBus.qml.
-    Connections {
-        target: PillBus
-        function onTogglePanel(name) { if (name === "bluetooth") ipc.toggle() }
-        function onHideOthers(name) { if (name !== "bluetooth") ipc.hide() }
-    }
+    // IPC for this panel lives in the always-on PanelIpc.qml (this component is
+    // lazy-loaded, so its own IpcHandler would vanish when closed).
 
     // Transparent click-catcher: closes the popover when clicking anywhere
     // outside of it. Starts below the 29px Waybar so the bar stays clickable.
