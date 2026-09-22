@@ -41,6 +41,11 @@ Scope {
     // the horizontal padding.
     readonly property int contentWidth: trayRow.implicitWidth + root.padH * 2
 
+    // With no registered items the pill would otherwise still paint its
+    // horizontal padding as a ~16px dark blob. Hide it (and its input mask)
+    // entirely until something registers.
+    readonly property bool hasItems: trayIcons.count > 0
+
     // The tray item context menu (right-click / menu-only items).
     TrayMenu { id: trayMenu }
 
@@ -86,7 +91,8 @@ Scope {
             // between them stays constant through the whole animation.
             x: win.width - width - PillBus.reach
             height: root.pillHeight
-            width: root.contentWidth
+            width: root.hasItems ? root.contentWidth : 0
+            visible: root.hasItems
             radius: root.radius
             color: "#040404"
 
@@ -96,6 +102,7 @@ Scope {
                 spacing: root.iconSpacing
 
                 Repeater {
+                    id: trayIcons
                     model: SystemTray.items
 
                     delegate: Item {

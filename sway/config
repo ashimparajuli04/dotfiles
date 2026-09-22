@@ -319,6 +319,9 @@ assign [app_id="Spotify"] workspace number 4
 # rmpc is no longer auto-started or pinned to workspace 3 — the Quickshell
 # music widget (cover-art click → library/queue) replaces it. rmpc stays
 # installed; launch it manually from a terminal if you ever want the TUI.
+# Mod+M: toggle the Quickshell music panel (library/queue browser) — same as
+# clicking the widget's cover art. IPC target lives in quickshell/PanelIpc.qml.
+bindsym $mod+m exec qs ipc call music toggle
 
 # Notifications:
 exec --no-startup-id dunst
@@ -339,9 +342,11 @@ exec --no-startup-id sh -c 'for i in $(seq 1 50); do mpc status >/dev/null 2>&1 
 exec --no-startup-id /home/ashim/.config/battery-alert/battery-alert
 
 # Quickshell (Bluetooth / Wi-Fi / Sound / Power popovers, toggled from the Waybar icons):
-# QSG_RHI_BACKEND=vulkan → RADV keeps the qs footprint ~90 MB / ~75 threads
-# below the default OpenGL path (Mesa GL grows a lot when panels open). See changes.md §37.
-exec --no-startup-id env QSG_RHI_BACKEND=vulkan quickshell --no-duplicate
+# QSG_RHI_BACKEND=vulkan → RADV keeps the qs footprint ~90 MB / ~75 threads below
+#   the default OpenGL path (Mesa GL grows a lot when panels open). See changes.md §37/38.
+# MALLOC_CONF=retain:false → jemalloc returns freed panel pages to the OS instead
+#   of keeping them mapped; measured another ~28-36 MB off PSS. See changes.md §40.
+exec --no-startup-id env QSG_RHI_BACKEND=vulkan MALLOC_CONF=retain:false quickshell --no-duplicate
 
 # Brightness CTRL (F2/F3, in addition to the Fn keys above):
 bindsym F2 exec brightnessctl set 5%-
