@@ -1,5 +1,6 @@
 singleton Theme 1.0 Theme.qml
 PanelIpc 1.0 PanelIpc.qml
+Notifications 1.0 Notifications.qml
 ToggleSwitch 1.0 ToggleSwitch.qml
 DeviceRow 1.0 DeviceRow.qml
 BluetoothPanel 1.0 BluetoothPanel.qml
@@ -10,6 +11,7 @@ WifiRow 1.0 WifiRow.qml
 WifiPanel 1.0 WifiPanel.qml
 PowermenuPanel 1.0 PowermenuPanel.qml
 CalendarPanel 1.0 CalendarPanel.qml
+CalendarPopup 1.0 CalendarPopup.qml
 CalendarAgenda 1.0 CalendarAgenda.qml
 CalendarMonth 1.0 CalendarMonth.qml
 EventRow 1.0 EventRow.qml

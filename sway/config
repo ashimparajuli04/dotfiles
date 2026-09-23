@@ -323,8 +323,9 @@ assign [app_id="Spotify"] workspace number 4
 # clicking the widget's cover art. IPC target lives in quickshell/PanelIpc.qml.
 bindsym $mod+m exec qs ipc call music toggle
 
-# Notifications:
-exec --no-startup-id dunst
+# Notifications: handled by Quickshell (quickshell/Notifications.qml owns
+# org.freedesktop.Notifications). dunst retired — no autostart.
+# exec --no-startup-id dunst
 
 # Focus apps' windows when they request attention (e.g. clicking Discord's tray icon):
 exec --no-startup-id bash /home/ashim/.config/sway/scripts/urgent-focus.sh

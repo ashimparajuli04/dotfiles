@@ -20,6 +20,9 @@ ShellRoot {
     TrayWidget {}
     MusicWidget {}
 
+    // Owns org.freedesktop.Notifications — must stay eager.
+    Notifications {}
+
     // Popovers — instantiated on demand, destroyed when closed.
     LazyLoader { active: PillBus.soundOpen; SoundPanel {} }
     LazyLoader { active: PillBus.batteryOpen; BatteryPanel {} }
