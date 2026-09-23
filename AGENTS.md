@@ -19,8 +19,7 @@ when the user says any of these, run the consistency check below.
    `.gitignore` instead of committing it.
 4. This repo is **private**. Never make it public without removing: SF Pro fonts
    (Apple licensing), the Genius token, emails/calendar IDs in `vdirsyncer/config`.
-5. Every consistency pass gets a dated section appended to `changes.md`.
-6. If unsure whether something is rice or a personal app → **ask the user**.
+5. If unsure whether something is rice or a personal app → **ask the user**.
 
 ## Exclusions (never track these)
 
@@ -94,15 +93,13 @@ git status                                                                   # o
 ```
 Restart the affected app (waybar/dunst/eww/quickshell) or `swaymsg reload`.
 
-### 7. Document & ship
-- Append a dated section to `changes.md` describing what was added/moved.
+### 7. Ship
 - `git add -A && git commit -m "rice: <what changed>" && git push`
 
 ## Asset map (source in repo → destination)
 
 | Repo path | Destination |
 |---|---|
-| `changes.md` | `~/changes.md` |
 | `bin/mpd-lyricsd` | `~/.local/bin/mpd-lyricsd` |
 | `bin/power-mode` | `~/.local/bin/power-mode` |
 | `icons/vinyl.svg` | `~/.local/share/icons/vinyl.svg` |

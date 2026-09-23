@@ -56,7 +56,6 @@ CONFIG_DIRS=(
 
 # "path-inside-repo|destination"
 EXTRA_LINKS=(
-  "changes.md|$HOME/changes.md"
   "bin/mpd-lyricsd|$HOME/.local/bin/mpd-lyricsd"
   "bin/power-mode|$HOME/.local/bin/power-mode"
   "icons/vinyl.svg|$HOME/.local/share/icons/vinyl.svg"
@@ -193,7 +192,7 @@ if command -v gsettings >/dev/null && gsettings get org.gnome.desktop.interface 
   gsettings set org.gnome.desktop.interface font-name    "SF Pro Display"
   say "theme / icons / cursor / font applied"
 else
-  say "no gsettings session found — apply manually (see changes.md)"
+  say "no gsettings session found — apply manually"
 fi
 
 step "Lyrics venv"
