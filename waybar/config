@@ -9,7 +9,7 @@
     "modules-left": [
         "sway/workspaces",
         "custom/weather",
-        "custom/music-lyrics"
+        "group/music"
     ],
     "modules-center": [],
     "modules-right": [
@@ -101,9 +101,44 @@
     "exec-if": "ping openweathermap.org -c1",
     "signal": 8
   },
-  "custom/music-lyrics": {
+  // Music pill: [prev] [play/pause] [next] Title: current lyric.
+  // A group (deliberately NO drawer) so hovering the pill sets the group's
+  // prelight state; `#music:hover` in style.css then reveals prev/next. The
+  // play/pause glyph stays visible and doubles as the playing indicator.
+  "group/music": {
+    "orientation": "horizontal",
+    "modules": [
+      "custom/music-prev",
+      "custom/music-play",
+      "custom/music-next",
+      "custom/music-text"
+    ]
+  },
+  "custom/music-prev": {
     "format": "{}",
-    "exec": "~/.config/waybar/scripts/music-lyrics.sh",
+    "exec": "~/.config/waybar/scripts/music-lyrics.sh prev",
+    "interval": "once",
+    "on-click": "mpc prev",
+    "tooltip": false
+  },
+  "custom/music-play": {
+    "format": "{}",
+    "exec": "~/.config/waybar/scripts/music-lyrics.sh icon",
+    "interval": 1,
+    "return-type": "text",
+    "on-click": "mpc toggle",
+    "tooltip": false
+  },
+  "custom/music-next": {
+    "format": "{}",
+    "exec": "~/.config/waybar/scripts/music-lyrics.sh next",
+    "interval": "once",
+    "on-click": "mpc next",
+    "tooltip": false
+  },
+  "custom/music-text": {
+    "format": "{}",
+    "exec": "~/.config/waybar/scripts/music-lyrics.sh text",
     "interval": 1,
     "return-type": "text",
     "on-click": "mpc toggle",

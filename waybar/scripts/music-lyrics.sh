@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
-# waybar custom module: MPD now-playing + current synced lyric line.
+# waybar music pill, split across the group/music modules:
+#   icon  -> just the play/pause state glyph (the always-visible button)
+#   text  -> "Title: current lyric"
+#   prev  -> skip-previous glyph (revealed on hover)
+#   next  -> skip-next glyph     (revealed on hover)
+#   full  -> legacy "<icon> Title: lyric" (no argument; kept for back-compat)
 # Lyrics are timed .lrc files in ~/.local/share/lyrics, named
-# "<Artist> - <Title>.lrc". Example output:
-#    " Let Her Go: only know you love her when you let her go"
+# "<Artist> - <Title>.lrc".
 
 LYRICS_DIR="$HOME/.local/share/lyrics"
 # The icon shows what pressing the pill will do:
@@ -12,10 +16,25 @@ LYRICS_DIR="$HOME/.local/share/lyrics"
 ICON_WHILE_PLAYING=$'\uf04c'   # nf-fa-pause (press -> pause)
 ICON_WHILE_PAUSED=$'\uf04b'    # nf-fa-play  (press -> play)
 ICON_STOP=$'\uf001'            # nf-fa-music
+# Prev/next are Plane-15 (nf-md-skip_previous / _next) — 5 hex digits, so
+# they need \U (8-digit) escapes, not \u.
+ICON_PREV=$'\U000F04AE'        # nf-md-skip_previous
+ICON_NEXT=$'\U000F04AD'        # nf-md-skip_next
+
+mode=${1:-full}
+# These never depend on MPD state, so they short-circuit before mpc runs.
+case "$mode" in
+    prev) printf '%s\n' "$ICON_PREV"; exit 0 ;;
+    next) printf '%s\n' "$ICON_NEXT"; exit 0 ;;
+esac
 
 # ---- MPD status ------------------------------------------------------------
 if ! status=$(mpc status 2>/dev/null); then
-    echo "$ICON_STOP Disconnected"
+    case "$mode" in
+        icon) printf '%s\n' "$ICON_STOP" ;;
+        text) printf 'Disconnected\n' ;;
+        *)    printf '%s Disconnected\n' "$ICON_STOP" ;;
+    esac
     exit 0
 fi
 
@@ -45,7 +64,11 @@ title=${title##*/}
 title=${title%.*}
 
 if [ -z "$title" ]; then
-    echo "$icon Stopped"
+    case "$mode" in
+        icon) printf '%s\n' "$icon" ;;
+        text) printf 'Stopped\n' ;;
+        *)    printf '%s Stopped\n' "$icon" ;;
+    esac
     exit 0
 fi
 
@@ -86,8 +109,22 @@ if [ -n "$lyrics_file" ] && [ -f "$lyrics_file" ]; then
 fi
 
 # ---- Output ----------------------------------------------------------------
-if [ -n "$current_lyric" ]; then
-    printf '%s %s: %s\n' "$icon" "$title" "$current_lyric"
-else
-    printf '%s %s\n' "$icon" "$title"
-fi
+case "$mode" in
+    icon)
+        printf '%s\n' "$icon"
+        ;;
+    text)
+        if [ -n "$current_lyric" ]; then
+            printf '%s: %s\n' "$title" "$current_lyric"
+        else
+            printf '%s\n' "$title"
+        fi
+        ;;
+    *)
+        if [ -n "$current_lyric" ]; then
+            printf '%s %s: %s\n' "$icon" "$title" "$current_lyric"
+        else
+            printf '%s %s\n' "$icon" "$title"
+        fi
+        ;;
+esac
