@@ -6,8 +6,9 @@ import Quickshell.Wayland
 // Desktop notifications drawn by Quickshell, replacing the dunst daemon
 // (Quickshell now owns org.freedesktop.Notifications). Cards stack top-right
 // under the bar, styled with the New Wave theme. Normal/low urgency auto-expire
-// (default 10 s, matching dunstrc); critical stays until clicked. Click a card
-// to dismiss it, right-click to dismiss all. See changes.md §41.
+// (default 10 s, matching dunstrc); critical stays until clicked. Album art
+// (the "image-path" hint, e.g. the mpd-notify now-playing card) is shown as a
+// left thumbnail. Click a card to dismiss it.
 Scope {
     id: root
 
@@ -65,7 +66,8 @@ Scope {
                     required property var modelData
 
                     width: cards.width
-                    implicitHeight: body.implicitHeight + 24
+                    readonly property bool hasArt: modelData.image !== ""
+                    implicitHeight: content.implicitHeight + 24
                     radius: 14
                     color: Theme.bg
                     border.width: 1
@@ -80,59 +82,88 @@ Scope {
                         return modelData.expireTimeout > 0 ? modelData.expireTimeout : root.defaultTimeout
                     }
 
-                    Column {
-                        id: body
+                    Row {
+                        id: content
                         anchors {
                             left: parent.left
                             right: parent.right
                             top: parent.top
                             margins: 12
                         }
-                        spacing: 4
+                        spacing: 10
 
-                        Row {
-                            spacing: 8
+                        // Album / notification artwork (the "image-path" hint).
+                        // dunst showed this for the mpd-notify now-playing card;
+                        // clip it to a rounded thumbnail.
+                        Rectangle {
+                            visible: card.hasArt
+                            width: 56
+                            height: 56
+                            radius: 8
+                            color: "transparent"
+                            clip: true
 
                             Image {
-                                visible: modelData.appIcon !== ""
-                                source: modelData.appIcon
-                                width: 20
-                                height: 20
-                                sourceSize.width: 20
-                                sourceSize.height: 20
+                                anchors.fill: parent
+                                source: card.hasArt ? modelData.image : ""
+                                sourceSize.width: 112
+                                sourceSize.height: 112
+                                fillMode: Image.PreserveAspectCrop
                                 smooth: true
+                                asynchronous: true
+                                cache: false
+                            }
+                        }
+
+                        Column {
+                            id: body
+                            width: content.width - (card.hasArt ? 66 : 0)
+                            spacing: 4
+
+                            Row {
+                                spacing: 8
+
+                                Image {
+                                    visible: modelData.appIcon !== ""
+                                    source: modelData.appIcon
+                                    width: 20
+                                    height: 20
+                                    sourceSize.width: 20
+                                    sourceSize.height: 20
+                                    smooth: true
+                                }
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: modelData.appName
+                                    color: Theme.muted
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 10
+                                }
                             }
 
                             Text {
-                                anchors.verticalCenter: parent.verticalCenter
-                                text: modelData.appName
-                                color: Theme.muted
+                                width: parent.width
+                                visible: modelData.summary !== ""
+                                text: modelData.summary
+                                textFormat: Text.PlainText
+                                color: Theme.fg
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 10
+                                font.pixelSize: 12
+                                font.bold: true
+                                wrapMode: Text.WordWrap
                             }
-                        }
 
-                        Text {
-                            width: parent.width
-                            visible: modelData.summary !== ""
-                            text: modelData.summary
-                            textFormat: Text.PlainText
-                            color: Theme.fg
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 12
-                            font.bold: true
-                            wrapMode: Text.WordWrap
-                        }
-
-                        Text {
-                            width: parent.width
-                            visible: modelData.body !== ""
-                            text: modelData.body
-                            textFormat: Text.PlainText
-                            color: Theme.fg
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 11
-                            wrapMode: Text.WordWrap
+                            Text {
+                                width: parent.width
+                                visible: modelData.body !== ""
+                                text: modelData.body
+                                textFormat: Text.PlainText
+                                color: Theme.fg
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 11
+                                wrapMode: Text.WordWrap
+                            }
                         }
                     }
 

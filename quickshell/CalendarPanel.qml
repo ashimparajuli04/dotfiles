@@ -458,7 +458,7 @@ Scope {
 
     // ---------- full calendar popup (lazy) ----------
     // Built on first open and destroyed on close; the chip/clock and hover card
-    // stay eager because they need the calendar data. See changes.md §41.
+    // stay eager because they need the calendar data.
     LazyLoader {
         active: root.popupOpen
 

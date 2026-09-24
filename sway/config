@@ -346,7 +346,7 @@ exec --no-startup-id /home/ashim/.config/battery-alert/battery-alert
 # QSG_RHI_BACKEND=vulkan → RADV keeps the qs footprint ~90 MB / ~75 threads below
 #   the default OpenGL path (Mesa GL grows a lot when panels open). See changes.md §37/38.
 # MALLOC_CONF=retain:false → jemalloc returns freed panel pages to the OS instead
-#   of keeping them mapped; measured another ~28-36 MB off PSS. See changes.md §40.
+#   of keeping them mapped; measured another ~28-36 MB off PSS.
 exec --no-startup-id env QSG_RHI_BACKEND=vulkan MALLOC_CONF=retain:false quickshell --no-duplicate
 
 # Brightness CTRL (F2/F3, in addition to the Fn keys above):

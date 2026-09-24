@@ -9,7 +9,7 @@ import "CalUtil.js" as CalUtil
 // open and destroyed on close. It reads state and callbacks from its owning
 // CalendarPanel through `panel` (single reference, no prop-drilling); the chip,
 // clock and hover card stay eager in CalendarPanel because they need the data
-// too. See changes.md §41.
+// too.
 PanelWindow {
     id: popup
 
