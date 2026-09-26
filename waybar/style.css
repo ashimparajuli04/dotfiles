@@ -104,29 +104,23 @@ window#waybar.hidden {
    A Waybar group/ (no drawer) so hovering the pill sets the group box's
    prelight state — `#music:hover` below then reveals prev/next. The hidden
    buttons collapse to zero width (font-size:0) and slide back in, so the
-   collapsed pill reserves no space for them (nothing to shift on hover).
-   The text is deliberately large (20px, 1px vertical padding); GTK has no
-   `line-height` (setting it crashes Waybar), so a small negative margin
-   pulls in what leading it can without clipping the glyphs. */
+   collapsed pill reserves no space for them (nothing to shift on hover). */
 #music {
   background-color: #040404;
-  padding: 1px 10px;
+  padding: 2px 10px;
   margin-top: 5px;
   margin-bottom: 0px;
   margin-right: 10px;
+  font-size: 13px;
   border-radius: 6px 8px 8px 6px;
 }
 
-#custom-music-prev,
 #custom-music-play,
-#custom-music-next,
 #custom-music-text {
   color: #d9c793;
   background-color: transparent;
-  font-size: 20px;
   padding: 0;
-  /* Pull the font's leading in so the glyphs fill the pill (~1px padding). */
-  margin: -1px 0;
+  margin: 0;
 }
 
 #custom-music-play {
@@ -139,8 +133,12 @@ window#waybar.hidden {
 
 #custom-music-prev,
 #custom-music-next {
+  color: #d9c793;
+  background-color: transparent;
   opacity: 0;
   min-width: 0;
+  padding: 0;
+  margin: 0;
   font-size: 0;
   transition: opacity 180ms ease-out,
               min-width 180ms ease-out,
@@ -151,9 +149,9 @@ window#waybar.hidden {
 #music:hover #custom-music-prev,
 #music:hover #custom-music-next {
   opacity: 1;
-  min-width: 20px;
+  min-width: 16px;
   padding: 0 5px;
-  font-size: 20px;
+  font-size: 13px;
 }
 
 /* Invisible slot for the Quickshell brightness pill (BrightnessPill.qml
