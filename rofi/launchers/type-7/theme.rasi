@@ -39,7 +39,7 @@ window {
   background-color: @bg1;
   border: 1px;
   border-color: @bg3;
-  border-radius: 6px;
+  border-radius: 0px 6px 6px 6px;
 }
 
 inputbar {
