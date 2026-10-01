@@ -56,7 +56,7 @@ Scope {
     }
 
     function refreshClock() {
-        root.nowLabel = CalUtil.now12()
+        root.nowLabel = CalUtil.nowStamp()
     }
 
     function reloadHover() {
@@ -317,13 +317,13 @@ Scope {
 
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    width: chipMetrics.advanceWidth * 8
+                    width: chipMetrics.width
                     text: root.nowLabel
                     color: root.textPrimary
                     font.family: root.fontFamily
                     font.pixelSize: 12
                     font.bold: true
-                    horizontalAlignment: Text.AlignRight
+                    horizontalAlignment: Text.AlignHCenter
                 }
             }
         }
@@ -333,7 +333,7 @@ Scope {
             font.family: root.fontFamily
             font.pixelSize: 12
             font.bold: true
-            text: "0"
+            text: "Wed 30 · 12:51 PM"
         }
 
         HoverHandler {

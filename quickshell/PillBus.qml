@@ -99,9 +99,10 @@ QtObject {
     property bool wifiOpen: false
     property bool musicOpen: false
     property bool powermenuOpen: false
+    property bool discordOpen: false
     property int musicTab: 0
 
-    readonly property var panelNames: ["sound", "battery", "bluetooth", "wifi", "music", "powermenu"]
+    readonly property var panelNames: ["sound", "battery", "bluetooth", "wifi", "music", "powermenu", "discord"]
 
     function isOpen(name) {
         switch (name) {
@@ -111,6 +112,7 @@ QtObject {
         case "wifi": return wifiOpen
         case "music": return musicOpen
         case "powermenu": return powermenuOpen
+        case "discord": return discordOpen
         }
         return false
     }
@@ -123,6 +125,7 @@ QtObject {
         case "wifi": wifiOpen = v; break
         case "music": musicOpen = v; break
         case "powermenu": powermenuOpen = v; break
+        case "discord": discordOpen = v; break
         }
     }
 

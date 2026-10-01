@@ -19,6 +19,7 @@ ShellRoot {
     BatteryPill {}
     TrayWidget {}
     MusicWidget {}
+    DiscordVoicePill {}
 
     // Owns org.freedesktop.Notifications — must stay eager.
     Notifications {}
@@ -30,6 +31,7 @@ ShellRoot {
     LazyLoader { active: PillBus.wifiOpen; WifiPanel {} }
     LazyLoader { active: PillBus.musicOpen; MusicPanel {} }
     LazyLoader { active: PillBus.powermenuOpen; PowermenuPanel {} }
+    LazyLoader { active: PillBus.discordOpen; DiscordVoicePanel {} }
 
     // Calendar owns the always-visible clock chip, so it stays eager.
     CalendarPanel {}

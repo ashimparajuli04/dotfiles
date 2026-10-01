@@ -23,7 +23,7 @@ Scope {
     // Joined row (§32): rightMargin 98 = 71 (wifi) + 27 (wifi width), so
     // this pill's right edge sits flush against the wifi pill.
     readonly property int collapsedWidth: 27
-    readonly property int rightMargin: 98       // screen right edge → window right edge
+    readonly property int rightMargin: 89       // screen right edge → window right edge
     readonly property int pillHeight: 24
     readonly property int nameCap: 140          // hover text elides beyond this
 

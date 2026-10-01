@@ -30,7 +30,7 @@ Scope {
     // The brightness pill's collapsed left edge is 179px from the screen's
     // right edge (its rightMargin 152 + width 27), so 189 leaves the same
     // 10px gap the old Waybar `#tray { margin-right: 10px }` had.
-    readonly property int rightMargin: 189
+    readonly property int rightMargin: 180
     readonly property int pillHeight: 24
     readonly property int iconSize: 16
     readonly property int iconSpacing: 6

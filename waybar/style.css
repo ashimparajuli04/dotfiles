@@ -214,11 +214,16 @@ window#waybar.hidden {
 #custom-powermenu {
   color: #e78284;
   margin-left: -12px;
+  /* 5px: keeps the pill's right edge at the window/bezel gap (7px from the
+     screen edge), same as a tiled window. The powermenu is now ~9px narrower
+     (trailing space removed, padding-right trimmed), so the pill row is
+     shifted 9px right by reducing each Quickshell pill's rightMargin by 9 —
+     the join with the battery pill stays seamless. See changes.md §16/§32. */
   margin-right: 5px;
-  /* 8px (not 12px) so the wider 💢 emoji keeps the pill at its old width
-     and the battery cluster's 10px gaps stay intact. See changes.md §16. */
+  /* 7px (not 8px) so the right cap gap matches the left cap (~7px): the emoji
+     ink has ~no right bearing, and the trailing space is gone. See §16. */
   padding-left: 8px;
-  padding-right: 8px;
+  padding-right: 7px;
   border-radius: 0px 8px 8px 0px;
 }
 
@@ -251,10 +256,23 @@ label:focus {
   background-color: #131822;
 }
 
+/* Invisible slot for the Quickshell Discord voice pill (DiscordVoicePill.qml
+   draws the participant avatars on top of it). Leftmost of the right group;
+   a fixed min-width keeps Waybar's layout stable as the participant count
+   changes. The overlay hides itself (opacity 0) when not in a voice call. */
+#custom-discordvoice {
+  background-color: transparent;
+  padding: 0;
+  margin-top: 5px;
+  margin-bottom: 0px;
+  margin-right: 0px;
+  min-width: 120px;
+}
+
 /* --------------------- system tray slot (changes.md §36) ---------------- */
 /* Invisible Waybar slot for the Quickshell system tray (TrayWidget.qml draws
    the tray icons on top of it). A fixed min-width reserves enough room for
-   the tray at rest so the native mpris module to its left stays clear; the
+   the tray at rest so the Discord voice pill to its left stays clear; the
    tray itself is an overlay and slides left with the pills on hover, so
    Waybar never re-layouts. Supersedes the §35 trayshift spacer. Raise this
    if more tray icons than fit are ever needed. */

@@ -25,7 +25,7 @@ Scope {
     // so this pill's right edge sits flush against the battery pill. Width is
     // 27 to match the other pills, so every icon sits an even 27px apart.
     readonly property int collapsedWidth: 27
-    readonly property int rightMargin: 71       // screen right edge → window right edge
+    readonly property int rightMargin: 62       // screen right edge → window right edge
     readonly property int pillHeight: 24
     readonly property int nameCap: 140          // hover text elides beyond this
 

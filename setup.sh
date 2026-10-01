@@ -49,7 +49,7 @@ AUR_PKGS=(bibata-cursor-theme-bin ryzenadj-git ryzen_smu-dkms-git)
 # What gets placed where
 # ---------------------------------------------------------------------------
 CONFIG_DIRS=(
-  kitty nvim battery-alert cava dunst gtk-3.0 gtk-4.0 khal mpd
+  kitty nvim cava dunst gtk-3.0 gtk-4.0 khal mpd
   mpd-lyricsd ncmpcpp quickshell rmpc rofi sway systemd vdirsyncer
   waybar xkb
 )

@@ -27,9 +27,14 @@ TrayWidget 1.0 TrayWidget.qml
 TrayMenu 1.0 TrayMenu.qml
 TrayMenuRow 1.0 TrayMenuRow.qml
 singleton BatteryState 1.0 BatteryState.qml
+singleton BatteryAlert 1.0 BatteryAlert.qml
 MusicWidget 1.0 MusicWidget.qml
 MusicPanel 1.0 MusicPanel.qml
 MusicButton 1.0 MusicButton.qml
 LyricsView 1.0 LyricsView.qml
 singleton MusicState 1.0 MusicState.qml
 singleton MusicStyle 1.0 MusicStyle.qml
+singleton DiscordVoice 1.0 DiscordVoice.qml
+DiscordAvatar 1.0 DiscordAvatar.qml
+DiscordVoicePill 1.0 DiscordVoicePill.qml
+DiscordVoicePanel 1.0 DiscordVoicePanel.qml

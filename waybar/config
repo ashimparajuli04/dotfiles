@@ -13,7 +13,7 @@
     ],
     "modules-center": [],
     "modules-right": [
-    	"mpris",
+    	"custom/discordvoice",
 	"custom/tray",
 	"custom/brightness",
 	"custom/sound",
@@ -23,9 +23,17 @@
         "custom/powermenu"
         
     ],
+    // Invisible slot holder for the Quickshell Discord voice pill
+    // (DiscordVoicePill.qml draws the participant avatars on top of it).
+    // Leftmost of the right group; a fixed min-width in style.css keeps
+    // Waybar from re-laying-out as the participant count changes.
+    "custom/discordvoice": {
+        "format": " ",
+        "tooltip": false
+    },
     // Invisible slot holder for the Quickshell system tray (TrayWidget.qml
     // draws the tray icons on top of it). A fixed min-width in style.css
-    // reserves room so the native mpris module to its left stays clear of
+    // reserves room so the Discord voice pill to its left stays clear of
     // the tray. Supersedes the §35 trayshift FIFO hack; see changes.md §36.
     "custom/tray": {
         "format": " ",
@@ -72,24 +80,10 @@
         "tooltip": false
     },
     "custom/powermenu": {
-        "format": "💢 ",
+        "format": "💢",
         "tooltip": false,
         "on-click": "qs ipc call powermenu toggle"
     },
-    "mpris": {
-	"format": "{player_icon} {dynamic}",
-	"format-paused": "{status_icon} <i>{dynamic}</i>",
-	"player-icons": {
-		"spotify": "",
-		"default": "🎵"
-	},
-	"dynamic-order": ["title"],
-	"interval": 5,
-	"status-icons": {
-		"paused": "⏸"
-	},
-	"ignored-players": ["firefox"]
-},
 
   "custom/weather": {
     "format": "{}",

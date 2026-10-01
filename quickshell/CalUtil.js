@@ -23,6 +23,7 @@ var NAMED_COLORS = {
 var PALETTE = ["#0A84FF", "#30D158", "#FF9F0A", "#BF5AF2", "#64D2FF", "#FFD60A", "#FF375F", "#5E5CE6"]
 
 var DAYS = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"]
+var DAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 var MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
 var MONTHS_LONG = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 
@@ -57,6 +58,17 @@ function now12() {
     if (h === 0)
         h = 12
     return h + ":" + pad2(d.getMinutes()) + " " + ap
+}
+
+function nowStamp() {
+    var d = new Date()
+    var h = d.getHours()
+    var ap = h >= 12 ? "PM" : "AM"
+    h = h % 12
+    if (h === 0)
+        h = 12
+    return DAYS_SHORT[d.getDay()] + " " + d.getDate() + " · "
+         + h + ":" + pad2(d.getMinutes()) + " " + ap
 }
 
 function fmt12(t) {

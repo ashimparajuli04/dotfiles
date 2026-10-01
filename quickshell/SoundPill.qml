@@ -34,7 +34,7 @@ Scope {
     // so this pill's right edge sits flush against the bluetooth pill.
     readonly property int collapsedWidth: 27
     readonly property int expandedWidth: 118    // right edge stays at x=1795
-    readonly property int rightMargin: 125      // screen right edge → window right edge
+    readonly property int rightMargin: 116      // screen right edge → window right edge
     readonly property int pillHeight: 24
 
     // ---------- state ----------
@@ -60,18 +60,15 @@ Scope {
         return (root.sink && root.sink.properties) ? root.sink.properties[name] : undefined
     }
 
-    // Same glyphs the old Waybar module used: mute → 󰝟, headphones →
-    // the  FontAwesome headphone glyph, otherwise 󰕿/󰖀/󰕾 by level.
+    // Same glyphs the old Waybar module used: mute → 󰝟, otherwise
+    // 󰕿/󰖀/󰕾 by level. Deliberately level-based only — the icon never
+    // switches to a headphone glyph when headphones are connected, so the
+    // speaker always reflects the volume level.
     // Plane-15 codepoints use surrogate pairs: a 5-hex-digit \u escape is
     // invalid in JS and truncates to a 4-digit glyph + a literal character.
     readonly property string glyph: {
         if (root.muted)
             return "\udb81\udf5f"
-        var d = ((root.prop("device.icon-name") || "") + " "
-            + (root.sink ? root.sink.name : "") + " " + (root.sink ? root.sink.description : "")).toLowerCase()
-        if (d.indexOf("headphone") !== -1 || d.indexOf("headset") !== -1
-            || d.indexOf("earbud") !== -1 || d.indexOf("bluez") !== -1)
-            return "\uf025"
         if (root.shownFraction < 0.33)
             return "\udb81\udd7f"
         if (root.shownFraction < 0.66)

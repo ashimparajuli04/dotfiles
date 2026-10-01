@@ -30,7 +30,7 @@ Scope {
     // cluster. Tuned with screenshots — see changes.md §28.
     readonly property int collapsedWidth: 27
     readonly property int expandedWidth: 172
-    readonly property int rightMargin: 152
+    readonly property int rightMargin: 143
     readonly property int pillHeight: 24
 
     // ---------- state ----------

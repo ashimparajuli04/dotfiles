@@ -23,18 +23,24 @@ Scope {
     // changes.md §32. rightMargin is 7px more than the old flush value so the
     // battery→powermenu icon gap matches the row's even 27px spacing.
     readonly property int collapsedWidth: 27
-    readonly property int rightMargin: 44       // screen right edge → window right edge
+    readonly property int rightMargin: 35       // screen right edge → window right edge
     readonly property int pillHeight: 24
     readonly property int pctCap: 60            // hover text elides beyond this
+    readonly property int labelCap: 130         // alert-word text elides beyond this
 
     // ---------- state ----------
-    // All battery values live in BatteryState.qml (UPower-backed).
-    property bool expanded: false
+    // All battery values live in BatteryState.qml (UPower-backed); the alert
+    // words and the ≤50 % "keep the percentage up" rule live in BatteryAlert.qml.
+    // Hover and the alert both request expansion — the pill is open while
+    // either one holds.
+    property bool hoverExpanded: false
+    readonly property bool expanded: hoverExpanded || BatteryAlert.forceExpand
 
     // Rounded to whole pixels so the pushed (collapsed) pills shift by an
     // exact integer and the joined row never shows a sub-pixel seam.
     readonly property int expandedWidth: Math.round(root.collapsedWidth
-        + (pctText.implicitWidth > 0 ? 5 + Math.min(pctText.implicitWidth, root.pctCap) : 0))
+        + (pctText.implicitWidth > 0 ? 5 + Math.min(pctText.implicitWidth, root.pctCap) : 0)
+        + (labelText.text !== "" ? 5 + Math.min(labelText.implicitWidth, root.labelCap) : 0))
 
     // Hover only expands the pill; collapsing is driven by
     // PillBus.collapseTick and only happens after the whole pill row has
@@ -51,7 +57,7 @@ Scope {
         target: PillBus
         function onCollapseTickChanged() {
             if (!hover.hovered)
-                root.expanded = false
+                root.hoverExpanded = false
         }
     }
 
@@ -68,7 +74,11 @@ Scope {
     Binding {
         target: PillBus
         property: "batteryMaxPush"
-        value: root.expandedWidth - root.collapsedWidth
+        // Ceiling = a full percentage text plus a full alert word (a pop can
+        // stack on top of the ≤50 % percentage). Every pill to the left
+        // reserves this much so the joined row never clips while the battery
+        // pill reaches its widest.
+        value: (5 + root.pctCap) + (5 + root.labelCap)
     }
 
     PanelWindow {
@@ -131,7 +141,7 @@ Scope {
             HoverHandler {
                 id: hover
                 onHoveredChanged: if (hovered)
-                    root.expanded = true
+                    root.hoverExpanded = true
             }
 
             Row {
@@ -172,6 +182,37 @@ Scope {
                     clip: true
                     width: root.expanded ? Math.min(implicitWidth, root.pctCap) : 0
                     opacity: root.expanded ? 1 : 0
+
+                    Behavior on width {
+                        NumberAnimation {
+                            duration: 220
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 140
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+                }
+
+                // The alert word (Charging / On battery / Fully charged! /
+                // Running low / Critical / Final moments) from BatteryAlert.
+                // Empty unless a pop is live, so it reserves no width at rest.
+                Text {
+                    id: labelText
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: BatteryAlert.label
+                    color: BatteryState.fg
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 13
+                    font.bold: true
+                    elide: Text.ElideRight
+                    clip: true
+                    width: (root.expanded && text !== "") ? Math.min(implicitWidth, root.labelCap) : 0
+                    opacity: (root.expanded && text !== "") ? 1 : 0
 
                     Behavior on width {
                         NumberAnimation {

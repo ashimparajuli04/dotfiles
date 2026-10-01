@@ -339,9 +339,6 @@ exec --no-startup-id ~/.config/sway/scripts/workspace-compact.py
 # wait for MPD first, so waybar's 'mpd' module doesn't get stuck disconnected
 exec --no-startup-id sh -c 'for i in $(seq 1 50); do mpc status >/dev/null 2>&1 && break; sleep 0.2; done; exec waybar'
 
-# Battery Alert:
-exec --no-startup-id /home/ashim/.config/battery-alert/battery-alert
-
 # Quickshell (Bluetooth / Wi-Fi / Sound / Power popovers, toggled from the Waybar icons):
 # QSG_RHI_BACKEND=vulkan → RADV keeps the qs footprint ~90 MB / ~75 threads below
 #   the default OpenGL path (Mesa GL grows a lot when panels open). See changes.md §37/38.
