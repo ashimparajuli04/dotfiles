@@ -46,6 +46,16 @@ Scope {
     // entirely until something registers.
     readonly property bool hasItems: trayIcons.count > 0
 
+    // Publish our live left edge (from the screen's right edge) so the Discord
+    // voice pill to our left tracks our real width and never collides — the
+    // tray grows leftward as icons register, so a fixed reserved width would
+    // eventually overlap it.
+    Binding {
+        target: PillBus
+        property: "trayLeftInset"
+        value: root.hasItems ? (root.rightMargin + root.contentWidth) : root.rightMargin
+    }
+
     // The tray item context menu (right-click / menu-only items).
     TrayMenu { id: trayMenu }
 

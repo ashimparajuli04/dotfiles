@@ -20,11 +20,15 @@ Scope {
     readonly property int spacing: 2
     readonly property int maxAvatars: 5
 
-    // Distance from the screen's right edge to this slot's right edge. Right-
-    // anchored, so this fixes the gap to the tray pill regardless of how many
-    // avatars are shown. 222 leaves the same ~10px gap the other pills use
-    // (the tray pill's left edge sits at ~1708). TUNE BY SCREENSHOT.
-    readonly property int baseRightMargin: 222
+    // Gap between this pill and the tray pill to its right (matches the ~10px
+    // the other pills use).
+    readonly property int trayGap: 11
+
+    // Right edge tracks the tray pill's live left edge (PillBus.trayLeftInset,
+    // published by TrayWidget.qml) plus the gap. Right-anchored, so the gap
+    // stays constant no matter how many avatars are shown, and it never
+    // collides when tray icons are added or removed.
+    readonly property int baseRightMargin: Math.round(PillBus.trayLeftInset) + trayGap
 
     // ---------- state ----------
     readonly property var shownUsers: {

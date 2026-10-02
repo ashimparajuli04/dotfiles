@@ -51,6 +51,13 @@ QtObject {
     readonly property real reach: pushBrightness + brightnessPush
     readonly property real maxReach: maxPushBrightness + brightnessMaxPush
 
+    // The system tray pill's live left edge, measured from the screen's right
+    // edge (published by TrayWidget.qml). The Discord voice pill sits a fixed
+    // gap left of this, so it tracks the tray's real width instead of a fixed
+    // reserved slot and never collides as tray icons come and go. Defaults to
+    // one tray icon's worth until TrayWidget publishes the real value.
+    property real trayLeftInset: 212
+
     // ---------- hover hold ----------
     // Each pill publishes its hover state here. An expanded pill must NOT
     // collapse while the pointer is on any other pill: the collapse would

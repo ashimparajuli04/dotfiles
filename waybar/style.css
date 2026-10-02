@@ -271,11 +271,12 @@ label:focus {
 
 /* --------------------- system tray slot (changes.md §36) ---------------- */
 /* Invisible Waybar slot for the Quickshell system tray (TrayWidget.qml draws
-   the tray icons on top of it). A fixed min-width reserves enough room for
-   the tray at rest so the Discord voice pill to its left stays clear; the
-   tray itself is an overlay and slides left with the pills on hover, so
-   Waybar never re-layouts. Supersedes the §35 trayshift spacer. Raise this
-   if more tray icons than fit are ever needed. */
+   the tray icons on top of it). A fixed min-width reserves Waybar's own
+   layout space; the tray overlay itself is positioned by TrayWidget.qml's
+   rightMargin and slides left with the pills on hover, so Waybar never
+   re-layouts. The Discord voice pill to its left tracks the tray's live width
+   via PillBus.trayLeftInset, so it stays clear as tray icons come and go.
+   Raise this if more tray icons than fit are ever needed. */
 #custom-tray {
   background-color: transparent;
   padding: 0;
