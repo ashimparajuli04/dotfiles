@@ -340,11 +340,13 @@ exec --no-startup-id ~/.config/sway/scripts/workspace-compact.py
 exec --no-startup-id sh -c 'for i in $(seq 1 50); do mpc status >/dev/null 2>&1 && break; sleep 0.2; done; exec waybar'
 
 # Quickshell (Bluetooth / Wi-Fi / Sound / Power popovers, toggled from the Waybar icons):
-# QSG_RHI_BACKEND=vulkan → RADV keeps the qs footprint ~90 MB / ~75 threads below
-#   the default OpenGL path (Mesa GL grows a lot when panels open). See changes.md §37/38.
-# MALLOC_CONF=retain:false → jemalloc returns freed panel pages to the OS instead
-#   of keeping them mapped; measured another ~28-36 MB off PSS.
-exec --no-startup-id env QSG_RHI_BACKEND=vulkan MALLOC_CONF=retain:false quickshell --no-duplicate
+# Launched through bin/quickshell-watchdog, which starts it and relaunches it if
+# it wedges. The watchdog sets QSG_RHI_BACKEND=opengl (the RHI to use) and
+# MALLOC_CONF=retain:false. We deliberately do NOT force vulkan: on this stack
+# (Quickshell 0.3.2 + Qt 6.12 + Mesa RADV) the Vulkan RHI deadlocks in the
+# Wayland/Mesa present path and wedges the whole shell within ~30s
+# (quickshell issue #919). OpenGL avoids it. See bin/quickshell-watchdog.
+exec --no-startup-id ~/.local/bin/quickshell-watchdog
 
 # Brightness CTRL (F2/F3, in addition to the Fn keys above):
 bindsym F2 exec brightnessctl set 5%-

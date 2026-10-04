@@ -25,6 +25,11 @@ Scope {
     property var speakingUsers: ({})
     property var voiceSettings: ({mute: false, deaf: false})
 
+    // Restart backoff for the bridge process: doubles on each crash up to 30s,
+    // so a persistently failing bridge can't hot-loop the 3s respawn. Reset to
+    // the base value whenever the bridge reports ready.
+    property int restartDelay: 3000
+
     readonly property bool inVoice: currentChannel !== null && currentChannel !== undefined
     readonly property bool isMuted: voiceSettings.mute || false
     readonly property bool isDeafened: voiceSettings.deaf || false
@@ -93,18 +98,23 @@ Scope {
             }
         }
 
+        // Drain stdout as well: the child must never block writing to a pipe
+        // nobody reads. (The bridge currently logs to stderr only.)
+        stdout: StdioCollector {}
+
         onExited: function (exitCode, exitStatus) {
             // Normal exit 0 => another bridge already owns the socket; keep
             // using it as a client. Anything else (crash/kill/non-zero) =>
-            // respawn. exitCode is only meaningful for NormalExit, so check
-            // the status too (QProcess::NormalExit == 0).
+            // respawn, backing off so a crash-loop can't spin.
             if (exitStatus === 0 && exitCode === 0) {
                 root.bridgeReady = false
                 return
             }
             console.warn("[discord] bridge exited: code=" + exitCode + " status=" + exitStatus)
             root.bridgeReady = false
+            bridgeRestart.interval = root.restartDelay
             bridgeRestart.start()
+            root.restartDelay = Math.min(root.restartDelay * 2, 30000)
         }
     }
 
@@ -165,6 +175,7 @@ Scope {
         switch (msg.type) {
         case "ready":
             bridgeReady = true
+            restartDelay = 3000
             sendBridgeCommand({cmd: "connect"})
             break
 

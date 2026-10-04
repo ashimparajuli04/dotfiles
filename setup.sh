@@ -58,6 +58,7 @@ CONFIG_DIRS=(
 EXTRA_LINKS=(
   "bin/mpd-lyricsd|$HOME/.local/bin/mpd-lyricsd"
   "bin/power-mode|$HOME/.local/bin/power-mode"
+  "bin/quickshell-watchdog|$HOME/.local/bin/quickshell-watchdog"
   "icons/vinyl.svg|$HOME/.local/share/icons/vinyl.svg"
   "icons/Flat-Remix-Blue-Dark|$HOME/.local/share/icons/Flat-Remix-Blue-Dark"
   "fonts/SFPro|$HOME/.local/share/fonts/SFPro"

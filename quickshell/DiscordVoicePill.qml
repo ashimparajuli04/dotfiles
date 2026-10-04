@@ -20,6 +20,22 @@ Scope {
     readonly property int spacing: 2
     readonly property int maxAvatars: 5
 
+    // Room for the "+N" overflow label when more than maxAvatars are talking.
+    readonly property int overflowWidth: 26
+
+    // Fixed layer-shell surface width. The surface must NEVER change size:
+    // resizing it emits wl_surface configure events, and Qt's Wayland client
+    // handling of those (applyConfigure -> sendExposeEvent -> sync/render)
+    // deadlocks against the Mesa/Vulkan present path (quickshell issue #919) —
+    // the GUI thread waits on the render thread while the render thread waits
+    // on a Wayland event the GUI thread can no longer dispatch. Every other
+    // pill keeps a constant surface width for exactly this reason; we reserve
+    // room for the widest strip and only animate the inner pill/content.
+    readonly property int reservedWidth: padX * 2
+        + maxAvatars * avatarSize
+        + Math.max(0, maxAvatars - 1) * spacing
+        + overflowWidth
+
     // Gap between this pill and the tray pill to its right (matches the ~10px
     // the other pills use).
     readonly property int trayGap: 11
@@ -69,7 +85,11 @@ Scope {
             right: root.baseRightMargin + PillBus.reach
         }
 
-        implicitWidth: root.shown ? (content.implicitWidth + root.padX * 2) : 0
+        // Constant surface width (see reservedWidth above). The visible pill
+        // is right-anchored inside and animates its own width, so the usable
+        // area still grows/shrinks with the participant count without ever
+        // resizing the layer surface.
+        implicitWidth: root.reservedWidth
         implicitHeight: root.pillHeight
         color: "transparent"
         exclusiveZone: 0

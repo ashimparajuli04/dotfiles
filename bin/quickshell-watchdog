@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+#
+# quickshell-watchdog — relaunch Quickshell when it wedges.
+#
+# Quickshell (0.3.2 + Qt 6.12 + Mesa RADV) can deadlock in the Wayland/Mesa
+# present path:
+#   QWaylandWindow::applyConfigure -> sendExposeEvent -> QQuickWindow sync
+#   ... waiting on the QSGRenderThread, which is stuck in
+#   QRhi::endFrame -> libvulkan_radeon -> wl_display_dispatch_queue.
+# Both threads wait on each other and the process never recovers: its IPC
+# stops answering and every bar pill / notification freezes (quickshell
+# issue #919). A wedged instance cannot rescue itself, so this supervisor
+# probes the IPC and, after a few consecutive timeouts, kills and relaunches
+# Quickshell — turning a dead bar into a ~2s blip.
+#
+# The Vulkan RHI was the reliable trigger here, so we launch with OpenGL
+# instead (see launch() below); the watchdog is the belt-and-braces net for
+# any remaining configure-path wedge.
+#
+# This is the single owner of the Quickshell launch (sway execs this instead
+# of `quickshell` directly). Single-instance via a pidfile.
+#
+# Registered in setup.sh -> EXTRA_LINKS as bin/quickshell-watchdog |
+# ~/.local/bin/quickshell-watchdog.
+
+set -u
+
+RUNTIME="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+PIDFILE="$RUNTIME/quickshell-watchdog.pid"
+LOG="quickshell-watchdog"
+
+# Probe cadence. MAX_FAILS * INTERVAL gives Quickshell ~15s to come up after a
+# (re)launch before we consider it wedged.
+INTERVAL=5
+PROBE_TIMEOUT=5
+MAX_FAILS=3
+SETTLE=10
+
+# QSG_RHI_BACKEND=opengl, NOT vulkan: on this stack the Vulkan RHI deadlocks in
+# the Wayland/Mesa present path and wedges the whole shell within ~30s
+# (quickshell issue #919; reproduced here). OpenGL doesn't take that path and
+# survived a heavy panel-churn soak. MALLOC_CONF=retain:false trims freed pages.
+# --no-duplicate avoids racing an already-running instance.
+launch() {
+    env QSG_RHI_BACKEND=opengl MALLOC_CONF=retain:false \
+        quickshell --no-duplicate >/dev/null 2>&1 &
+}
+
+# Single instance via pidfile. (Not flock: a lock fd would be inherited by the
+# launched Quickshell and its children, so it would stay held — and block a new
+# watchdog — even after this process exited.)
+if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE" 2>/dev/null)" 2>/dev/null; then
+    exit 0
+fi
+printf '%s\n' "$$" > "$PIDFILE"
+trap 'rm -f "$PIDFILE"' EXIT
+
+fails=0
+while true; do
+    if ! pgrep -x quickshell >/dev/null 2>&1; then
+        launch
+        fails=0
+        sleep "$SETTLE"
+        continue
+    fi
+
+    if timeout "$PROBE_TIMEOUT" qs ipc show >/dev/null 2>&1; then
+        fails=0
+    else
+        fails=$((fails + 1))
+        if [ "$fails" -ge "$MAX_FAILS" ]; then
+            logger -t "$LOG" "quickshell IPC not responding; restarting" 2>/dev/null || true
+            pkill -9 -x quickshell 2>/dev/null || true
+            sleep 1
+            launch
+            fails=0
+            sleep "$SETTLE"
+            continue
+        fi
+    fi
+
+    sleep "$INTERVAL"
+done
