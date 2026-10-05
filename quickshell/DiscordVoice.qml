@@ -19,6 +19,10 @@ Scope {
     // ---------- state ----------
     property bool bridgeReady: false
     property bool authenticated: false
+    // Whether Discord itself is running (its local IPC is reachable). The pill
+    // stays hidden while Discord is closed, so a not-yet-started Discord can't
+    // leave a placeholder stuck in the bar.
+    property bool discordRunning: false
     property string authError: ""
     property var currentChannel: null
     property var voiceUsers: []
@@ -192,6 +196,10 @@ Scope {
         case "auth_error":
             authError = msg.error || "Authentication failed"
             authenticated = false
+            break
+
+        case "discord_status":
+            discordRunning = msg.running === true
             break
 
         case "voice_channel":

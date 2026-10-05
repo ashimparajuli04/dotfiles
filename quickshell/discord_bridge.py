@@ -408,6 +408,9 @@ class DiscordBridge:
         self._reauth_attempted = False
         self._shutdown = False
         self._discord_task: asyncio.Task[None] | None = None
+        # Whether Discord's local IPC is reachable. Broadcast so the bar can
+        # hide the pill entirely while Discord is closed.
+        self._discord_running = False
 
     # -- main entry --
 
@@ -472,6 +475,12 @@ class DiscordBridge:
         replay a late-joining client would show stale state until the next
         Discord event happened to fire.  Deliberately omits the access token.
         """
+        # Discord availability first: this is the one bit of state that must
+        # reach the client even when we are not (and cannot be) authenticated.
+        await self.server.send_to(writer, {
+            "type": "discord_status",
+            "running": self._discord_running,
+        })
         if not self.authenticated:
             return
         await self.server.send_to(writer, {
@@ -495,6 +504,19 @@ class DiscordBridge:
 
     # -- Discord connection --
 
+    async def _set_discord_running(self, running: bool) -> None:
+        """Broadcast whether Discord's local IPC is reachable (only on change).
+
+        The bar hides the Discord voice pill while Discord is closed: there is
+        nothing to show until there's a voice call or an authorization prompt,
+        and a not-yet-running Discord must not leave a placeholder stuck in the
+        bar. Sending only on change keeps a never-running Discord quiet.
+        """
+        if running == self._discord_running:
+            return
+        self._discord_running = running
+        await self.server.send({"type": "discord_status", "running": running})
+
     async def _connect_discord(self, quiet: bool = False) -> bool:
         """Connect and handshake with Discord.  Returns True on success.
 
@@ -503,16 +525,19 @@ class DiscordBridge:
         error on every retry would spam the Quickshell log.
         """
         if not await self.discord.connect():
+            await self._set_discord_running(False)
             if not quiet:
                 await self.server.send({"type": "error", "error": "Discord not running or IPC unavailable"})
             return False
         try:
             await self.discord.handshake(self.client_id)
             log.info("Discord handshake complete")
+            await self._set_discord_running(True)
             return True
         except Exception as e:
             log.error("Handshake failed: %s", e)
             self.discord.close()
+            await self._set_discord_running(False)
             if not quiet:
                 await self.server.send({"type": "error", "error": f"Handshake failed: {e}"})
             return False
@@ -550,6 +575,7 @@ class DiscordBridge:
             self.current_channel = None
             self.voice_users.clear()
             self.voice_settings = {"mute": False, "deaf": False}
+            await self._set_discord_running(False)
             await self.server.send({"type": "disconnected", "reason": "Discord connection lost"})
             log.info("Discord disconnected")
 

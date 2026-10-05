@@ -55,12 +55,13 @@ Scope {
     }
     readonly property int overflow: DiscordVoice.inVoice
         ? Math.max(0, DiscordVoice.voiceUsers.length - maxAvatars) : 0
-    // Show while in a call, and also while not yet authorized (a small
-    // placeholder glyph) so the pill is clickable to open the Authorize panel.
-    // Hidden only in the steady idle state: authorized + not in a call.
+    // Only materialise the pill when there is something to show:
+    //  * active participants while in a call, or
+    //  * an authorization prompt — but only while Discord is actually running,
+    //    so a closed Discord doesn't leave a stranded placeholder in the bar.
     readonly property bool notAuthed: !DiscordVoice.authenticated
-    readonly property bool shown: root.notAuthed
-        || (DiscordVoice.inVoice && shownUsers.length > 0)
+    readonly property bool shown: (DiscordVoice.inVoice && shownUsers.length > 0)
+        || (root.notAuthed && DiscordVoice.discordRunning)
 
     function ringFor(user) {
         var muted = user.self_mute || user.mute
