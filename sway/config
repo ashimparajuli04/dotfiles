@@ -330,10 +330,12 @@ bindsym $mod+m exec qs ipc call music toggle
 # Focus apps' windows when they request attention (e.g. clicking Discord's tray icon):
 exec --no-startup-id bash /home/ashim/.config/sway/scripts/urgent-focus.sh
 
-# Keep workspace numbers contiguous: sway destroys an empty, unfocused
-# workspace but never renumbers the rest, so after workspace 1 empties you are
-# left on "2". This helper renames the survivors to 1..N (see changes.md §33).
-exec --no-startup-id ~/.config/sway/scripts/workspace-compact.py
+# Keep workspace numbers contiguous AND pin workspace 1 to the external
+# display: sway destroys an empty, unfocused workspace but never renumbers the
+# rest, and a freshly connected external should always show workspace 1 (the
+# existing workspaces shift up by one, 1->2, 2->3, ...). This helper owns all
+# renumbering. See sway/scripts/workspace-manager.py.
+exec --no-startup-id ~/.config/sway/scripts/workspace-manager.py
 
 # Waybar (replaces the built-in swaybar):
 # wait for MPD first, so waybar's 'mpd' module doesn't get stuck disconnected

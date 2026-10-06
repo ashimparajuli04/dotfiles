@@ -64,7 +64,7 @@
         "tooltip": false
     },
     // Only workspaces that actually exist are shown; sway destroys an empty
-    // workspace once it loses focus and sway/scripts/workspace-compact.py
+    // workspace once it loses focus and sway/scripts/workspace-manager.py
     // renumbers the survivors to 1..N. No persistent-workspaces here.
     "sway/workspaces": {
         "format": "",
