@@ -285,6 +285,7 @@ Scope {
 
     // ---------- clock chip (top bar) ----------
     PanelWindow {
+        screen: BarScreen.screen
         id: chip
 
         anchors {
@@ -321,7 +322,7 @@ Scope {
                     text: root.nowLabel
                     color: root.textPrimary
                     font.family: root.fontFamily
-                    font.pixelSize: 12
+                    font.pixelSize: 13
                     font.bold: true
                     horizontalAlignment: Text.AlignHCenter
                 }
@@ -331,7 +332,7 @@ Scope {
         TextMetrics {
             id: chipMetrics
             font.family: root.fontFamily
-            font.pixelSize: 12
+            font.pixelSize: 13
             font.bold: true
             text: "Wed 30 · 12:51 PM"
         }
@@ -349,6 +350,7 @@ Scope {
 
     // ---------- click catcher (closes popup) ----------
     PanelWindow {
+        screen: BarScreen.screen
         id: catcher
         visible: root.popupOpen
 
@@ -379,6 +381,7 @@ Scope {
 
     // ---------- hover card ----------
     PanelWindow {
+        screen: BarScreen.screen
         id: card
         visible: root.cardVisible
 

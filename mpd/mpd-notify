@@ -22,7 +22,13 @@ get_cover() {
 while "true"; do
     status="`mpc status`"
     if [[ ${status} == *"[playing]"* ]]; then
-        dunstify -a Music --replace=27072 -t 2000 -i $(get_cover) "$(mpc --format '%title%-%artist%' current)"
+        cover=$(get_cover)
+        # notify-send (libnotify), NOT dunstify: Quickshell owns
+        # org.freedesktop.Notifications now, so no dunst needed. The
+        # image-path hint is what Quickshell reads for the album thumbnail.
+        notify-send -a Music -r 27072 -t 2000 \
+            -i "$cover" -h "string:image-path:$cover" \
+            "$(mpc --format '%title%-%artist%' current)"
     fi
     mpc current --wait > /dev/null
 done

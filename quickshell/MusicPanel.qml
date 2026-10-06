@@ -14,7 +14,7 @@ Scope {
     property int tab: 0               // 0 = library, 1 = queue
     property string filter: ""
 
-    readonly property var targetScreen: Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
+    readonly property var targetScreen: BarScreen.screen
     readonly property real screenW: root.targetScreen ? root.targetScreen.width : 1920
     readonly property real screenH: root.targetScreen ? root.targetScreen.height : 1080
     readonly property real maxListHeight: Math.round(root.screenH * 0.5)
@@ -127,6 +127,7 @@ Scope {
     // Transparent click-catcher below the Waybar.
     PanelWindow {
         visible: root.panelOpen
+        screen: BarScreen.screen
 
         anchors {
             top: true

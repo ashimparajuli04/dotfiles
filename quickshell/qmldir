@@ -1,4 +1,7 @@
 singleton Theme 1.0 Theme.qml
+singleton BarScreen 1.0 BarScreen.qml
+singleton Displays 1.0 Displays.qml
+DisplayPanel 1.0 DisplayPanel.qml
 PanelIpc 1.0 PanelIpc.qml
 Notifications 1.0 Notifications.qml
 ToggleSwitch 1.0 ToggleSwitch.qml
@@ -38,3 +41,5 @@ singleton DiscordVoice 1.0 DiscordVoice.qml
 DiscordAvatar 1.0 DiscordAvatar.qml
 DiscordVoicePill 1.0 DiscordVoicePill.qml
 DiscordVoicePanel 1.0 DiscordVoicePanel.qml
+singleton ClipboardHistory 1.0 ClipboardHistory.qml
+ClipboardPanel 1.0 ClipboardPanel.qml

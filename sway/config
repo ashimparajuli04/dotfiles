@@ -221,6 +221,13 @@ bindsym $mod+r mode "resize"
     bindsym --locked XF86MonBrightnessDown exec brightnessctl set 5%-
     bindsym --locked XF86MonBrightnessUp exec brightnessctl set 5%+
 
+    # The laptop's cast/project key reports as Super+P (Lenovo's projector key
+    # sends the Windows "Project" shortcut, not XF86Display). XF86Display is
+    # kept as a fallback for keyboards that do send it. Opens the display
+    # setup wizard — see quickshell/Displays.qml.
+    bindsym $mod+p exec qs ipc call display toggle
+    bindsym XF86Display exec qs ipc call display toggle
+
     # Screenshots (KDE-style): Print selects a region, Shift+Print the full
     # desktop, $mod+Print the focused window. satty annotates; Enter copies +
     # saves, Esc cancels. See sway/scripts/screenshot.sh.
@@ -323,6 +330,12 @@ assign [app_id="Spotify"] workspace number 4
 # clicking the widget's cover art. IPC target lives in quickshell/PanelIpc.qml.
 bindsym $mod+m exec qs ipc call music toggle
 
+# Mod+Shift+V: toggle the Quickshell clipboard popover (cliphist-backed).
+# Stays until you click outside or hit Esc. The pill itself is drawn by Waybar
+# (custom/clipboard, left-click) between the workspace dots and the music pill.
+# ($mod+v is taken by `splitv` above, so use Shift.)
+bindsym $mod+Shift+v exec qs ipc call clipboard toggle
+
 # Notifications: handled by Quickshell (quickshell/Notifications.qml owns
 # org.freedesktop.Notifications). dunst retired — no autostart.
 # exec --no-startup-id dunst
@@ -338,8 +351,11 @@ exec --no-startup-id bash /home/ashim/.config/sway/scripts/urgent-focus.sh
 exec --no-startup-id ~/.config/sway/scripts/workspace-manager.py
 
 # Waybar (replaces the built-in swaybar):
-# wait for MPD first, so waybar's 'mpd' module doesn't get stuck disconnected
-exec --no-startup-id sh -c 'for i in $(seq 1 50); do mpc status >/dev/null 2>&1 && break; sleep 0.2; done; exec waybar'
+# bin/waybar-output pins the bar to one output (Waybar would otherwise
+# duplicate it on every monitor) and waits for MPD first, so waybar's 'mpd'
+# module doesn't get stuck disconnected. The display setup wizard re-runs it
+# to move the bar to the chosen main display.
+exec --no-startup-id ~/.local/bin/waybar-output eDP-1 --wait-mpd
 
 # Quickshell (Bluetooth / Wi-Fi / Sound / Power popovers, toggled from the Waybar icons):
 # Launched through bin/quickshell-watchdog, which starts it and relaunches it if
@@ -349,6 +365,11 @@ exec --no-startup-id sh -c 'for i in $(seq 1 50); do mpc status >/dev/null 2>&1 
 # Wayland/Mesa present path and wedges the whole shell within ~30s
 # (quickshell issue #919). OpenGL avoids it. See bin/quickshell-watchdog.
 exec --no-startup-id ~/.local/bin/quickshell-watchdog
+
+# Bluetooth auto-reconnect on login: Sway has no DE agent (gnome-bluetooth /
+# bluedevil), so this asks every *trusted* paired device to connect. After
+# suspend/resume the same script is run by bluetooth-reconnect-resume.service.
+exec --no-startup-id ~/.local/bin/bluetooth-autoconnect
 
 # Brightness CTRL (F2/F3, in addition to the Fn keys above):
 bindsym F2 exec brightnessctl set 5%-

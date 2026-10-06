@@ -167,6 +167,7 @@ Scope {
     // Transparent click-catcher: closes the popover when clicking anywhere
     // outside of it. Starts below the 29px Waybar so the bar stays clickable.
     PanelWindow {
+        screen: BarScreen.screen
         id: catcher
         visible: root.panelOpen
 
@@ -193,6 +194,7 @@ Scope {
     }
 
     PanelWindow {
+        screen: BarScreen.screen
         id: panel
         visible: root.panelOpen
 
@@ -227,6 +229,20 @@ Scope {
                     root.cancelPassword()
                 else
                     root.panelOpen = false
+            }
+
+            // Pointer inside the panel keeps the hover preview held open;
+            // tapping anywhere inside *latches* it until an outside click.
+            // The shared timer / latch flag live in PillBus.qml.
+            HoverHandler {
+                id: panelHover
+                onHoveredChanged: PillBus.pointerOnPanel = panelHover.hovered
+            }
+
+            TapHandler {
+                // Observe taps without stealing them from the panel's buttons.
+                grabPermissions: PointerHandler.ApprovesTakeOverByAnything
+                onTapped: PillBus.panelLatched = true
             }
 
             // Wheel over the right gutter (next to the scrollbar) scrolls too.

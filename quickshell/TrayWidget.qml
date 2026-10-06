@@ -60,6 +60,7 @@ Scope {
     TrayMenu { id: trayMenu }
 
     PanelWindow {
+        screen: BarScreen.screen
         id: win
 
         anchors {

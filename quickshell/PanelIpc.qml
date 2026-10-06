@@ -10,17 +10,35 @@ import Quickshell.Io
 // `calendar` is NOT here — CalendarPanel owns an always-visible clock chip and
 // stays eager, so it keeps its own IpcHandler.
 Scope {
+    // Preview popovers (sound / bluetooth / wifi / battery): opening via IPC
+    // counts as "latched", so they stay until an outside click (like clicking
+    // the pill). Closing via hide() lets PillBus.previewReset clear the latch.
+    // See PillBus.qml for the shared preview coordinator.
     IpcHandler {
         target: "sound"
-        function toggle() { PillBus.toggleOpen("sound") }
-        function show() { PillBus.show("sound") }
+        function toggle() {
+            if (PillBus.soundOpen) {
+                PillBus.close("sound")
+            } else {
+                PillBus.show("sound")
+                PillBus.panelLatched = true
+            }
+        }
+        function show() { PillBus.show("sound"); PillBus.panelLatched = true }
         function hide() { PillBus.close("sound") }
     }
 
     IpcHandler {
         target: "battery"
-        function toggle() { PillBus.toggleOpen("battery") }
-        function show() { PillBus.show("battery") }
+        function toggle() {
+            if (PillBus.batteryOpen) {
+                PillBus.close("battery")
+            } else {
+                PillBus.show("battery")
+                PillBus.panelLatched = true
+            }
+        }
+        function show() { PillBus.show("battery"); PillBus.panelLatched = true }
         function hide() { PillBus.close("battery") }
 
         // Dev/test: pop an alert word without waiting for a real discharge,
@@ -30,15 +48,29 @@ Scope {
 
     IpcHandler {
         target: "bluetooth"
-        function toggle() { PillBus.toggleOpen("bluetooth") }
-        function show() { PillBus.show("bluetooth") }
+        function toggle() {
+            if (PillBus.bluetoothOpen) {
+                PillBus.close("bluetooth")
+            } else {
+                PillBus.show("bluetooth")
+                PillBus.panelLatched = true
+            }
+        }
+        function show() { PillBus.show("bluetooth"); PillBus.panelLatched = true }
         function hide() { PillBus.close("bluetooth") }
     }
 
     IpcHandler {
         target: "wifi"
-        function toggle() { PillBus.toggleOpen("wifi") }
-        function show() { PillBus.show("wifi") }
+        function toggle() {
+            if (PillBus.wifiOpen) {
+                PillBus.close("wifi")
+            } else {
+                PillBus.show("wifi")
+                PillBus.panelLatched = true
+            }
+        }
+        function show() { PillBus.show("wifi"); PillBus.panelLatched = true }
         function hide() { PillBus.close("wifi") }
     }
 
@@ -81,5 +113,69 @@ Scope {
         function toggleDeafen() { DiscordVoice.toggleDeafen() }
         function hangup() { DiscordVoice.hangup() }
         function status(): string { return DiscordVoice.status() }
+    }
+
+    // Clipboard: opens the popover, clears the history, or copies an entry by
+    // id. The history itself lives in ClipboardHistory.qml. The pill is drawn
+    // by Waybar (#custom/clipboard, left-click) — this handler backs that and
+    // the Mod+Shift+V keybind. The panel closes on an outside click or Esc.
+    IpcHandler {
+        target: "clipboard"
+
+        function toggle() {
+            if (PillBus.clipboardOpen) {
+                PillBus.clipboardPinned = false
+                PillBus.close("clipboard")
+            } else {
+                PillBus.show("clipboard")
+                ClipboardHistory.refresh()
+            }
+        }
+
+        function show() {
+            PillBus.show("clipboard")
+            ClipboardHistory.refresh()
+        }
+
+        function hide() {
+            PillBus.clipboardPinned = false
+            PillBus.close("clipboard")
+        }
+
+        function wipe() { ClipboardHistory.wipe() }
+        function copy(id: string) { ClipboardHistory.copy(id) }
+        // Debug/status: reports the panel state machine.
+        function state(): string {
+            return (PillBus.clipboardOpen ? "open" : "closed")
+                + "/" + (PillBus.clipboardPinned ? "pinned" : "unpinned")
+        }
+    }
+
+    // Display setup wizard. Opened automatically on hotplug and from the power
+    // menu's Display button; these handlers are for manual testing.
+    IpcHandler {
+        target: "display"
+        function show() { Displays.openWizard() }
+        function hide() { Displays.cancel() }
+        function toggle() {
+            if (Displays.promptOpen)
+                Displays.cancel()
+            else
+                Displays.openWizard()
+        }
+        function state(): string {
+            return (Displays.promptOpen ? "open" : "closed")
+                + "/step" + Displays.step
+                + "/ext=" + (Displays.externalName || "-")
+        }
+        function debug(): string {
+            var names = []
+            var s = Quickshell.screens
+            for (var i = 0; i < s.length; i++)
+                names.push(s[i].name)
+            return "pref=" + BarScreen.preferredName
+                + " screens=[" + names.join(",") + "]"
+                + " barScreen=" + (BarScreen.screen ? BarScreen.screen.name : "null")
+        }
     }
 }

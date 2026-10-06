@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+#
+# waybar-output — (re)start Waybar pinned to a single output.
+#
+# Waybar duplicates its bar across every connected output unless `output` is
+# set. The display setup wizard (quickshell/Displays.qml) calls this to move
+# the bar to the chosen main display. The base waybar config `include`s the
+# file written here, so the repo config stays clean and only this runtime file
+# changes.
+#
+# Usage: waybar-output <output> [--wait-mpd]
+#   --wait-mpd  wait for MPD first (used at login, so the mpd module doesn't
+#               get stuck disconnected)
+#
+# Registered in setup.sh -> EXTRA_LINKS as bin/waybar-output |
+# ~/.local/bin/waybar-output.
+
+set -u
+
+OUT="${1:-eDP-1}"
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/newwave"
+mkdir -p "$STATE_DIR"
+printf '{"output":"%s"}\n' "$OUT" > "$STATE_DIR/waybar-display.json"
+
+if [ "${2:-}" = "--wait-mpd" ]; then
+    for _ in $(seq 1 50); do
+        mpc status >/dev/null 2>&1 && break
+        sleep 0.2
+    done
+fi
+
+pkill -x waybar 2>/dev/null || true
+# Let the old instance release its layer surfaces before the new one starts.
+sleep 0.2
+setsid waybar >/dev/null 2>&1 &

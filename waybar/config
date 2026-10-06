@@ -1,4 +1,8 @@
 {
+    // Output the bar is pinned to is written at runtime by bin/waybar-output
+    // (the display setup wizard moves the bar between displays). Keeping it in
+    // an included file lets the repo config stay static. See Displays.qml.
+    "include": ["/home/ashim/.local/state/newwave/waybar-display.json"],
     "layer": "top",
     "position": "top",
     "margin-top": 1,
@@ -8,6 +12,7 @@
     "spacing": 0,
     "modules-left": [
         "sway/workspaces",
+        "custom/clipboard",
         "custom/weather",
         "group/music"
     ],
@@ -85,6 +90,16 @@
         "on-click": "qs ipc call powermenu toggle"
     },
 
+  // Clipboard pill, drawn by Waybar itself (NOT a Quickshell overlay) so it is
+  // laid out — and animated — in step with the workspaces module, with no
+  // position tracking. Lives in the LEFT cluster between the workspace dots
+  // and the weather/music pills. Left-click toggles the Quickshell popover
+  // (ClipboardPanel.qml); `qs ipc call clipboard toggle` (Mod+Shift+V) does too.
+  "custom/clipboard": {
+    "format": "\uDB80\uDD4D",
+    "tooltip": false,
+    "on-click": "qs ipc call clipboard toggle"
+  },
   "custom/weather": {
     "format": "{}",
     "format-alt": "{alt}",

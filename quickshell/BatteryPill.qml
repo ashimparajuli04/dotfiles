@@ -3,16 +3,18 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 
-// The Waybar battery pill, re-created as a Quickshell overlay so it can
-// expand on hover and reveal the charge percentage — same approach as
-// WifiPill.qml / SoundPill.qml.
+// The Waybar battery pill, re-created as a Quickshell overlay. Hovering it
+// opens BatteryPanel as a preview (held while the pointer is on the pill or
+// the panel, closed 1s after leaving both); clicking it opens/latches the
+// panel until an outside click. See PillBus.qml for the shared preview logic.
+// It no longer expands on hover; it only expands of its own accord for the
+// alert words / ≤50 % percentage (BatteryAlert.forceExpand).
 //
-// Geometry: sits on the transparent `custom/battery` Waybar spacer and
-// expands LEFTWARD (right edge pinned at x=1876). The row is joined
-// flush now (changes.md §32): this pill abuts the wifi pill on the left
-// and the powermenu continues on the right. The battery is the
-// rightmost Quickshell pill, so while it expands it pushes the wifi pill
-// (and everything left of it) via PillBus. See changes.md §22.
+// Geometry: sits on the transparent `custom/battery` Waybar spacer (right edge
+// pinned at x=1876). The row is joined flush now (changes.md §32): this pill
+// abuts the wifi pill on the left and the powermenu continues on the right.
+// While it expands (alerts) it pushes the wifi pill (and everything left of
+// it) via PillBus. See changes.md §22.
 Scope {
     id: root
 
@@ -31,10 +33,8 @@ Scope {
     // ---------- state ----------
     // All battery values live in BatteryState.qml (UPower-backed); the alert
     // words and the ≤50 % "keep the percentage up" rule live in BatteryAlert.qml.
-    // Hover and the alert both request expansion — the pill is open while
-    // either one holds.
-    property bool hoverExpanded: false
-    readonly property bool expanded: hoverExpanded || BatteryAlert.forceExpand
+    // The pill expands only for alerts now — hover opens the panel instead.
+    readonly property bool expanded: BatteryAlert.forceExpand
 
     // Rounded to whole pixels so the pushed (collapsed) pills shift by an
     // exact integer and the joined row never shows a sub-pixel seam.
@@ -42,26 +42,37 @@ Scope {
         + (pctText.implicitWidth > 0 ? 5 + Math.min(pctText.implicitWidth, root.pctCap) : 0)
         + (labelText.text !== "" ? 5 + Math.min(labelText.implicitWidth, root.labelCap) : 0))
 
-    // Hover only expands the pill; collapsing is driven by
-    // PillBus.collapseTick and only happens after the whole pill row has
-    // been unhovered. Switching quickly to/from a neighbour therefore
-    // never collapses this one and never slides the row under the
-    // cursor — see PillBus.qml.
+    // Publish "pointer is on the pill" so PillBus can hold the preview panel
+    // open while the pointer is on the pill or the panel (and so it keeps
+    // other expanded pills from collapsing under the cursor).
     Binding {
         target: PillBus
         property: "hoverBattery"
         value: hover.hovered
     }
 
-    Connections {
-        target: PillBus
-        function onCollapseTickChanged() {
-            if (!hover.hovered)
-                root.hoverExpanded = false
+    // Hover opens the panel as a preview; a click opens it latched. The shared
+    // close timer / latch flag live in PillBus.qml so the four preview popovers
+    // never fight over which one is open. Panel toggling is in-process via
+    // PillBus (no `qs ipc` subprocess).
+    function openPreview() {
+        if (!PillBus.batteryOpen) {
+            PillBus.show("battery")
+            PillBus.panelLatched = false
         }
     }
 
-    // Panel toggling is in-process via PillBus (no `qs ipc` subprocess). See PillBus.qml.
+    function toggle() {
+        if (PillBus.batteryOpen) {
+            if (PillBus.panelLatched)
+                PillBus.close("battery")
+            else
+                PillBus.panelLatched = true
+        } else {
+            PillBus.show("battery")
+            PillBus.panelLatched = true
+        }
+    }
 
     // Publish the live expansion delta so the wifi pill (and everything
     // left of it) slides out of the way in perfect sync (see PillBus.qml).
@@ -82,6 +93,7 @@ Scope {
     }
 
     PanelWindow {
+        screen: BarScreen.screen
         id: win
 
         anchors {
@@ -135,13 +147,30 @@ Scope {
                 anchors.fill: parent
                 acceptedButtons: Qt.LeftButton
                 cursorShape: Qt.PointingHandCursor
-                onClicked: PillBus.toggleOpen("battery")
+                onClicked: root.toggle()
             }
 
             HoverHandler {
                 id: hover
-                onHoveredChanged: if (hovered)
-                    root.hoverExpanded = true
+                // Report the pointer to PillBus instead of opening on the first
+                // pixel of hover; the preview opens only after a short rest, so
+                // an accidental slide across the row passes through (see
+                // PillBus.requestPreview / hoverOpenDelay).
+                onHoveredChanged: {
+                    if (hovered)
+                        PillBus.requestPreview("battery")
+                    else
+                        PillBus.cancelPreview("battery")
+                }
+            }
+
+            // Fires once the pointer has rested here long enough.
+            Connections {
+                target: PillBus
+                function onPreviewTickChanged() {
+                    if (PillBus.previewName === "battery" && hover.hovered)
+                        root.openPreview()
+                }
             }
 
             Row {

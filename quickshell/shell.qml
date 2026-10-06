@@ -32,6 +32,11 @@ ShellRoot {
     LazyLoader { active: PillBus.musicOpen; MusicPanel {} }
     LazyLoader { active: PillBus.powermenuOpen; PowermenuPanel {} }
     LazyLoader { active: PillBus.discordOpen; DiscordVoicePanel {} }
+    LazyLoader { active: PillBus.clipboardOpen; ClipboardPanel {} }
+
+    // Display setup wizard: opened automatically when a new external display
+    // is connected, or from the power menu's Display button. See Displays.qml.
+    LazyLoader { active: Displays.promptOpen; DisplayPanel {} }
 
     // Calendar owns the always-visible clock chip, so it stays eager.
     CalendarPanel {}

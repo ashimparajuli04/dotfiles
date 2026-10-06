@@ -54,6 +54,7 @@ Scope {
     // Transparent click-catcher: closes the menu on any click outside it.
     // Starts below the 31px bar so the bar stays clickable.
     PanelWindow {
+        screen: BarScreen.screen
         visible: root.opened
         anchors {
             top: true
@@ -77,6 +78,7 @@ Scope {
     }
 
     PanelWindow {
+        screen: BarScreen.screen
         id: win
         visible: root.opened
 

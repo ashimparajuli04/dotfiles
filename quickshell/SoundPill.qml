@@ -4,24 +4,14 @@ import Quickshell.Io
 import Quickshell.Services.Pipewire
 import Quickshell.Wayland
 
-// The Waybar pulseaudio pill, re-created as a Quickshell overlay so it can
-// expand on hover and reveal a draggable slider — same approach as
-// BrightnessPill.qml.
+// The Waybar pulseaudio pill, re-created as a Quickshell overlay. Hovering it
+// opens SoundPanel as a preview (held while the pointer is on the pill or the
+// panel, closed 1s after leaving both); clicking it opens/latches the panel
+// until an outside click. See PillBus.qml for the shared preview logic.
 //
-// The slider ALWAYS controls the PipeWire default sink: the exact same
-// device your keyboard volume keys drive (`pactl ... @DEFAULT_SINK@`).
-// When two devices are playing at once, this still only touches the
-// default one, just like the keys do.
-//
-// Geometry: sits on the transparent `custom/sound` Waybar spacer and
-// expands LEFTWARD (right edge pinned at x=1795, flush against the
-// bluetooth pill; joined row — changes.md §32), unlike the brightness
-// pill. While it expands it pushes the brightness pill left via
-// PillBus.soundPush; the bluetooth and wifi pills (to its right) push
-// this pill in turn, so the joined row stays flush when it grows (see
-// PillBus.qml). Left of the brightness pill the space is empty
-// (mpris/tray pills, if visible, are the only thing that can be
-// transiently covered).
+// The old inline hover slider is gone — volume is adjusted by scrolling over
+// the pill or from the panel. The wheel always controls the PipeWire default
+// sink: the exact same device your keyboard volume keys drive.
 Scope {
     id: root
 
@@ -33,7 +23,6 @@ Scope {
     // Joined row (§32): rightMargin 125 = 98 (bluetooth) + 27 (its width),
     // so this pill's right edge sits flush against the bluetooth pill.
     readonly property int collapsedWidth: 27
-    readonly property int expandedWidth: 118    // right edge stays at x=1795
     readonly property int rightMargin: 116      // screen right edge → window right edge
     readonly property int pillHeight: 24
 
@@ -42,12 +31,9 @@ Scope {
     readonly property real volume: (root.sink && root.sink.audio) ? root.sink.audio.volume : 0
     readonly property bool muted: (root.sink && root.sink.audio) ? root.sink.audio.muted : false
 
-    property bool expanded: false
-
-    readonly property bool dragActive: slider.dragging
     // Never display more than 100%: above that is over-amplification the
     // UI should not offer (see changes.md §27).
-    readonly property real shownFraction: Math.max(0, Math.min(1, root.dragActive ? slider.shown : root.volume))
+    readonly property real shownFraction: Math.max(0, Math.min(1, root.volume))
     readonly property int shownPercent: Math.round(root.shownFraction * 100)
 
     // Keep live bindings on the displayed node: untracked nodes may not
@@ -84,66 +70,44 @@ Scope {
             root.sink.audio.volume = Math.max(0, Math.min(1, v))
     }
 
-    // Drag updates are coalesced to at most every 30ms (see BrightnessPill).
-    property real pendingApply: -1
-    function requestVolume(v) {
-        root.pendingApply = v
-        if (!applyTimer.running)
-            applyTimer.start()
-    }
-
+    // Drag updates were coalesced here while the inline slider existed; with
+    // the slider gone the wheel and IPC nudge apply straight away.
     function nudge(delta) {
         root.applyVolume(root.volume + delta)
     }
 
-    Timer {
-        id: applyTimer
-        interval: 30
-        onTriggered: {
-            if (root.pendingApply >= 0) {
-                root.applyVolume(root.pendingApply)
-                root.pendingApply = -1
-            }
-        }
-    }
-
-    // Hover — or an active slider drag — keeps this pill engaged in
-    // PillBus; collapsing is driven by PillBus.collapseTick and only
-    // happens after no pill in the row is engaged. A drag can therefore
-    // never be collapsed mid-drag, and releasing it outside the pill
-    // resumes the normal grace period — see PillBus.qml.
+    // Publish "pointer is on the pill" so PillBus can hold the preview panel
+    // open while the pointer is either on the pill or on the panel.
     Binding {
         target: PillBus
         property: "hoverSound"
-        value: hover.hovered || root.dragActive
+        value: hover.hovered
     }
 
-    Connections {
-        target: PillBus
-        function onCollapseTickChanged() {
-            if (!hover.hovered && !root.dragActive)
-                root.expanded = false
+    // Hover opens the panel as a preview; a click opens it latched. Shared
+    // close timer / latch state live in PillBus.qml.
+    function openPreview() {
+        if (!PillBus.soundOpen) {
+            PillBus.show("sound")
+            PillBus.panelLatched = false
         }
     }
 
-    // Panel toggling is in-process via PillBus (no `qs ipc` subprocess). See PillBus.qml.
+    function toggle() {
+        if (PillBus.soundOpen) {
+            if (PillBus.panelLatched)
+                PillBus.close("sound")
+            else
+                PillBus.panelLatched = true
+        } else {
+            PillBus.show("sound")
+            PillBus.panelLatched = true
+        }
+    }
+
     Process {
         id: pavuProc
         command: ["pavucontrol"]
-    }
-
-    // Publish the live expansion delta so the brightness pill slides out
-    // of the way in perfect sync (see PillBus.qml / BrightnessPill.qml).
-    Binding {
-        target: PillBus
-        property: "soundPush"
-        value: Math.max(0, Math.round(pill.width - root.collapsedWidth))
-    }
-
-    Binding {
-        target: PillBus
-        property: "soundMaxPush"
-        value: root.expandedWidth - root.collapsedWidth
     }
 
     IpcHandler {
@@ -154,6 +118,7 @@ Scope {
     }
 
     PanelWindow {
+        screen: BarScreen.screen
         id: win
 
         anchors {
@@ -166,7 +131,7 @@ Scope {
             right: root.rightMargin
         }
 
-        implicitWidth: root.expandedWidth + PillBus.maxPushSound
+        implicitWidth: root.collapsedWidth + PillBus.maxPushSound
         implicitHeight: root.pillHeight
         color: "transparent"
         exclusiveZone: 0
@@ -192,17 +157,12 @@ Scope {
             // this pill left while they expand.
             x: win.width - width - PillBus.pushSound
             height: root.pillHeight
-            width: root.expanded ? root.expandedWidth : root.collapsedWidth
+            // Icon-only now (no hover expansion, so no inline slider); the
+            // bluetooth/wifi/battery pills still push it left.
+            width: root.collapsedWidth
             // Middle segment of the joined row: square corners.
             radius: 0
             color: "#040404"
-
-            Behavior on width {
-                NumberAnimation {
-                    duration: 220
-                    easing.type: Easing.OutCubic
-                }
-            }
 
             MouseArea {
                 anchors.fill: parent
@@ -212,14 +172,31 @@ Scope {
                     if (mouse.button === Qt.RightButton)
                         pavuProc.running = true
                     else
-                        PillBus.toggleOpen("sound")
+                        root.toggle()
                 }
             }
 
             HoverHandler {
                 id: hover
-                onHoveredChanged: if (hovered)
-                    root.expanded = true
+                // Report the pointer to PillBus instead of opening on the first
+                // pixel of hover; the preview opens only after a short rest, so
+                // an accidental slide across the row passes through (see
+                // PillBus.requestPreview / hoverOpenDelay).
+                onHoveredChanged: {
+                    if (hovered)
+                        PillBus.requestPreview("sound")
+                    else
+                        PillBus.cancelPreview("sound")
+                }
+            }
+
+            // Fires once the pointer has rested here long enough.
+            Connections {
+                target: PillBus
+                function onPreviewTickChanged() {
+                    if (PillBus.previewName === "sound" && hover.hovered)
+                        root.openPreview()
+                }
             }
 
             WheelHandler {
@@ -232,57 +209,17 @@ Scope {
                 }
             }
 
-            Row {
-                id: content
-                anchors.centerIn: parent
-                spacing: 5
-
-                Text {
-                    id: glyphText
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root.glyph
-                    color: root.muted ? root.mutedColor : root.accent
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 13
-                }
-
-                VolumeSlider {
-                    id: slider
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: root.expanded ? 84 : 0
-                    height: 22
-                    opacity: root.expanded ? 1 : 0
-                    enabled: root.expanded
-                    value: root.volume
-                    trackColor: "#1F1F1F"
-                    fillColor: root.accent
-                    knobColor: "#FFFFFF"
-
-                    Behavior on width {
-                        NumberAnimation {
-                            duration: 220
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-
-                    Behavior on opacity {
-                        NumberAnimation {
-                            duration: 140
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-
-                    onDragged: function (v) {
-                        root.requestVolume(v)
-                    }
-
-                    onMoved: function (v) {
-                        // Releasing the drag re-engages the normal grace
-                        // period (the PillBus hover binding drops when
-                        // dragActive goes false — see PillBus.qml).
-                        root.applyVolume(v)
-                    }
-                }
+            // Pinned to the pill's right edge (as it was while the pill used
+            // to expand); the pill is a fixed 27px now.
+            Text {
+                id: glyphText
+                anchors.right: parent.right
+                anchors.rightMargin: 7
+                anchors.verticalCenter: parent.verticalCenter
+                text: root.glyph
+                color: root.muted ? root.mutedColor : root.accent
+                font.family: Theme.fontFamily
+                font.pixelSize: 13
             }
         }
     }

@@ -14,7 +14,6 @@ window#waybar.hidden {
   opacity: 0.1;
 }
 
-#mpris,
 #custom-weather{
   border-radius: 8px 8px 8px 8px;
 }
@@ -65,7 +64,6 @@ window#waybar.hidden {
 
 #workspaces,
 #custom-powermenu,
-#mpris,
 #custom-weather{
   background-color: #040404;
   padding: 0em 2em;
@@ -86,18 +84,26 @@ window#waybar.hidden {
   margin-left: 5px;
 }
 
-#mpris{
-  color: #d9c793;
-  padding-left: 12px;
-  padding-right: 12px;
-  font-size: 13px;
-  border-radius: 6px 8px 8px 6px;
-}
 #custom-weather{
   padding-left: 12px;
   padding-right: 12px;
   font-size: 13px;
   border-radius: 6px 8px 8px 6px;
+}
+
+/* Clipboard pill, drawn by Waybar (not a Quickshell overlay) so it stays in
+   step with the workspaces module's width animation. Left cluster, between
+   the workspace dots and the weather/music pills. Left-click opens the
+   Quickshell popover; see waybar/config + quickshell/ClipboardPanel.qml. */
+#custom-clipboard {
+  background-color: #040404;
+  color: #56b6c2;
+  padding: 2px 8px;
+  margin-top: 5px;
+  margin-bottom: 0px;
+  margin-right: 10px;
+  border-radius: 8px;
+  font-size: 13px;
 }
 
 /* Music pill: [prev] [play/pause] [next] Title: current lyric.
@@ -115,12 +121,18 @@ window#waybar.hidden {
   border-radius: 6px 8px 8px 6px;
 }
 
+/* font-size MUST be set here, not only on #music above: the global `*`
+   rule matches these labels directly, and a direct rule beats the value
+   inherited from the group box in GTK CSS. Without this the title/lyric
+   fell back to `*`'s 10px (2px smaller than the clock chip).
+   Kept at 13px to match the calendar clock chip. See changes.md. */
 #custom-music-play,
 #custom-music-text {
   color: #d9c793;
   background-color: transparent;
   padding: 0;
   margin: 0;
+  font-size: 13px;
 }
 
 #custom-music-play {

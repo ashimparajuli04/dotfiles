@@ -4,15 +4,15 @@ import Quickshell.Io
 import Quickshell.Bluetooth
 import Quickshell.Wayland
 
-// The Waybar bluetooth pill, re-created as a Quickshell overlay so it
-// can expand on hover and reveal the connected device name(s) — same
-// approach as BrightnessPill.qml / SoundPill.qml.
+// The Waybar bluetooth pill, re-created as a Quickshell overlay. Hovering it
+// opens BluetoothPanel as a preview (held while the pointer is on the pill or
+// the panel, closed 1s after leaving both); clicking it opens/latches the
+// panel until an outside click. See PillBus.qml for the shared preview logic.
 //
-// Geometry: sits on the transparent `custom/bluetooth` Waybar spacer and
-// expands LEFTWARD (right edge pinned at x=1822, flush against the wifi
-// pill; joined row — changes.md §32). While it expands it pushes the
-// sound and brightness pills left via PillBus; the wifi pill (to the
-// right) pushes this one in turn.
+// Geometry: sits on the transparent `custom/bluetooth` Waybar spacer (right
+// edge at x=1822, flush against the wifi pill; joined row). It no longer
+// expands; the wifi/battery pills (to the right) still push it left via
+// PillBus.
 Scope {
     id: root
 
@@ -25,7 +25,6 @@ Scope {
     readonly property int collapsedWidth: 27
     readonly property int rightMargin: 89       // screen right edge → window right edge
     readonly property int pillHeight: 24
-    readonly property int nameCap: 140          // hover text elides beyond this
 
     // ---------- state ----------
     readonly property var adapter: Bluetooth.defaultAdapter
@@ -44,10 +43,6 @@ Scope {
         return out
     }
 
-    readonly property string hoverText: !root.powered ? "Off"
-        : root.connectedNames.length === 0 ? "No device"
-        : root.connectedNames.join(", ")
-
     // Same glyphs as the old Waybar module: connected → 󰂱, on → 󰂯,
     // off/disabled → 󰂲.
     readonly property string glyph: !root.powered ? "󰂲"
@@ -65,49 +60,37 @@ Scope {
         return out
     }
 
-    property bool expanded: false
-
-    // Rounded to whole pixels so the pushed (collapsed) pills shift by an
-    // exact integer and the joined row never shows a sub-pixel seam.
-    readonly property int expandedWidth: Math.round(root.collapsedWidth
-        + (nameText.implicitWidth > 0 ? 5 + Math.min(nameText.implicitWidth, root.nameCap) : 0))
-
-    // Hover only expands the pill; collapsing is driven by
-    // PillBus.collapseTick and only happens after the whole pill row has
-    // been unhovered. Switching quickly to/from a neighbour therefore
-    // never collapses this one and never slides the row under the
-    // cursor — see PillBus.qml.
+    // Publish "pointer is on the pill" so PillBus can hold the preview panel
+    // open while the pointer is either on the pill or on the panel.
     Binding {
         target: PillBus
         property: "hoverBt"
         value: hover.hovered
     }
 
-    Connections {
-        target: PillBus
-        function onCollapseTickChanged() {
-            if (!hover.hovered)
-                root.expanded = false
+    // Hover opens the panel as a preview; a click opens it latched. Shared
+    // close timer / latch state live in PillBus.qml.
+    function openPreview() {
+        if (!PillBus.bluetoothOpen) {
+            PillBus.show("bluetooth")
+            PillBus.panelLatched = false
         }
     }
 
-    // Panel toggling is in-process via PillBus (no `qs ipc` subprocess). See PillBus.qml.
-
-    // Publish the live expansion delta so everything to the left slides
-    // out of the way in perfect sync (see PillBus.qml).
-    Binding {
-        target: PillBus
-        property: "btPush"
-        value: Math.max(0, Math.round(pill.width - root.collapsedWidth))
-    }
-
-    Binding {
-        target: PillBus
-        property: "btMaxPush"
-        value: root.expandedWidth - root.collapsedWidth
+    function toggle() {
+        if (PillBus.bluetoothOpen) {
+            if (PillBus.panelLatched)
+                PillBus.close("bluetooth")
+            else
+                PillBus.panelLatched = true
+        } else {
+            PillBus.show("bluetooth")
+            PillBus.panelLatched = true
+        }
     }
 
     PanelWindow {
+        screen: BarScreen.screen
         id: win
 
         anchors {
@@ -120,7 +103,7 @@ Scope {
             right: root.rightMargin
         }
 
-        implicitWidth: root.expandedWidth + PillBus.maxPushBt
+        implicitWidth: root.collapsedWidth + PillBus.maxPushBt
         implicitHeight: root.pillHeight
         color: "transparent"
         exclusiveZone: 0
@@ -146,84 +129,53 @@ Scope {
             // while they expand.
             x: win.width - width - PillBus.pushBt
             height: root.pillHeight
-            width: root.expanded ? root.expandedWidth : root.collapsedWidth
+            // Icon-only now (no hover expansion); the wifi/battery pills still
+            // push it left while they expand.
+            width: root.collapsedWidth
             // Middle segment of the joined row: square corners.
             radius: 0
             color: "#040404"
-
-            Behavior on width {
-                NumberAnimation {
-                    duration: 220
-                    easing.type: Easing.OutCubic
-                }
-            }
 
             MouseArea {
                 anchors.fill: parent
                 acceptedButtons: Qt.LeftButton
                 cursorShape: Qt.PointingHandCursor
-                onClicked: PillBus.toggleOpen("bluetooth")
+                onClicked: root.toggle()
             }
 
             HoverHandler {
                 id: hover
-                onHoveredChanged: if (hovered)
-                    root.expanded = true
+                // Report the pointer to PillBus instead of opening on the first
+                // pixel of hover; the preview opens only after a short rest, so
+                // an accidental slide across the row passes through (see
+                // PillBus.requestPreview / hoverOpenDelay).
+                onHoveredChanged: {
+                    if (hovered)
+                        PillBus.requestPreview("bluetooth")
+                    else
+                        PillBus.cancelPreview("bluetooth")
+                }
             }
 
-            Row {
-                id: content
+            // Fires once the pointer has rested here long enough.
+            Connections {
+                target: PillBus
+                function onPreviewTickChanged() {
+                    if (PillBus.previewName === "bluetooth" && hover.hovered)
+                        root.openPreview()
+                }
+            }
+
+            Text {
+                id: glyphText
                 anchors.centerIn: parent
-                // Collapsed the glyph must sit dead-centre (like the old
-                // Waybar pill), so the gap only exists while expanded.
-                spacing: root.expanded ? 5 : 0
-
-                Behavior on spacing {
-                    NumberAnimation {
-                        duration: 220
-                        easing.type: Easing.OutCubic
-                    }
-                }
-
-                Text {
-                    id: glyphText
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root.glyph
-                    color: root.accent
-                    // The old Waybar pill's font stack lists Material
-                    // Design Icons first, so its glyphs came from there.
-                    font.family: "Material Design Icons"
-                    font.pixelSize: 13
-                    font.bold: true
-                }
-
-                Text {
-                    id: nameText
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root.hoverText
-                    color: root.accent
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 13
-                    font.bold: true
-                    elide: Text.ElideRight
-                    clip: true
-                    width: root.expanded ? Math.min(implicitWidth, root.nameCap) : 0
-                    opacity: root.expanded ? 1 : 0
-
-                    Behavior on width {
-                        NumberAnimation {
-                            duration: 220
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-
-                    Behavior on opacity {
-                        NumberAnimation {
-                            duration: 140
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-                }
+                text: root.glyph
+                color: root.accent
+                // The old Waybar pill's font stack lists Material
+                // Design Icons first, so its glyphs came from there.
+                font.family: "Material Design Icons"
+                font.pixelSize: 13
+                font.bold: true
             }
         }
     }

@@ -29,7 +29,10 @@ Scope {
     // pill's left edge, and it carries the rounded left end of the
     // cluster. Tuned with screenshots — see changes.md §28.
     readonly property int collapsedWidth: 27
-    readonly property int expandedWidth: 172
+    // Hugs the expanded content: 7 (left pad) + 104 (slider) + 5 (gap)
+    // + 13 (icon) + 7 (right pad). Was 172, which left ~42px of dead space
+    // to the left of the slider.
+    readonly property int expandedWidth: 136
     readonly property int rightMargin: 143
     readonly property int pillHeight: 24
 
@@ -57,7 +60,13 @@ Scope {
     readonly property int shownPercent: Math.max(1, Math.min(100,
         root.dragActive ? Math.round(slider.shown * 100) : root.percent))
 
-    // ---------- brightnessctl ----------
+    // ---------- brightness ----------
+    // Level is read from sysfs (FileView) instead of forking `brightnessctl`
+    // every second; brightnessctl is only spawned to WRITE and once at startup
+    // to discover the backlight device. Same values, no per-second process.
+    property string backlightDir: ""
+    property int maxBrightness: 1
+
     function applyPercent(p) {
         var v = Math.max(1, Math.min(100, Math.round(p)))
         setProc.command = ["brightnessctl", "set", v + "%"]
@@ -76,6 +85,7 @@ Scope {
         root.applyPercent(root.percent + delta)
     }
 
+    // One-shot at startup: discover the sysfs backlight dir + max, seed percent.
     Process {
         id: readProc
         command: ["brightnessctl", "-m"]
@@ -84,6 +94,11 @@ Scope {
                 // e.g. amdgpu_bl1,backlight,65535,100%,65535
                 var parts = String(text).trim().split(",")
                 if (parts.length >= 4) {
+                    if (parts[0])
+                        root.backlightDir = "/sys/class/backlight/" + parts[0]
+                    var mx = parseInt(parts[2])
+                    if (!isNaN(mx) && mx > 0)
+                        root.maxBrightness = mx
                     var p = parseInt(parts[3])
                     if (!isNaN(p))
                         root.percent = p
@@ -92,10 +107,30 @@ Scope {
         }
     }
 
+    Component.onCompleted: if (!readProc.running) readProc.running = true
+
+    // Live level straight from sysfs; reloaded once a second so an external
+    // `brightnessctl set` (the XF86MonBrightness keys) still shows up, but
+    // with no process spawn.
+    FileView {
+        id: brightnessView
+        path: root.backlightDir !== "" ? root.backlightDir + "/brightness" : ""
+        printErrors: false
+        onLoaded: root.applyBrightness(brightnessView.text())
+    }
+
+    function applyBrightness(text) {
+        if (root.maxBrightness <= 0)
+            return
+        var c = parseInt(String(text).trim())
+        if (isNaN(c))
+            return
+        root.percent = Math.max(1, Math.min(100, Math.round(c / root.maxBrightness * 100)))
+    }
+
     Process {
         id: setProc
-        onExited: if (!readProc.running)
-            readProc.running = true
+        onExited: brightnessView.reload()
     }
 
     Timer {
@@ -103,8 +138,7 @@ Scope {
         running: true
         repeat: true
         triggeredOnStart: true
-        onTriggered: if (!readProc.running)
-            readProc.running = true
+        onTriggered: brightnessView.reload()
     }
 
     Timer {
@@ -157,13 +191,14 @@ Scope {
         target: "brightness"
         function up() { root.nudge(5) }
         function down() { root.nudge(-5) }
-        function refresh() { if (!readProc.running) readProc.running = true }
+        function refresh() { if (root.backlightDir === "") { if (!readProc.running) readProc.running = true } else brightnessView.reload() }
         function expand() { root.expanded = true }
         function collapse() { root.expanded = false }
         function set(percent: int) { root.applyPercent(percent) }
     }
 
     PanelWindow {
+        screen: BarScreen.screen
         id: win
 
         anchors {
@@ -234,57 +269,61 @@ Scope {
                 }
             }
 
-            Row {
-                id: content
-                anchors.centerIn: parent
-                spacing: 5
+            // The glyph is pinned to the pill's right edge so it never slides
+            // out from under the cursor while the pill expands (the pill's
+            // right edge is fixed in screen space during its own expansion).
+            // The slider is anchored to the glyph's left and grows LEFTWARD
+            // into the space the pill vacates, instead of re-centering the
+            // whole row.
+            Text {
+                id: icon
+                anchors.right: parent.right
+                anchors.rightMargin: 7
+                anchors.verticalCenter: parent.verticalCenter
+                text: root.iconGlyph
+                font.family: Theme.fontFamily
+                font.pixelSize: 13
+                font.bold: true
+                color: root.accent
+            }
 
-                Text {
-                    id: icon
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root.iconGlyph
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 13
-                    font.bold: true
-                    color: root.accent
+            VolumeSlider {
+                id: slider
+                anchors.right: icon.left
+                anchors.rightMargin: 5
+                anchors.verticalCenter: parent.verticalCenter
+                width: root.expanded ? 104 : 0
+                height: 22
+                opacity: root.expanded ? 1 : 0
+                enabled: root.expanded
+                value: root.percent / 100
+                trackColor: "#1F1F1F"
+                fillColor: root.accent
+                knobColor: "#FFFFFF"
+
+                Behavior on width {
+                    NumberAnimation {
+                        duration: 220
+                        easing.type: Easing.OutCubic
+                    }
                 }
 
-                VolumeSlider {
-                    id: slider
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: root.expanded ? 104 : 0
-                    height: 22
-                    opacity: root.expanded ? 1 : 0
-                    enabled: root.expanded
-                    value: root.percent / 100
-                    trackColor: "#1F1F1F"
-                    fillColor: root.accent
-                    knobColor: "#FFFFFF"
-
-                    Behavior on width {
-                        NumberAnimation {
-                            duration: 220
-                            easing.type: Easing.OutCubic
-                        }
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 140
+                        easing.type: Easing.OutCubic
                     }
+                }
 
-                    Behavior on opacity {
-                        NumberAnimation {
-                            duration: 140
-                            easing.type: Easing.OutCubic
-                        }
-                    }
+                onDragged: function (v) {
+                    root.requestPercent(v * 100)
+                }
 
-                    onDragged: function (v) {
-                        root.requestPercent(v * 100)
-                    }
-
-                    onMoved: function (v) {
-                        // Releasing the drag re-engages the normal grace
-                        // period (the PillBus hover binding drops when
-                        // dragActive goes false — see PillBus.qml).
-                        root.applyPercent(v * 100)
-                    }
+                onMoved: function (v) {
+                    // Releasing the drag re-engages the normal grace
+                    // period (the PillBus hover binding drops when
+                    // dragActive goes false — see PillBus.qml).
+                    root.applyPercent(v * 100)
                 }
             }
         }

@@ -30,6 +30,7 @@ Scope {
     }
 
     PanelWindow {
+        screen: BarScreen.screen
         id: win
 
         anchors {

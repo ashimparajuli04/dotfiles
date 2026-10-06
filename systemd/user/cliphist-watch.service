@@ -1,0 +1,11 @@
+[Unit]
+Description=cliphist clipboard-history watcher (feeds the Quickshell clipboard pill)
+After=graphical-session.target
+
+[Service]
+ExecStart=/usr/bin/wl-paste --watch /usr/bin/cliphist store
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=default.target

@@ -11,6 +11,7 @@ import "CalUtil.js" as CalUtil
 // clock and hover card stay eager in CalendarPanel because they need the data
 // too.
 PanelWindow {
+    screen: BarScreen.screen
     id: popup
 
     property var panel: null

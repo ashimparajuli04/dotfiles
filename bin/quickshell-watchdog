@@ -42,6 +42,10 @@ SETTLE=10
 # survived a heavy panel-churn soak. MALLOC_CONF=retain:false trims freed pages.
 # --no-duplicate avoids racing an already-running instance.
 launch() {
+    # Reap any `mpc idleloop` orphaned by a hard-killed previous instance
+    # (Quickshell's MusicState event source). launch() only runs when no
+    # Quickshell is alive, so any idleloop present here is stale.
+    pkill -f 'mpc idleloop' 2>/dev/null || true
     env QSG_RHI_BACKEND=opengl MALLOC_CONF=retain:false \
         quickshell --no-duplicate >/dev/null 2>&1 &
 }

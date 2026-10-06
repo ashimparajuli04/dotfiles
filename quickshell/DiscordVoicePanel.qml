@@ -30,6 +30,7 @@ Scope {
     // Transparent click-catcher: closes the popover when clicking anywhere
     // outside of it. Starts below the 29px Waybar so the bar stays clickable.
     PanelWindow {
+        screen: BarScreen.screen
         id: catcher
         visible: root.panelOpen
 
@@ -56,6 +57,7 @@ Scope {
     }
 
     PanelWindow {
+        screen: BarScreen.screen
         id: panel
         visible: root.panelOpen
 

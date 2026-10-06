@@ -34,8 +34,9 @@ BACKUP="$HOME/.rice-backup-$(date +%Y%m%d-%H%M%S)"
 # Packages
 # ---------------------------------------------------------------------------
 PACMAN_PKGS=(
-  waybar rofi mpd mpc ncmpcpp playerctl jq ffmpeg dunst libnotify swaybg
+  waybar rofi mpd mpc playerctl jq ffmpeg libnotify swaybg
   brightnessctl pipewire-pulse grim satty wl-clipboard pavucontrol sassc
+  cliphist
   papirus-icon-theme
   bluez bluez-utils quickshell cava rmpc khal vdirsyncer uv
   ttf-jetbrains-mono-nerd ttf-iosevka-nerd ttf-material-icons
@@ -43,14 +44,14 @@ PACMAN_PKGS=(
   python-requests python-unidecode python-jinja
   dkms linux-headers
 )
-AUR_PKGS=(bibata-cursor-theme-bin ryzenadj-git ryzen_smu-dkms-git)
+AUR_PKGS=(bibata-cursor-theme-bin ryzenadj-git ryzen_smu-dkms-git wl-mirror)
 
 # ---------------------------------------------------------------------------
 # What gets placed where
 # ---------------------------------------------------------------------------
 CONFIG_DIRS=(
-  kitty nvim cava dunst gtk-3.0 gtk-4.0 khal mpd
-  mpd-lyricsd ncmpcpp quickshell rmpc rofi sway systemd vdirsyncer
+  kitty nvim gtk-3.0 gtk-4.0 khal mpd
+  mpd-lyricsd quickshell rmpc rofi sway systemd vdirsyncer
   waybar xkb
 )
 
@@ -59,6 +60,7 @@ EXTRA_LINKS=(
   "bin/mpd-lyricsd|$HOME/.local/bin/mpd-lyricsd"
   "bin/power-mode|$HOME/.local/bin/power-mode"
   "bin/quickshell-watchdog|$HOME/.local/bin/quickshell-watchdog"
+  "bin/waybar-output|$HOME/.local/bin/waybar-output"
   "icons/vinyl.svg|$HOME/.local/share/icons/vinyl.svg"
   "icons/Flat-Remix-Blue-Dark|$HOME/.local/share/icons/Flat-Remix-Blue-Dark"
   "fonts/SFPro|$HOME/.local/share/fonts/SFPro"
@@ -212,7 +214,7 @@ fi
 
 step "systemd user services"
 systemctl --user daemon-reload >/dev/null 2>&1 || true
-for unit in mpd.service mpd-lyricsd.service fetch-lyrics.timer vdirsyncer.timer; do
+for unit in mpd.service mpd-lyricsd.service cliphist-watch.service fetch-lyrics.timer vdirsyncer.timer; do
   if systemctl --user enable --now "$unit" >/dev/null 2>&1; then
     say "enabled  $unit"
   else

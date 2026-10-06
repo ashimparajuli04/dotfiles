@@ -14,7 +14,7 @@ when the user says any of these, run the consistency check below.
    scripts) lives in this repo and is **symlinked** to its destination;
    every one must be registered in `setup.sh` → `EXTRA_LINKS`.
 3. Never commit secrets or runtime state. Known-ignored: `vdirsyncer/*-password`,
-   `mpd/mpd.db`, `mpd/state`, `ncmpcpp/error.log`, `systemd/user/*.wants/`,
+   `mpd/mpd.db`, `mpd/state`, `systemd/user/*.wants/`,
    `scripts/.venv/`. Check `git status` after each change; add new junk to
    `.gitignore` instead of committing it.
 4. This repo is **private**. Never make it public without removing: SF Pro fonts
@@ -56,7 +56,7 @@ Also scan for newly created dotfiles the rice might use: `~/.config/*`, `~/.xkb`
 - Grep existing configs for external references:
   ```bash
   grep -rnE '/home/|~/|\$HOME' sway waybar rofi eww quickshell mpd mpd-lyricsd \
-    ncmpcpp rmpc systemd khal vdirsyncer gtk-3.0 scripts 2>/dev/null | grep -v '\.venv'
+    rmpc systemd khal vdirsyncer gtk-3.0 scripts 2>/dev/null | grep -v '\.venv'
   ```
   Every referenced path outside the repo is a candidate asset.
 - Known asset homes — check for new entries:
@@ -91,7 +91,7 @@ readlink -f ~/.config/<name> ~/.themes/<theme> ~/.local/share/fonts/<font>   # r
 sway -C -c ~/.config/sway/config                                             # config still valid
 git status                                                                   # only intended changes
 ```
-Restart the affected app (waybar/dunst/eww/quickshell) or `swaymsg reload`.
+Restart the affected app (waybar/quickshell) or `swaymsg reload`.
 
 ### 7. Ship
 - `git add -A && git commit -m "rice: <what changed>" && git push`
@@ -102,6 +102,8 @@ Restart the affected app (waybar/dunst/eww/quickshell) or `swaymsg reload`.
 |---|---|
 | `bin/mpd-lyricsd` | `~/.local/bin/mpd-lyricsd` |
 | `bin/power-mode` | `~/.local/bin/power-mode` |
+| `bin/quickshell-watchdog` | `~/.local/bin/quickshell-watchdog` |
+| `bin/waybar-output` | `~/.local/bin/waybar-output` |
 | `icons/vinyl.svg` | `~/.local/share/icons/vinyl.svg` |
 | `icons/Flat-Remix-Blue-Dark` | `~/.local/share/icons/Flat-Remix-Blue-Dark` |
 | `fonts/SFPro` | `~/.local/share/fonts/SFPro` |

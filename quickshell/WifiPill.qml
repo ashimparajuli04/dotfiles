@@ -4,15 +4,14 @@ import Quickshell.Io
 import Quickshell.Networking
 import Quickshell.Wayland
 
-// The Waybar network pill, re-created as a Quickshell overlay so it can
-// expand on hover and reveal the connected SSID — same approach as
-// BrightnessPill.qml / SoundPill.qml.
+// The Waybar network pill, re-created as a Quickshell overlay. Hovering it
+// opens WifiPanel as a preview (held while the pointer is on the pill or the
+// panel, closed 1s after leaving both); clicking it opens/latches the panel
+// until an outside click. See PillBus.qml for the shared preview logic.
 //
-// Geometry: sits on the transparent `custom/wifi` Waybar spacer and
-// expands LEFTWARD (right edge pinned at x=1849, flush against the
-// battery pill; joined row — changes.md §32). While it expands it pushes
-// the bluetooth pill (and everything left of it) via PillBus; the
-// battery pill (to the right) pushes this one in turn.
+// Geometry: sits on the transparent `custom/wifi` Waybar spacer (right edge
+// at x=1849, flush against the battery pill; joined row). It no longer
+// expands; the battery pill (to the right) still pushes it left via PillBus.
 Scope {
     id: root
 
@@ -27,7 +26,6 @@ Scope {
     readonly property int collapsedWidth: 27
     readonly property int rightMargin: 62       // screen right edge → window right edge
     readonly property int pillHeight: 24
-    readonly property int nameCap: 140          // hover text elides beyond this
 
     // ---------- state ----------
     readonly property var wifiDevice: {
@@ -96,12 +94,8 @@ Scope {
         return "󰤮"
     }
 
-    readonly property string hoverText: root.connected ? root.connectedWifi.name
-        : root.wired ? "Ethernet" : "Disconnected"
-
     readonly property color fg: (root.connected || root.wired) ? root.accent : root.disconnectedColor
 
-    property bool expanded: false
     property int wbIconIdx: -1
 
     // ---------- waybar-exact signal strength ----------
@@ -112,25 +106,28 @@ Scope {
     // Reading the same /proc value and applying the same formula keeps
     // the glyph identical to the pre-Quickshell bar; NetworkManager's
     // percentage is only the startup fallback.
-    Process {
-        id: signalProc
-        command: ["cat", "/proc/net/wireless"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                var dev = root.wifiDevice ? root.wifiDevice.name : ""
-                if (!dev)
-                    return
-                var m = String(text).match(new RegExp("^\\s*" + dev + ":\\s*\\S+\\s+([\\d.]+)\\s+(-?\\d+)", "m"))
-                if (!m)
-                    return
-                var dbm = parseInt(m[2])
-                if (isNaN(dbm) || dbm >= 0 || dbm <= -200)
-                    return
-                var s = 100 - Math.abs(dbm + 45) / 45 * 100
-                s = Math.max(0, Math.min(100, Math.floor(s)))
-                root.wbIconIdx = Math.max(0, Math.min(4, Math.floor(s / 20)))
-            }
-        }
+    // Read /proc/net/wireless in-process (FileView) instead of forking `cat`
+    // every 5s; reloaded on the same cadence, identical output.
+    FileView {
+        id: wirelessView
+        path: "/proc/net/wireless"
+        printErrors: false
+        onLoaded: root.applyWireless(wirelessView.text())
+    }
+
+    function applyWireless(text) {
+        var dev = root.wifiDevice ? root.wifiDevice.name : ""
+        if (!dev)
+            return
+        var m = String(text).match(new RegExp("^\\s*" + dev + ":\\s*\\S+\\s+([\\d.]+)\\s+(-?\\d+)", "m"))
+        if (!m)
+            return
+        var dbm = parseInt(m[2])
+        if (isNaN(dbm) || dbm >= 0 || dbm <= -200)
+            return
+        var s = 100 - Math.abs(dbm + 45) / 45 * 100
+        s = Math.max(0, Math.min(100, Math.floor(s)))
+        root.wbIconIdx = Math.max(0, Math.min(4, Math.floor(s / 20)))
     }
 
     Timer {
@@ -138,51 +135,41 @@ Scope {
         running: true
         repeat: true
         triggeredOnStart: true
-        onTriggered: if (!signalProc.running)
-            signalProc.running = true
+        onTriggered: wirelessView.reload()
     }
 
-    // Rounded to whole pixels so the pushed (collapsed) pills shift by an
-    // exact integer and the joined row never shows a sub-pixel seam.
-    readonly property int expandedWidth: Math.round(root.collapsedWidth
-        + (nameText.implicitWidth > 0 ? 5 + Math.min(nameText.implicitWidth, root.nameCap) : 0))
-
-    // Hover only expands the pill; collapsing is driven by
-    // PillBus.collapseTick and only happens after the whole pill row has
-    // been unhovered. Switching quickly to the bluetooth pill (or any
-    // other) therefore never collapses this one and never slides the row
-    // under the cursor — see PillBus.qml.
+    // Publish "pointer is on the pill" so PillBus can hold the preview panel
+    // open while the pointer is either on the pill or on the panel.
     Binding {
         target: PillBus
         property: "hoverWifi"
         value: hover.hovered
     }
 
-    Connections {
-        target: PillBus
-        function onCollapseTickChanged() {
-            if (!hover.hovered)
-                root.expanded = false
+    // Hover opens the panel as a preview; a click opens it latched. The shared
+    // close timer / latch flag live in PillBus.qml so the three preview
+    // popovers never fight over which one is open.
+    function openPreview() {
+        if (!PillBus.wifiOpen) {
+            PillBus.show("wifi")
+            PillBus.panelLatched = false
         }
     }
 
-    // Panel toggling is in-process via PillBus (no `qs ipc` subprocess). See PillBus.qml.
-
-    // Publish the live expansion delta so everything to the left slides
-    // out of the way in perfect sync (see PillBus.qml).
-    Binding {
-        target: PillBus
-        property: "wifiPush"
-        value: Math.max(0, Math.round(pill.width - root.collapsedWidth))
-    }
-
-    Binding {
-        target: PillBus
-        property: "wifiMaxPush"
-        value: root.expandedWidth - root.collapsedWidth
+    function toggle() {
+        if (PillBus.wifiOpen) {
+            if (PillBus.panelLatched)
+                PillBus.close("wifi")
+            else
+                PillBus.panelLatched = true
+        } else {
+            PillBus.show("wifi")
+            PillBus.panelLatched = true
+        }
     }
 
     PanelWindow {
+        screen: BarScreen.screen
         id: win
 
         anchors {
@@ -195,7 +182,7 @@ Scope {
             right: root.rightMargin
         }
 
-        implicitWidth: root.expandedWidth + PillBus.maxPushWifi
+        implicitWidth: root.collapsedWidth + PillBus.maxPushWifi
         implicitHeight: root.pillHeight
         color: "transparent"
         exclusiveZone: 0
@@ -221,84 +208,53 @@ Scope {
             // while it expands.
             x: win.width - width - PillBus.pushWifi
             height: root.pillHeight
-            width: root.expanded ? root.expandedWidth : root.collapsedWidth
+            // Icon-only now (no hover expansion); the battery pill still
+            // pushes this one left while it expands.
+            width: root.collapsedWidth
             // Middle segment of the joined row: square corners.
             radius: 0
             color: "#040404"
-
-            Behavior on width {
-                NumberAnimation {
-                    duration: 220
-                    easing.type: Easing.OutCubic
-                }
-            }
 
             MouseArea {
                 anchors.fill: parent
                 acceptedButtons: Qt.LeftButton
                 cursorShape: Qt.PointingHandCursor
-                onClicked: PillBus.toggleOpen("wifi")
+                onClicked: root.toggle()
             }
 
             HoverHandler {
                 id: hover
-                onHoveredChanged: if (hovered)
-                    root.expanded = true
+                // Don't open on the first pixel of hover: report the pointer to
+                // PillBus and let it open the preview only after a short rest,
+                // so an accidental slide across the row passes through (see
+                // PillBus.requestPreview / hoverOpenDelay).
+                onHoveredChanged: {
+                    if (hovered)
+                        PillBus.requestPreview("wifi")
+                    else
+                        PillBus.cancelPreview("wifi")
+                }
             }
 
-            Row {
-                id: content
+            // Fires once the pointer has rested here long enough.
+            Connections {
+                target: PillBus
+                function onPreviewTickChanged() {
+                    if (PillBus.previewName === "wifi" && hover.hovered)
+                        root.openPreview()
+                }
+            }
+
+            Text {
+                id: glyphText
                 anchors.centerIn: parent
-                // Collapsed the glyph must sit where the old Waybar pill
-                // had it; the gap only exists while expanded.
-                spacing: root.expanded ? 5 : 0
-
-                Behavior on spacing {
-                    NumberAnimation {
-                        duration: 220
-                        easing.type: Easing.OutCubic
-                    }
-                }
-
-                Text {
-                    id: glyphText
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root.glyph
-                    color: root.fg
-                    // The old Waybar pill's font stack lists Material
-                    // Design Icons first, so its glyphs came from there.
-                    font.family: "Material Design Icons"
-                    font.pixelSize: 13
-                    font.bold: true
-                }
-
-                Text {
-                    id: nameText
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root.hoverText
-                    color: root.fg
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 13
-                    font.bold: true
-                    elide: Text.ElideRight
-                    clip: true
-                    width: root.expanded ? Math.min(implicitWidth, root.nameCap) : 0
-                    opacity: root.expanded ? 1 : 0
-
-                    Behavior on width {
-                        NumberAnimation {
-                            duration: 220
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-
-                    Behavior on opacity {
-                        NumberAnimation {
-                            duration: 140
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-                }
+                text: root.glyph
+                color: root.fg
+                // The old Waybar pill's font stack lists Material
+                // Design Icons first, so its glyphs came from there.
+                font.family: "Material Design Icons"
+                font.pixelSize: 13
+                font.bold: true
             }
         }
     }

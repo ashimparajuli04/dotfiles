@@ -47,6 +47,14 @@ case "$state" in
     *)       icon="$ICON_STOP" ;;
 esac
 
+# The icon module only needs the play/pause state. Stop here so this
+# (once-per-second) invocation never touches `mpc current`, the lyrics dir, or
+# awk — they only feed the text module. Output is unchanged.
+if [ "$mode" = icon ]; then
+    printf '%s\n' "$icon"
+    exit 0
+fi
+
 # Elapsed time (m:ss or h:mm:ss) -> seconds
 elapsed=$(printf '%s\n' "$status" | grep -oE '([0-9]+:)?[0-9]+:[0-9]+/' | head -n1 | tr -d '/')
 current_seconds=0
@@ -55,10 +63,15 @@ if [ -n "$elapsed" ]; then
 fi
 
 # ---- Current song ----------------------------------------------------------
-artist=$(mpc current -f '%artist%' 2>/dev/null)
-title=$(mpc current -f '%title%' 2>/dev/null)
+# All three tags from a single `mpc current` (saves two mpd round-trips per
+# second); split in pure bash to avoid extra `sed`/`printf` subprocesses.
+meta=$(mpc current -f '%artist%\n%title%\n%file%' 2>/dev/null)
+artist=${meta%%$'\n'*}
+meta=${meta#*$'\n'}
+title=${meta%%$'\n'*}
+file=${meta#*$'\n'}
 if [ -z "$title" ]; then
-    title=$(mpc current -f '%file%' 2>/dev/null)
+    title=$file
 fi
 title=${title##*/}
 title=${title%.*}

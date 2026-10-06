@@ -74,6 +74,7 @@ Scope {
     }
 
     PanelWindow {
+        screen: BarScreen.screen
         id: win
 
         anchors {
@@ -130,6 +131,14 @@ Scope {
                 acceptedButtons: Qt.LeftButton
                 cursorShape: Qt.PointingHandCursor
                 onClicked: PillBus.toggleOpen("discord")
+            }
+
+            // Holding the pointer here keeps an expanded brightness/battery
+            // pill from collapsing and shifting this pill out from under the
+            // cursor (see PillBus.hoverAny).
+            HoverHandler {
+                id: hover
+                onHoveredChanged: PillBus.hoverDiscord = hover.hovered
             }
 
             Row {

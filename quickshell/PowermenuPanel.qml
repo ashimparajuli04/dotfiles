@@ -32,13 +32,17 @@ Scope {
     readonly property int tileSpacing: 30
 
     // Same order as the rofi menu (its listview is column-major):
-    // lock / suspend / logout in the first column, hibernate / reboot /
+    // lock / suspend / logout in the first column, display / reboot /
     // shutdown in the second.
+    //
+    // "Display" opens the display setup wizard (Displays.qml) so an external
+    // monitor's mode/arrangement can be changed without replugging it. It
+    // replaced the old Hibernate placeholder tile.
     readonly property var actions: [
         { name: "Lock", glyph: "\uE98F", command: ["bash", "-c", "swaylock -i ~/Pictures/wallpapers/newwave-1.png --indicator-radius 70 --inside-color 1e1e2e --inside-clear-color f5c2e7 --inside-wrong-color f38ba8 --ring-color 1e1e2e --ring-clear-color f5c2e7 --ring-ver-color 89b4fa --ring-wrong-color f38ba8 --inside-ver-color 89b4fa --line-clear-color f5c2e7 --line-wrong-color f38ba8 --line-ver-color 89b4fa --font \"SF Pro Display\""] },
-        { name: "Suspend", glyph: "\uE9A3", command: ["bash", "-c", "mpc -q pause; amixer set Master mute; systemctl suspend"] },
+        { name: "Suspend", glyph: "\uE9A3", command: ["bash", "-c", "mpc -q pause; wpctl set-mute @DEFAULT_AUDIO_SINK@ 1; systemctl suspend"] },
         { name: "Logout", glyph: "\uE991", command: ["swaymsg", "exit"] },
-        { name: "Hibernate", glyph: "\uE9AF", command: ["systemctl", "hibernate"] },
+        { name: "Display", glyph: "\udb80\udf79", glyphFont: Theme.fontFamily, kind: "display" },
         { name: "Reboot", glyph: "\uE9C4", command: ["systemctl", "reboot"] },
         { name: "Shutdown", glyph: "\uE9C0", command: ["systemctl", "poweroff"] }
     ]
@@ -66,17 +70,27 @@ Scope {
         var action = root.actions[index]
         if (!action)
             return
+        // The Display tile opens the setup wizard instead of spawning a command.
+        if (action.kind === "display") {
+            root.panelOpen = false
+            Displays.openWizard()
+            return
+        }
+        // Tiles with no command (none currently) do nothing.
+        if (!action.command)
+            return
+        // Launch DETACHED: this panel lives in a LazyLoader keyed to
+        // PillBus.powermenuOpen (shell.qml), so it is torn down the instant
+        // panelOpen flips false. A child Process owned by this component is
+        // destroyed before it can run (that was why every tile silently did
+        // nothing); execDetached outlives the teardown. Same idiom as
+        // WifiPanel/MusicState.
+        Quickshell.execDetached(action.command)
         root.panelOpen = false
-        actionProc.command = action.command
-        actionProc.running = true
     }
 
     // Opening this popover closes the others, in-process via PillBus
     // (no `qs ipc` subprocesses). See PillBus.qml.
-
-    Process {
-        id: actionProc
-    }
 
     Process {
         id: infoProc
@@ -120,6 +134,7 @@ Scope {
     // compositor, so no top margin is needed: the surface starts right
     // below the bar, which is exactly the area rofi centers its window in.
     PanelWindow {
+        screen: BarScreen.screen
         id: catcher
         visible: root.panelOpen
 
@@ -169,11 +184,12 @@ Scope {
             Repeater {
                 model: root.actions.length
                 delegate: Rectangle {
+                    readonly property bool isPlaceholder: root.actions[index].placeholder === true
                     x: root.tileMargin + Math.floor(index / 3) * (root.tileWidth + root.tileSpacing)
                     y: root.tileMargin + (index % 3) * (root.tileHeight + root.tileSpacing)
                     width: root.tileWidth
                     height: root.tileHeight
-                    color: root.selectedIndex === index ? root.sel : root.bgAlt
+                    color: root.selectedIndex === index && !isPlaceholder ? root.sel : root.bgAlt
 
                     HoverHandler {
                         cursorShape: Qt.PointingHandCursor
@@ -200,8 +216,10 @@ Scope {
                         // The glyph's ink sits slightly right of the em box center.
                         anchors.horizontalCenterOffset: -1
                         text: root.actions[index].glyph
-                        color: root.selectedIndex === index ? root.bg : root.fg
-                        font.family: "feather"
+                        color: root.selectedIndex === index && !isPlaceholder ? root.bg : root.fg
+                        // Placeholder tiles read as inert, not broken.
+                        opacity: isPlaceholder ? 0.3 : 1.0
+                        font.family: root.actions[index].glyphFont || "feather"
                         font.pointSize: 32
                         font.bold: true
                     }

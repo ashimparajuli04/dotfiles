@@ -11,7 +11,7 @@ import Quickshell.Wayland
 Scope {
     id: root
 
-    readonly property var targetScreen: Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
+    readonly property var targetScreen: BarScreen.screen
     readonly property real screenW: root.targetScreen ? root.targetScreen.width : 1920
     readonly property real screenH: root.targetScreen ? root.targetScreen.height : 1080
 
