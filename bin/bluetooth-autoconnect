@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+# Reconnect trusted, bonded Bluetooth devices.
+#
+# Sway has no desktop shell (GNOME's gnome-bluetooth, KDE's bluedevil) to act
+# as a BlueZ agent and re-issue Connect on login / resume, so nothing ever asks
+# paired peripherals to come back. This script fills that gap.
+#
+# It is intentionally root-safe: it only talks to bluetoothd over the *system*
+# D-Bus, so it can be run from the user session (sway `exec`) and from a
+# system-level systemd unit (after resume) alike.
+#
+# Opt-in list = devices marked "Trusted: yes". Run:
+#   bluetoothctl trust <MAC>
+# for each device you want reconnected automatically.
+#
+# Tunables via environment:
+#   WAIT_SECS   seconds to wait for the adapter to power on   (default 30)
+#   RETRIES     connect attempts per device                   (default 5)
+#   RETRY_DELAY seconds between attempts                      (default 2)
+
+set -u
+
+WAIT_SECS=${WAIT_SECS:-30}
+RETRIES=${RETRIES:-5}
+RETRY_DELAY=${RETRY_DELAY:-2}
+
+log() { printf 'bluetooth-autoconnect: %s\n' "$*"; }
+
+command -v bluetoothctl >/dev/null 2>&1 || { log "bluetoothctl not found"; exit 0; }
+
+# --- 1. Wait for the adapter to exist and be powered -------------------------
+adapter_up=0
+for _ in $(seq 1 "$WAIT_SECS"); do
+    if bluetoothctl show 2>/dev/null | grep -q 'Powered: yes'; then
+        adapter_up=1
+        break
+    fi
+    sleep 1
+done
+if [ "$adapter_up" -ne 1 ]; then
+    log "adapter not powered after ${WAIT_SECS}s; giving up"
+    exit 0
+fi
+
+# --- 2. Make sure it is on (some setups leave the radio off at boot) ---------
+bluetoothctl power on >/dev/null 2>&1 || true
+
+# --- 3. Reconnect every trusted device that is not already up ----------------
+mapfile -t devices < <(bluetoothctl devices 2>/dev/null | awk '{print $2}')
+if [ "${#devices[@]}" -eq 0 ]; then
+    log "no known devices"
+    exit 0
+fi
+
+connected_any=0
+for mac in "${devices[@]}"; do
+    [ -n "$mac" ] || continue
+    info=$(bluetoothctl info "$mac" 2>/dev/null)
+
+    # Opt-in via Trusted, and don't touch what is already connected.
+    printf '%s\n' "$info" | grep -q 'Trusted: yes'   || continue
+    printf '%s\n' "$info" | grep -q 'Connected: yes' && continue
+
+    name=$(printf '%s\n' "$info" | awk -F: '/^[[:space:]]*Name:/ { sub(/^[[:space:]]*Name:[[:space:]]*/, ""); print; exit }')
+    [ -n "$name" ] || name="$mac"
+
+    for attempt in $(seq 1 "$RETRIES"); do
+        if bluetoothctl connect "$mac" >/dev/null 2>&1; then
+            log "connected: $name ($mac)"
+            connected_any=1
+            break
+        fi
+        [ "$attempt" -lt "$RETRIES" ] && sleep "$RETRY_DELAY"
+    done
+done
+
+[ "$connected_any" -eq 1 ] || log "nothing to reconnect (all trusted devices already up or none trusted)"
+exit 0

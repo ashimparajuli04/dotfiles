@@ -24,7 +24,8 @@ when the user says any of these, run the consistency check below.
 ## Exclusions (never track these)
 
 - Personal apps: `discord`, `zen`, `qBittorrent`, `opencode`, `nemo`,
-  `matplotlib`, `github-copilot`, `Code`, `yay`
+  `matplotlib`, `github-copilot`, `Code`, `yay`, `zed`, `obsidian`,
+  `inkscape`, `Recordly`
 - Machine-local / junk: `dconf`, `go`, `pulse`, `procps`, `pavucontrol.ini`,
   `mimeapps.list`, `raffi` (not even installed)
 - Data (not config): `~/.calendars`, `~/.contacts`, `~/Music`,
@@ -104,10 +105,13 @@ Restart the affected app (waybar/quickshell) or `swaymsg reload`.
 | `bin/power-mode` | `~/.local/bin/power-mode` |
 | `bin/quickshell-watchdog` | `~/.local/bin/quickshell-watchdog` |
 | `bin/waybar-output` | `~/.local/bin/waybar-output` |
+| `bin/bluetooth-autoconnect` | `~/.local/bin/bluetooth-autoconnect` |
 | `icons/vinyl.svg` | `~/.local/share/icons/vinyl.svg` |
 | `icons/Flat-Remix-Blue-Dark` | `~/.local/share/icons/Flat-Remix-Blue-Dark` |
 | `fonts/SFPro` | `~/.local/share/fonts/SFPro` |
 | `fonts/newwave` | `~/.local/share/fonts/newwave` |
+| `fonts/maple-mono` | `~/.local/share/fonts/maple-mono` |
+| `gtkrc-2.0` | `~/.gtkrc-2.0` |
 | `themes/Nightfox-*` | `~/.themes/Nightfox-*` |
 | `wallpapers/newwave-1.png` | `~/Pictures/wallpapers/newwave-1.png` |
 | `scripts/{fetch-lyrics,lyrics-view}` | used in place (eww + systemd units point at the repo) |
