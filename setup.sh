@@ -78,8 +78,7 @@ EXTRA_LINKS=(
 # Text files whose hardcoded /home/ashim paths are rewritten on a new machine
 PATH_FIX_FILES=(
   sway/config waybar/config rofi/config.rasi rmpc/config.ron
-  vdirsyncer/config systemd/user/fetch-lyrics.service
-  systemd/user/mpd-lyricsd.service scripts/fetch-lyrics
+  vdirsyncer/config systemd/user/mpd-lyricsd.service
   mpd-lyricsd/config.toml gtk-3.0/bookmarks quickshell/BatteryPanel.qml
 )
 
@@ -201,23 +200,9 @@ else
   say "no gsettings session found — apply manually"
 fi
 
-step "Lyrics venv"
-if [ -x "$REPO/scripts/.venv/bin/python3" ] && "$REPO/scripts/.venv/bin/python3" -c 'import pykakasi' >/dev/null 2>&1; then
-  say "ok       scripts/.venv"
-else
-  if command -v uv >/dev/null; then
-    uv venv --python "$(command -v python3)" "$REPO/scripts/.venv"
-    uv pip install --python "$REPO/scripts/.venv/bin/python3" pykakasi
-  else
-    python3 -m venv "$REPO/scripts/.venv"
-    "$REPO/scripts/.venv/bin/pip" install --quiet pykakasi
-  fi
-  say "created  scripts/.venv (pykakasi)"
-fi
-
 step "systemd user services"
 systemctl --user daemon-reload >/dev/null 2>&1 || true
-for unit in mpd.service mpd-lyricsd.service cliphist-watch.service fetch-lyrics.timer vdirsyncer.timer; do
+for unit in mpd.service mpd-lyricsd.service cliphist-watch.service vdirsyncer.timer; do
   if systemctl --user enable --now "$unit" >/dev/null 2>&1; then
     say "enabled  $unit"
   else

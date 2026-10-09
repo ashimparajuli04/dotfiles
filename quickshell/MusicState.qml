@@ -17,6 +17,13 @@ import Quickshell.Io
 
 Scope {
     id: root
+    // Required external dirs — NOT tracked in the rice repo; the lyrics side
+    // only works if these exist (see AGENTS.md → Exclusions):
+    //   musicDir  — the MPD library (album art + cover extraction live here).
+    //   lyricsDir — synced lyrics as "<Artist> - <Title>.lrc"; when it is
+    //               missing/empty the widget shows "No lyrics". The Genius
+    //               plain-text fallback is <musicDir>/.lyrics/lyrics.txt,
+    //               rewritten by mpd-lyricsd.
     readonly property string musicDir: "/home/ashim/Music"
     readonly property string lyricsDir: "/home/ashim/.local/share/lyrics"
     readonly property string coverCache: "/tmp/quickshell-music-cover.png"

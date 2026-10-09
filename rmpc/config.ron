@@ -6,6 +6,9 @@
     password: None,
     theme: Some("/home/ashim/.config/rmpc/theme.ron"),
     cache_dir: None,
+    // Synced lyrics live here as "<Artist> - <Title>.lrc". This dir is NOT
+    // tracked in the rice repo — populate it (e.g. with the `syncedlyrics`
+    // tool) or rmpc's Lyrics pane stays empty.
     lyrics_dir: Some("/home/ashim/.local/share/lyrics"),
     on_song_change: None,
     volume_step: 5,

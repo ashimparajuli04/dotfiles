@@ -57,12 +57,14 @@ Also scan for newly created dotfiles the rice might use: `~/.config/*`, `~/.xkb`
 - Grep existing configs for external references:
   ```bash
   grep -rnE '/home/|~/|\$HOME' sway waybar rofi eww quickshell mpd mpd-lyricsd \
-    rmpc systemd khal vdirsyncer gtk-3.0 scripts 2>/dev/null | grep -v '\.venv'
+    rmpc systemd khal vdirsyncer gtk-3.0 2>/dev/null
   ```
-  Every referenced path outside the repo is a candidate asset.
+  Every referenced path outside the repo is a candidate asset. External
+  *data* dirs (e.g. `~/Music`, `~/.local/share/lyrics`) are intentionally not
+  tracked — leave them, but keep the requirement documented in the configs.
 - Known asset homes — check for new entries:
   `~/.local/share/fonts`, `~/.local/share/icons`, `~/.themes`,
-  `~/Pictures/wallpapers`, `~/.local/bin`, `/home/scripts` (if it exists)
+  `~/Pictures/wallpapers`, `~/.local/bin`
 - Compare against `setup.sh`'s `EXTRA_LINKS` and repo dirs.
 
 ### 4. Include a new config dir
@@ -78,13 +80,13 @@ ln -s ~/Programming/dotfiles/<name> ~/.config/<name>
 
 ### 5. Include a new asset
 - Move/copy it into the right repo dir: `fonts/`, `icons/`, `themes/`,
-  `wallpapers/`, `bin/`, `scripts/`.
+  `wallpapers/`, `bin/`.
 - Register in `setup.sh` → `EXTRA_LINKS` as `"path/inside/repo|$HOME/destination"`.
 - Symlink it into place (mirror what `setup.sh` would do):
   `ln -s ~/Programming/dotfiles/<path> <destination>`
 - Fonts: run `fc-cache -f` and verify with `fc-list | grep -i <name>`.
-- Scripts: `chmod +x`, and check what interpreter they need (venv → recreate
-  under `scripts/.venv`, which is gitignored).
+- Scripts: `chmod +x` and make sure any interpreter/deps they need are
+  installed (prefer system packages; do not commit a local venv).
 
 ### 6. Verify
 ```bash
@@ -114,7 +116,6 @@ Restart the affected app (waybar/quickshell) or `swaymsg reload`.
 | `gtkrc-2.0` | `~/.gtkrc-2.0` |
 | `themes/Nightfox-*` | `~/.themes/Nightfox-*` |
 | `wallpapers/newwave-1.png` | `~/Pictures/wallpapers/newwave-1.png` |
-| `scripts/{fetch-lyrics,lyrics-view}` | used in place (eww + systemd units point at the repo) |
 
 ## New machine setup
 
@@ -126,6 +127,11 @@ cd ~/Programming/dotfiles && ./setup.sh        # add --skip-packages if already 
   paths in `PATH_FIX_FILES` and re-targets the `gtk-4.0` symlinks. Those
   rewrites are **machine-local** — do not commit them.
 - Still manual after setup: vdirsyncer passwords, Genius token, weather API key.
+- External **data** dirs the rice reads but never tracks (populate them or the
+  music widgets show no lyrics):
+  - `~/.local/share/lyrics` — synced `<Artist> - <Title>.lrc` files.
+  - `~/Music/.lyrics/lyrics.txt` — Genius plain-text fallback (mpd-lyricsd).
+  - `~/Music` — the MPD library itself.
 
 ## setup.sh flags
 

@@ -6,7 +6,9 @@
 #   next  -> skip-next glyph     (revealed on hover)
 #   full  -> legacy "<icon> Title: lyric" (no argument; kept for back-compat)
 # Lyrics are timed .lrc files in ~/.local/share/lyrics, named
-# "<Artist> - <Title>.lrc".
+# "<Artist> - <Title>.lrc". That dir is NOT tracked in the rice repo: if it is
+# missing or empty the pill just shows the title. Genius plain-text fallback:
+# ~/Music/.lyrics/lyrics.txt (written by mpd-lyricsd).
 
 LYRICS_DIR="$HOME/.local/share/lyrics"
 # The icon shows what pressing the pill will do:
