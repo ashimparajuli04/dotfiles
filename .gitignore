@@ -10,6 +10,9 @@ mpd-lyricsd/config.toml
 # --- local venv for the lyrics scripts ---
 scripts/.venv/
 
+# --- Apple-licensed fonts (installed locally, never redistributed) ---
+fonts/SFPro/
+
 # --- Python bytecode ---
 __pycache__/
 *.pyc

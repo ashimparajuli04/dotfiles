@@ -18,8 +18,10 @@ when the user says any of these, run the consistency check below.
    `mpd/mpd.db`, `mpd/state`, `systemd/user/*.wants/`,
    `scripts/.venv/`. Check `git status` after each change; add new junk to
    `.gitignore` instead of committing it.
-4. This repo is **private**. Never make it public without removing: SF Pro fonts
-   (Apple licensing), emails/calendar IDs in `vdirsyncer/config`.
+4. SF Pro fonts are **not** tracked — install them locally at
+   `~/.local/share/fonts/SFPro` yourself; they are Apple-licensed and not
+   redistributable. Before making the repo public, review `vdirsyncer/config`
+   for personal identifiers.
 5. If unsure whether something is rice or a personal app → **ask the user**.
 
 ## Exclusions (never track these)
@@ -111,7 +113,6 @@ Restart the affected app (waybar/quickshell) or `swaymsg reload`.
 | `bin/bluetooth-autoconnect` | `~/.local/bin/bluetooth-autoconnect` |
 | `icons/vinyl.svg` | `~/.local/share/icons/vinyl.svg` |
 | `icons/Flat-Remix-Blue-Dark` | `~/.local/share/icons/Flat-Remix-Blue-Dark` |
-| `fonts/SFPro` | `~/.local/share/fonts/SFPro` |
 | `fonts/newwave` | `~/.local/share/fonts/newwave` |
 | `fonts/maple-mono` | `~/.local/share/fonts/maple-mono` |
 | `gtkrc-2.0` | `~/.gtkrc-2.0` |

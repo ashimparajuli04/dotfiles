@@ -64,7 +64,6 @@ EXTRA_LINKS=(
   "bin/bluetooth-autoconnect|$HOME/.local/bin/bluetooth-autoconnect"
   "icons/vinyl.svg|$HOME/.local/share/icons/vinyl.svg"
   "icons/Flat-Remix-Blue-Dark|$HOME/.local/share/icons/Flat-Remix-Blue-Dark"
-  "fonts/SFPro|$HOME/.local/share/fonts/SFPro"
   "fonts/newwave|$HOME/.local/share/fonts/newwave"
   "fonts/maple-mono|$HOME/.local/share/fonts/maple-mono"
   "gtkrc-2.0|$HOME/.gtkrc-2.0"
@@ -267,6 +266,7 @@ Setup complete.
 Manual steps still to do:
   * vdirsyncer:                app passwords in ~/.config/vdirsyncer/{google,icloud}-password
   * Genius lyrics token:       ~/.config/mpd-lyricsd/config.toml -> [genius] access_token (gitignored)
+  * SF Pro fonts (optional):   install into ~/.local/share/fonts/SFPro yourself (Apple-licensed — not shipped in this repo)
   * Weather module (optional): appid in ~/.config/waybar/weather.py + coords in weather-waybar-module.sh
   * Music:                     put songs in ~/Music (mpd auto_update is on)
 
