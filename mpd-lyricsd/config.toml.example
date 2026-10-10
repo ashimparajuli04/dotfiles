@@ -1,0 +1,17 @@
+# Example configuration for mpd-lyricsd (the Genius plain-text lyrics fallback).
+#
+# Copy this to config.toml and add your own Genius API access token:
+#     cp config.toml.example config.toml && chmod 600 config.toml
+#
+# config.toml is gitignored — never commit your access token.
+# The plain-text fallback is written to lyrics.txt and shown only when no
+# synced .lrc exists in ~/.local/share/lyrics. Both dirs are external data and
+# NOT tracked in the rice repo.
+
+lyrics_path = "/home/ashim/Music/.lyrics"
+
+[genius]
+access_token = ""
+
+[mpd]
+address = "localhost:6600"

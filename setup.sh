@@ -128,6 +128,14 @@ step "Repositories and paths"
 say "repo: $REPO"
 say "home: $HOME"
 
+# config.toml holds the Genius token and is gitignored; seed it from the
+# tracked example on a fresh clone (before the path repair below touches it).
+if [ ! -f "$REPO/mpd-lyricsd/config.toml" ]; then
+  cp "$REPO/mpd-lyricsd/config.toml.example" "$REPO/mpd-lyricsd/config.toml"
+  chmod 600 "$REPO/mpd-lyricsd/config.toml"
+  say "created mpd-lyricsd/config.toml from the example — add your Genius token"
+fi
+
 if [ "$OLD_REPO" != "$REPO" ] || [ "$OLD_HOME" != "$HOME" ]; then
   step "Path repair: $OLD_REPO -> $REPO, $OLD_HOME -> $HOME"
   for f in "${PATH_FIX_FILES[@]}"; do
@@ -258,7 +266,7 @@ Setup complete.
 
 Manual steps still to do:
   * vdirsyncer:                app passwords in ~/.config/vdirsyncer/{google,icloud}-password
-  * Genius lyrics token:       ~/.config/mpd-lyricsd/config.toml -> [genius] access_token
+  * Genius lyrics token:       ~/.config/mpd-lyricsd/config.toml -> [genius] access_token (gitignored)
   * Weather module (optional): appid in ~/.config/waybar/weather.py + coords in weather-waybar-module.sh
   * Music:                     put songs in ~/Music (mpd auto_update is on)
 

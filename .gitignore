@@ -5,6 +5,7 @@ systemd/user/*.wants/
 
 # --- secrets ---
 vdirsyncer/*-password
+mpd-lyricsd/config.toml
 
 # --- local venv for the lyrics scripts ---
 scripts/.venv/

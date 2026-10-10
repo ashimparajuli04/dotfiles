@@ -14,11 +14,12 @@ when the user says any of these, run the consistency check below.
    scripts) lives in this repo and is **symlinked** to its destination;
    every one must be registered in `setup.sh` → `EXTRA_LINKS`.
 3. Never commit secrets or runtime state. Known-ignored: `vdirsyncer/*-password`,
+   `mpd-lyricsd/config.toml` (Genius token — see `config.toml.example`),
    `mpd/mpd.db`, `mpd/state`, `systemd/user/*.wants/`,
    `scripts/.venv/`. Check `git status` after each change; add new junk to
    `.gitignore` instead of committing it.
 4. This repo is **private**. Never make it public without removing: SF Pro fonts
-   (Apple licensing), the Genius token, emails/calendar IDs in `vdirsyncer/config`.
+   (Apple licensing), emails/calendar IDs in `vdirsyncer/config`.
 5. If unsure whether something is rice or a personal app → **ask the user**.
 
 ## Exclusions (never track these)
