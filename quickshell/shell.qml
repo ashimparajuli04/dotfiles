@@ -19,7 +19,10 @@ ShellRoot {
     BatteryPill {}
     TrayWidget {}
     MusicWidget {}
-    DiscordVoicePill {}
+    // Only materialised while Discord is running: the pill (and its layer
+    // surface / avatar strip) costs nothing when Discord is closed, matching the
+    // lazily-gated discord_bridge.py process in DiscordVoice.qml.
+    LazyLoader { active: DiscordVoice.discordRunning; DiscordVoicePill {} }
 
     // Owns org.freedesktop.Notifications — must stay eager.
     Notifications {}

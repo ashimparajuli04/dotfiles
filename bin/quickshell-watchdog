@@ -46,6 +46,17 @@ launch() {
     # (Quickshell's MusicState event source). launch() only runs when no
     # Quickshell is alive, so any idleloop present here is stale.
     pkill -f 'mpc idleloop' 2>/dev/null || true
+    # Same for DiscordVoice.qml's discord-ipc presence watcher: a hard-killed
+    # Quickshell (SIGKILL from this watchdog) leaves its bash loop reparented and
+    # still polling. One bash is harmless, but they must not accumulate across
+    # wedge restarts.
+    pkill -f 'discord-ipc-' 2>/dev/null || true
+    # And the bridge itself: it detaches from a killed Quickshell and keeps
+    # running forever (it only reports Discord's state, it never exits), so a
+    # stale one would defeat the "no python while Discord is closed" gate. The
+    # freshly launched Quickshell's gate will start a new one (if Discord is up)
+    # and re-authenticate from the cached token.
+    pkill -f 'discord_bridge.py' 2>/dev/null || true
     env QSG_RHI_BACKEND=opengl MALLOC_CONF=retain:false \
         quickshell --no-duplicate >/dev/null 2>&1 &
 }

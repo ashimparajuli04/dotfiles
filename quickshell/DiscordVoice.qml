@@ -1,13 +1,15 @@
 pragma Singleton
 
-// Always-on Discord voice bridge client for the New Wave bar.
+// Discord voice bridge client for the New Wave bar — started lazily.
 //
-// A single long-lived `discord_bridge.py` process (which speaks Discord's
-// local RPC) is supervised here, and a `Quickshell.Io.Socket` client reads its
-// JSON-lines protocol. This singleton holds the voice state and is consumed
-// by DiscordVoicePill.qml (the bar avatars) and DiscordVoicePanel.qml (the
+// `discord_bridge.py` (which speaks Discord's local RPC) is only spawned while
+// Discord is actually running, and stopped when Discord closes (see the
+// presence gate below), so the bar carries no python process at all while
+// Discord is shut. A `Quickshell.Io.Socket` client reads its JSON-lines
+// protocol. This singleton holds the voice state and is consumed by
+// DiscordVoicePill.qml (the bar avatars) and DiscordVoicePanel.qml (the
 // popover). Mirrors MusicState.qml: a singleton that supervises a long-lived
-// child process. See changes.md (Discord voice).
+// child process.
 
 import QtQuick
 import Quickshell
@@ -84,9 +86,61 @@ Scope {
         })
     }
 
+    // ---------- Discord presence gate ----------
+    // The bridge is a whole python process, so it is only spawned while Discord
+    // itself is running. Discord creates its local IPC socket
+    // ($XDG_RUNTIME_DIR/discord-ipc-N) when it starts and removes it when it
+    // closes; this watches that socket with an all-builtin bash loop and emits
+    // "up"/"down" only when the state changes. Discord closed => the bridge is
+    // stopped outright (no lingering python); Discord open => it starts and
+    // reconnects.
+    //
+    // There is no cheap way to detect "joined a voice call" *without* the
+    // bridge — the bridge is the thing that reports voice state — so the gate is
+    // Discord-open. The bits that only matter in a call (avatar image downloads,
+    // the avatar strip) still activate only on a real voice_channel event.
+    Process {
+        id: discordGate
+        running: true
+        command: ["bash", "-c",
+            'd="${XDG_RUNTIME_DIR:-/tmp}"; last=""; '
+            + 'while :; do cur=down; '
+            + 'for i in 0 1 2 3 4 5 6 7 8 9; do [ -S "$d/discord-ipc-$i" ] && { cur=up; break; }; done; '
+            + 'if [ "$cur" != "$last" ]; then echo "$cur"; last="$cur"; fi; '
+            + 'sleep 2; done']
+        stdout: SplitParser {
+            onRead: function (line) { root.onDiscordPresence(line === "up") }
+        }
+    }
+
+    function onDiscordPresence(up) {
+        discordRunning = up
+        if (up) {
+            if (!bridgeProcess.running) {
+                restartDelay = 3000
+                bridgeProcess.running = true
+            }
+            socketConnect.restart()
+        } else {
+            if (bridgeProcess.running)
+                bridgeProcess.running = false
+            // Drop all state so a closed Discord leaves nothing stale in the bar.
+            authenticated = false
+            bridgeReady = false
+            currentChannel = null
+            voiceUsers = []
+            speakingUsers = ({})
+            if (bridgeSocket.connected)
+                bridgeSocket.connected = false
+        }
+    }
+
     // ---------- bridge process ----------
-    // Spawn once; exit 0 means another bridge already owns the socket (so we
-    // just keep using it as a client), anything else means restart.
+    // Started/stopped by the presence gate above — never spawned while Discord
+    // is closed. Exit 0 means another bridge already owns the socket (so we just
+    // keep using it as a client); anything else means restart, but only while
+    // Discord is still running and with exponential backoff so a crash-loop
+    // can't spin.
     Process {
         id: bridgeProcess
         command: ["python3", Qt.resolvedUrl("discord_bridge.py").toString().replace("file://", ""),
@@ -107,34 +161,26 @@ Scope {
         stdout: StdioCollector {}
 
         onExited: function (exitCode, exitStatus) {
-            // Normal exit 0 => another bridge already owns the socket; keep
-            // using it as a client. Anything else (crash/kill/non-zero) =>
-            // respawn, backing off so a crash-loop can't spin.
-            if (exitStatus === 0 && exitCode === 0) {
-                root.bridgeReady = false
-                return
-            }
-            console.warn("[discord] bridge exited: code=" + exitCode + " status=" + exitStatus)
             root.bridgeReady = false
+            // Normal exit 0 => another bridge already owns the socket; keep
+            // using it as a client.
+            if (exitStatus === 0 && exitCode === 0)
+                return
+            // Stopped because the gate saw Discord close (running=false set by
+            // onDiscordPresence): do not respawn.
+            if (!root.discordRunning)
+                return
+            console.warn("[discord] bridge exited: code=" + exitCode + " status=" + exitStatus)
             bridgeRestart.interval = root.restartDelay
             bridgeRestart.start()
             root.restartDelay = Math.min(root.restartDelay * 2, 30000)
         }
     }
 
-    // Give the shell a moment before spawning so the path is ready, then let it
-    // run for the life of the shell.
-    Timer {
-        id: bridgeStart
-        interval: 100
-        running: true
-        onTriggered: bridgeProcess.running = true
-    }
-
     Timer {
         id: bridgeRestart
         interval: 3000
-        onTriggered: bridgeProcess.running = true
+        onTriggered: if (root.discordRunning) bridgeProcess.running = true
     }
 
     // ---------- socket client ----------
@@ -161,8 +207,7 @@ Scope {
     Timer {
         id: socketConnect
         interval: 800
-        running: true
-        onTriggered: bridgeSocket.connected = true
+        onTriggered: if (root.discordRunning) bridgeSocket.connected = true
     }
 
     // Watchdog: reattach after a Quickshell reload or a Discord/socket drop.
@@ -170,7 +215,7 @@ Scope {
         interval: 3000
         repeat: true
         running: true
-        onTriggered: if (!bridgeSocket.connected)
+        onTriggered: if (root.discordRunning && !bridgeSocket.connected)
             bridgeSocket.connected = true
     }
 
