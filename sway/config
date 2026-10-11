@@ -292,6 +292,13 @@ input "type:keyboard" {
     xkb_options custom:ralt_super
 }
 
+# Focus On Click, Not Hover:
+# Sway's default is `yes` (focus follows the mouse pointer), so simply moving
+# the pointer over a window steals focus. `no` makes focus change only on
+# click. Clicking an unfocused window still focuses it AND forwards the click
+# to the app in the same press, so no click is swallowed.
+focus_follows_mouse no
+
 # Gaps And No Borders:
 # NOTE (sway 1.12): "inner" spaces each window (including workspace edges),
 # "outer" is ADDITIONAL workspace spacing -> edge gap = inner + outer.
@@ -299,8 +306,19 @@ input "type:keyboard" {
 # to the Waybar pills (margin-top 1 + 5px pill margin). See ~/changes.md.
 gaps inner 6
 gaps outer 0
-default_border none
-default_floating_border none
+# Focused-window cue: a solid 1px ring on the focused tile only. Sway has no
+# rounded corners / gradient / focus animation, so this cannot look like
+# Hyprland. The unfocused borders are fully transparent (alpha 0) so tiles stay
+# gapless-looking and only the focused one is outlined. `smart_borders on`
+# leaves a lone window on a workspace unframed - a ring appears only when there
+# are 2+ windows to tell apart. Muted lavender #A79BC8 is Theme.muted.
+default_border pixel 1
+default_floating_border pixel 2
+smart_borders on
+client.focused          #A79BC8 #A79BC8 #FFFFFF #A79BC8 #A79BC8
+client.focused_inactive #00000000 #00000000 #FFFFFF #00000000 #00000000
+client.unfocused        #00000000 #00000000 #FFFFFF #00000000 #00000000
+client.urgent           #FF00F1 #FF00F1 #FFFFFF #FF00F1 #FF00F1
 font pango:monospace 1
 titlebar_padding 1
 titlebar_border_thickness 0
@@ -374,3 +392,8 @@ exec --no-startup-id ~/.local/bin/bluetooth-autoconnect
 # Brightness CTRL (F2/F3, in addition to the Fn keys above):
 bindsym F2 exec brightnessctl set 5%-
 bindsym F3 exec brightnessctl set 5%+
+
+# btop: opened by the Quickshell CPU/RAM pill (quickshell/ResourcePill.qml
+# spawns `kitty --class btop -e btop`). Float it centred so it reads as a
+# popover rather than taking a tile.
+for_window [app_id="btop"] floating enable, resize set 960 620, move position center
