@@ -306,13 +306,13 @@ focus_follows_mouse no
 # to the Waybar pills (margin-top 1 + 5px pill margin). See ~/changes.md.
 gaps inner 6
 gaps outer 0
-# Focused-window cue: a solid 1px ring on the focused tile only. Sway has no
+# Focused-window cue: a solid 2px ring on the focused tile only. Sway has no
 # rounded corners / gradient / focus animation, so this cannot look like
 # Hyprland. The unfocused borders are fully transparent (alpha 0) so tiles stay
 # gapless-looking and only the focused one is outlined. `smart_borders on`
 # leaves a lone window on a workspace unframed - a ring appears only when there
 # are 2+ windows to tell apart. Muted lavender #A79BC8 is Theme.muted.
-default_border pixel 1
+default_border pixel 2
 default_floating_border pixel 2
 smart_borders on
 client.focused          #A79BC8 #A79BC8 #FFFFFF #A79BC8 #A79BC8

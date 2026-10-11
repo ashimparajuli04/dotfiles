@@ -32,12 +32,20 @@ Scope {
     property var knownNames: []       // names seen so far, for hotplug diffing
     property bool booted: false
 
-    // First connected non-internal output (enabled or not).
+    // First connected non-internal output (enabled or not). Prefer sway's
+    // output list (it carries the model), but fall back to Quickshell's own
+    // screens: if `swaymsg` is unavailable (e.g. a stale SWAYSOCK) `outputs`
+    // stays empty, yet Quickshell still knows the real screens directly — so
+    // the wizard can at least detect that an external is connected.
     readonly property string externalName: {
         var s = root.outputs
         for (var n in s)
             if (root.isExternal(n))
                 return n
+        var sc = Quickshell.screens
+        for (var i = 0; i < sc.length; i++)
+            if (root.isExternal(sc[i].name))
+                return sc[i].name
         return ""
     }
     readonly property bool hasExternal: externalName !== ""
@@ -82,13 +90,24 @@ Scope {
     }
 
     // ---------- processes ----------
+    // Every swaymsg below is prefixed with this: it resolves the *live* sway
+    // socket before running. Quickshell can inherit a stale SWAYSOCK/I3SOCK
+    // (after a sway restart the watchdog may still hold the old path — see
+    // bin/quickshell-watchdog), and a stale socket makes every `swaymsg`
+    // silently fail: the wizard sees no outputs and every apply command is a
+    // no-op. Re-resolving here is belt-and-braces so the wizard keeps working
+    // even if the environment is wrong.
+    readonly property string swayEnv: 'for f in "$XDG_RUNTIME_DIR"/sway-ipc.*.sock; do '
+        + 'SWAYSOCK=$f I3SOCK=$f swaymsg -t get_version >/dev/null 2>&1 '
+        + '&& { export SWAYSOCK=$f I3SOCK=$f; break; }; done; '
+
     Process { id: mkdirProc }
 
     Process { id: cmdProc }
 
     Process {
         id: outputsProc
-        command: ["swaymsg", "-t", "get_outputs"]
+        command: ["sh", "-c", root.swayEnv + "swaymsg -t get_outputs"]
         stdout: StdioCollector {
             onStreamFinished: root.parseOutputs(text)
         }
@@ -97,14 +116,15 @@ Scope {
     Process {
         id: subscribeProc
         running: true
-        command: ["swaymsg", "-t", "subscribe", "-m", "[\"output\"]"]
+        command: ["sh", "-c", root.swayEnv
+            + "exec swaymsg -t subscribe -m '[\"output\"]'"]
         stdout: SplitParser {
             onRead: root.refreshOutputs()
         }
     }
 
     function run(cmd) {
-        cmdProc.command = ["sh", "-c", cmd]
+        cmdProc.command = ["sh", "-c", root.swayEnv + cmd]
         cmdProc.running = true
     }
 

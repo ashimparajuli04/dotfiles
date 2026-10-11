@@ -13,6 +13,7 @@
     "modules-left": [
         "sway/workspaces",
         "custom/clipboard",
+        "sway/mode",
         "custom/weather",
         "group/music"
     ],
@@ -20,6 +21,7 @@
     "modules-right": [
     	"custom/discordvoice",
 	"custom/tray",
+	"custom/system",
 	"custom/brightness",
 	"custom/sound",
 	"custom/bluetooth",
@@ -50,6 +52,15 @@
         "format": " ",
         "tooltip": false
     },
+    // Invisible slot holder for the Quickshell CPU/RAM pill
+    // (ResourcePill.qml renders on top of this). It is its own standalone pill
+    // now, hugging its content (~97px) and separated from the icon row on its
+    // right by a 10px gap; a fixed min-width in style.css reserves its
+    // footprint. Left-click opens btop in a floating kitty window.
+    "custom/system": {
+        "format": " ",
+        "tooltip": false
+    },
     // Invisible slot holder for the Quickshell sound pill (SoundPill.qml).
     // See changes.md §14.
     "custom/sound": {
@@ -75,6 +86,13 @@
         "format": "",
         "format-icons": {},
         "all-outputs": true
+    },
+    // Sway mode indicator: sits in the left cluster between the clipboard pill
+    // and the weather pill. Shows the active mode name (e.g. "resize" after
+    // Mod+r); Waybar hides it automatically while the default mode is active,
+    // so it reserves no space when idle. See sway/config `mode "resize"`.
+    "sway/mode": {
+        "format": "{}"
     },
     // Invisible slot holder for the Quickshell battery pill
     // (BatteryPill.qml draws on top of it; BatteryPanel.qml is the

@@ -106,6 +106,21 @@ window#waybar.hidden {
   font-size: 13px;
 }
 
+/* Sway mode indicator (sway/mode): shows the active mode name ("resize")
+   while a non-default mode is active — in the left cluster, between the
+   clipboard pill and the weather pill. Hidden in the default mode, so it
+   reserves no space until you press Mod+r. */
+#mode {
+  background-color: #040404;
+  color: #ff00f1;
+  padding: 2px 8px;
+  margin-top: 5px;
+  margin-bottom: 0px;
+  margin-right: 10px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
 /* Music pill: [prev] [play/pause] [next] Title: current lyric.
    A Waybar group/ (no drawer) so hovering the pill sets the group box's
    prelight state — `#music:hover` below then reveals prev/next. The hidden
@@ -166,6 +181,20 @@ window#waybar.hidden {
   font-size: 13px;
 }
 
+/* Invisible slot for the Quickshell CPU/RAM pill (ResourcePill.qml draws on
+   top of it). Its own standalone pill now — the overlay hugs its content with
+   the same 7px padding as the icon pills (~97px footprint) and carries the
+   10px gap to the icon row on its right (see ResourcePill.qml); the slot
+   geometry is decoupled from the overlays, so nothing here needs to move. */
+#custom-system {
+  background-color: transparent;
+  padding: 0;
+  margin-top: 5px;
+  margin-bottom: 0px;
+  margin-right: 7px;
+  min-width: 97px;
+}
+
 /* Invisible slot for the Quickshell brightness pill (BrightnessPill.qml
    draws on top of it); snug icon-only footprint (27px, like bluetooth) —
    the percentage text was dropped, the pill shows the level glyph only.
@@ -175,10 +204,10 @@ window#waybar.hidden {
   padding: 0;
   margin-top: 5px;
   margin-bottom: 0px;
-  /* Joined pill row (changes.md §32): 7px (not 10px) so the Waybar
-     modules left of the cluster keep their 10px gap to the brightness
-     pill after the join shifted the pills right. */
-  margin-right: 7px;
+  /* Joined pill row (changes.md §32): 0px (was 7px) — the #custom-system
+     slot to the left now carries the gap; the Quickshell pills carry the
+     spacing. */
+  margin-right: 0px;
   min-width: 27px;
 }
 

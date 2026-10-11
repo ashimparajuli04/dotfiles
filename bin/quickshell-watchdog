@@ -20,6 +20,16 @@
 # This is the single owner of the Quickshell launch (sway execs this instead
 # of `quickshell` directly). Single-instance via a pidfile.
 #
+# It also owns the *sway socket* the shell talks to. Quickshell drives sway by
+# shelling out to `swaymsg`, which resolves the compositor from SWAYSOCK /
+# I3SOCK. This watchdog starts at login but gets orphaned (reparented to init)
+# when sway exits, so it — and every Quickshell it relaunches — can keep a
+# socket path that is already dead. Every `swaymsg` inside Quickshell then
+# fails silently: the display wizard sees no outputs, the bar never hides over
+# fullscreen, workspaces/logout break. To prevent that we re-resolve the live
+# socket every pass (live_sock), recycle a Quickshell bound to a stale one, and
+# step aside when sway is gone so the next session can take over.
+#
 # Registered in setup.sh -> EXTRA_LINKS as bin/quickshell-watchdog |
 # ~/.local/bin/quickshell-watchdog.
 
@@ -35,6 +45,27 @@ INTERVAL=5
 PROBE_TIMEOUT=5
 MAX_FAILS=3
 SETTLE=10
+
+# SWAYSOCK recorded in a process's environment (empty if unreadable/unset).
+sock_of_pid() {
+    tr '\0' '\n' < "/proc/$1/environ" 2>/dev/null \
+        | sed -n 's/^SWAYSOCK=//p' | head -n1
+}
+
+# Path of the *live* sway socket. Never trust the inherited SWAYSOCK/I3SOCK —
+# they may point at a sway that has since exited. Probe the candidates and keep
+# the one sway actually answers on. Non-zero = no sway running.
+live_sock() {
+    local f
+    for f in "$RUNTIME"/sway-ipc."$(id -u)".*.sock; do
+        [ -S "$f" ] || continue
+        if SWAYSOCK="$f" I3SOCK="$f" swaymsg -t get_version >/dev/null 2>&1; then
+            printf '%s\n' "$f"
+            return 0
+        fi
+    done
+    return 1
+}
 
 # QSG_RHI_BACKEND=opengl, NOT vulkan: on this stack the Vulkan RHI deadlocks in
 # the Wayland/Mesa present path and wedges the whole shell within ~30s
@@ -64,14 +95,46 @@ launch() {
 # Single instance via pidfile. (Not flock: a lock fd would be inherited by the
 # launched Quickshell and its children, so it would stay held — and block a new
 # watchdog — even after this process exited.)
-if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE" 2>/dev/null)" 2>/dev/null; then
-    exit 0
+#
+# A plain "is the pid alive" check is not enough: an owner orphaned across a
+# sway restart is alive but points at a dead socket, so it can never drive the
+# current session and would block this session's exec line forever. Only defer
+# to an owner whose socket still answers; otherwise take over.
+if [ -f "$PIDFILE" ]; then
+    old="$(cat "$PIDFILE" 2>/dev/null || true)"
+    if [ -n "$old" ] && kill -0 "$old" 2>/dev/null; then
+        old_sock="$(sock_of_pid "$old")"
+        if [ -n "$old_sock" ] \
+            && SWAYSOCK="$old_sock" I3SOCK="$old_sock" swaymsg -t get_version >/dev/null 2>&1; then
+            exit 0
+        fi
+        kill "$old" 2>/dev/null || true
+    fi
 fi
 printf '%s\n' "$$" > "$PIDFILE"
 trap 'rm -f "$PIDFILE"' EXIT
 
 fails=0
 while true; do
+    # Re-resolve the live socket every pass: a sway restart swaps the path, and
+    # this watchdog can outlive one. If sway is gone this session is over —
+    # release the pidfile so the next session's exec line can own the watchdog.
+    sock="$(live_sock)" || { rm -f "$PIDFILE"; exit 0; }
+    export SWAYSOCK="$sock" I3SOCK="$sock"
+
+    # Recycle a running Quickshell that was started against a different (dead)
+    # socket — inherited from a stale owner or from an earlier sway — so every
+    # `swaymsg` inside it targets the live compositor.
+    qs_pid="$(pgrep -x quickshell 2>/dev/null | head -n1)"
+    if [ -n "$qs_pid" ]; then
+        qs_sock="$(sock_of_pid "$qs_pid")"
+        if [ -n "$qs_sock" ] && [ "$qs_sock" != "$sock" ]; then
+            logger -t "$LOG" "quickshell on stale sway socket; restarting" 2>/dev/null || true
+            pkill -9 -x quickshell 2>/dev/null || true
+            sleep 1
+        fi
+    fi
+
     if ! pgrep -x quickshell >/dev/null 2>&1; then
         launch
         fails=0

@@ -9,7 +9,9 @@ import Quickshell.Io
 // so the joined row stays flush while pills expand (push instead of
 // overlap; see changes.md §32).
 //
-// Layout (left → right): brightness · sound · bluetooth · wifi · battery
+// Layout (left → right): [system] (brightness · sound · bluetooth · wifi ·
+// battery). The CPU/RAM "system" pill is a standalone pill separated from the
+// icon row by a gap; the bracketed pills are joined flush.
 QtObject {
     id: bus
 
@@ -26,9 +28,9 @@ QtObject {
     property real wifiMaxPush: 0
     property real batteryMaxPush: 0
 
-    // Brightness is the leftmost pill, so nothing inside PillBus needs its
-    // own expansion — but external consumers (the Waybar tray spacer, via
-    // TrayShift.qml) do, to know the cluster's full leftward reach.
+    // Brightness is the leftmost of the joined icon pills, so nothing inside
+    // PillBus needs its own expansion — but external consumers (the Waybar tray
+    // spacer, via TrayShift.qml) do, to know the cluster's full leftward reach.
     property real brightnessPush: 0
     property real brightnessMaxPush: 0
 
@@ -67,6 +69,7 @@ QtObject {
     // expanded pills collapse together (see BrightnessPill/BatteryPill).
     property bool hoverBrightness: false
     property bool hoverBattery: false
+    property bool hoverSystem: false
 
     // The wifi / bluetooth / sound pills no longer expand; they publish "the
     // pointer is on my pill" here for both the preview coordinator below and
@@ -77,7 +80,7 @@ QtObject {
     property bool hoverDiscord: false
 
     readonly property bool hoverAny: hoverBrightness || hoverBattery
-        || hoverSound || hoverBt || hoverWifi || hoverDiscord
+        || hoverSound || hoverBt || hoverWifi || hoverDiscord || hoverSystem
 
     // Bumped when the row has been fully unhovered for the grace period;
     // each expanded pill listens and collapses off this single broadcast.

@@ -12,9 +12,9 @@ import Quickshell.Wayland
 // slides it left in one smooth motion. See changes.md §36.
 //
 // Geometry: sits on the transparent `custom/tray` Waybar spacer, immediately
-// left of the brightness pill (the leftmost joined pill). Its right edge is
-// pinned `rightMargin` from the screen's right edge and it slides left by
-// PillBus.reach, exactly like BrightnessPill.qml.
+// left of the CPU/RAM (system) pill. Its right edge is pinned `rightMargin`
+// from the screen's right edge and it slides left by PillBus.reach, exactly
+// like BrightnessPill.qml.
 //
 // Caveats (documented in changes.md §36):
 //  * SNI-only — legacy XEmbed tray icons will not appear (Waybar's tray
@@ -27,10 +27,11 @@ Scope {
     id: root
 
     // ---------- geometry ----------
-    // The brightness pill's collapsed left edge is 179px from the screen's
-    // right edge (its rightMargin 152 + width 27), so 189 leaves the same
-    // 10px gap the old Waybar `#tray { margin-right: 10px }` had.
-    readonly property int rightMargin: 180
+    // The system (CPU/RAM) pill now hugs its content (~97px wide, right edge at
+    // 180), so its collapsed left edge is 277px from the screen's right edge;
+    // 287 leaves the same 10px gap the old Waybar `#tray { margin-right: 10px }`
+    // had.
+    readonly property int rightMargin: 287
     readonly property int pillHeight: 24
     readonly property int iconSize: 16
     readonly property int iconSpacing: 6
@@ -62,6 +63,9 @@ Scope {
     PanelWindow {
         screen: BarScreen.screen
         id: win
+
+        // Fullscreen on this output hides the whole bar (see FullscreenWatch).
+        visible: !FullscreenWatch.covering
 
         anchors {
             top: true

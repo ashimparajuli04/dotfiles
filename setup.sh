@@ -42,6 +42,7 @@ PACMAN_PKGS=(
   ttf-jetbrains-mono-nerd ttf-iosevka-nerd ttf-material-icons
   ttf-material-design-icons-extended
   python-requests python-unidecode python-jinja
+  tree-sitter-cli
   dkms linux-headers
 )
 AUR_PKGS=(bibata-cursor-theme-bin ryzenadj-git ryzen_smu-dkms-git wl-mirror)

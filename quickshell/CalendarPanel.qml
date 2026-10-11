@@ -288,6 +288,9 @@ Scope {
         screen: BarScreen.screen
         id: chip
 
+        // Fullscreen on this output hides the whole bar (see FullscreenWatch).
+        visible: !FullscreenWatch.covering
+
         anchors {
             top: true
         }
@@ -383,7 +386,7 @@ Scope {
     PanelWindow {
         screen: BarScreen.screen
         id: card
-        visible: root.cardVisible
+        visible: root.cardVisible && !FullscreenWatch.covering
 
         anchors {
             top: true

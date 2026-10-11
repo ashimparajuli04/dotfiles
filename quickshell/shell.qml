@@ -12,6 +12,7 @@ ShellRoot {
     PanelIpc {}
 
     // Always-visible bar.
+    ResourcePill {}
     BrightnessPill {}
     SoundPill {}
     BluetoothPill {}

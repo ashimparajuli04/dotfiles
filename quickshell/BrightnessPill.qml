@@ -26,8 +26,10 @@ Scope {
     // (#custom-brightness); rightMargin is measured from the screen's
     // right edge. The row is joined flush now (changes.md §32):
     // rightMargin 152 puts this pill's right edge against the sound
-    // pill's left edge, and it carries the rounded left end of the
-    // cluster. Tuned with screenshots — see changes.md §28.
+    // pill's left edge. This is the LEFT CAP of the icon row — the CPU/RAM
+    // pill is a separate, gapped pill to its left now — so it is rounded on
+    // the left and square on the right. Tuned with screenshots — see
+    // changes.md §28.
     readonly property int collapsedWidth: 27
     // Hugs the expanded content: 7 (left pad) + 104 (slider) + 5 (gap)
     // + 13 (icon) + 7 (right pad). Was 172, which left ~42px of dead space
@@ -201,6 +203,9 @@ Scope {
         screen: BarScreen.screen
         id: win
 
+        // Fullscreen on this output hides the whole bar (see FullscreenWatch).
+        visible: !FullscreenWatch.covering
+
         anchors {
             top: true
             right: true
@@ -239,9 +244,10 @@ Scope {
             x: win.width - width - PillBus.pushBrightness
             height: root.pillHeight
             width: root.expanded ? root.expandedWidth : root.collapsedWidth
+            // Left cap of the icon row: rounded left, square right (the sound
+            // pill continues to the right; the CPU/RAM pill is a separate,
+            // gapped pill to the left now).
             radius: 8
-            // Leftmost segment: the rounded left cap of the joined row,
-            // square where the sound pill continues to the right.
             topRightRadius: 0
             bottomRightRadius: 0
             color: "#040404"

@@ -1,5 +1,6 @@
 singleton Theme 1.0 Theme.qml
 singleton BarScreen 1.0 BarScreen.qml
+singleton FullscreenWatch 1.0 FullscreenWatch.qml
 singleton Displays 1.0 Displays.qml
 DisplayPanel 1.0 DisplayPanel.qml
 PanelIpc 1.0 PanelIpc.qml
@@ -20,6 +21,7 @@ CalendarMonth 1.0 CalendarMonth.qml
 EventRow 1.0 EventRow.qml
 PillButton 1.0 PillButton.qml
 BrightnessPill 1.0 BrightnessPill.qml
+ResourcePill 1.0 ResourcePill.qml
 SoundPill 1.0 SoundPill.qml
 BluetoothPill 1.0 BluetoothPill.qml
 WifiPill 1.0 WifiPill.qml

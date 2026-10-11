@@ -121,6 +121,9 @@ Scope {
         screen: BarScreen.screen
         id: win
 
+        // Fullscreen on this output hides the whole bar (see FullscreenWatch).
+        visible: !FullscreenWatch.covering
+
         anchors {
             top: true
             right: true
